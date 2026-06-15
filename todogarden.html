@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>待辦事項花園 | Time Garden</title>
+    <meta
+      name="description"
+      content="待辦事項花園是一款結合待辦清單、時間管理與植物養成的療癒系 App。"
+    />
+    <meta property="og:title" content="待辦事項花園 | Time Garden" />
+    <meta
+      property="og:description"
+      content="把待辦事項種成一座專屬花園。完成任務、培養習慣、安排生活，讓每天的努力都看得見。"
+    />
+    <meta property="og:image" content="assets/feature-graphic.png" />
+    <link rel="icon" type="image/png" href="assets/app-icon.png" />
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9149847545556409"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1f3347;
+        --muted: #5b7185;
+        --line: #d7e3ec;
+        --surface: #ffffff;
+        --soft: #eef8ff;
+        --blue: #5b9bd5;
+        --green: #79b67d;
+        --coral: #e28b7b;
+        --shadow: 0 18px 50px rgba(35, 62, 86, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC",
+          "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: #f8fbfd;
+        line-height: 1.6;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .hero {
+        min-height: 86vh;
+        display: grid;
+        align-items: end;
+        background:
+          linear-gradient(
+            180deg,
+            rgba(248, 251, 253, 0.18) 0%,
+            rgba(248, 251, 253, 0.72) 54%,
+            #f8fbfd 100%
+          ),
+          url("assets/feature-graphic.png") center top / cover no-repeat;
+      }
+
+      .hero-inner,
+      .section-inner {
+        width: min(1120px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .hero-copy {
+        max-width: 680px;
+        padding: 120px 0 84px;
+      }
+
+      .app-mark {
+        width: 96px;
+        height: 96px;
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+      }
+
+      h1 {
+        margin: 28px 0 14px;
+        font-size: clamp(44px, 8vw, 86px);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .tagline {
+        margin: 0;
+        max-width: 620px;
+        color: var(--ink);
+        font-size: clamp(20px, 3vw, 30px);
+        font-weight: 700;
+      }
+
+      .subcopy {
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 18px;
+        max-width: 620px;
+      }
+
+      .download-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+        margin-top: 34px;
+      }
+
+      .store-badge {
+        display: inline-flex;
+        align-items: center;
+        line-height: 0;
+        text-decoration: none;
+      }
+
+      .store-badge img {
+        display: block;
+        height: 48px;
+        width: auto;
+      }
+
+      .google-play-badge img {
+        height: 57px;
+      }
+
+      section {
+        padding: 64px 0;
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+
+      .feature {
+        min-height: 180px;
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .feature h2 {
+        margin: 0 0 10px;
+        font-size: 24px;
+      }
+
+      .feature p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .support-band {
+        background: linear-gradient(135deg, var(--soft), #fff7f2);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .support-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 32px;
+        align-items: center;
+      }
+
+      .support-grid h2 {
+        margin: 0 0 12px;
+        font-size: 34px;
+      }
+
+      .support-grid p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .support-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 12px;
+      }
+
+      .link-button {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: white;
+        color: var(--ink);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      footer {
+        padding: 32px 0 44px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .footer-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .footer-links a {
+        text-decoration: none;
+      }
+
+      @media (max-width: 760px) {
+        .hero {
+          min-height: 92vh;
+        }
+
+        .hero-inner,
+        .section-inner {
+          width: min(100% - 28px, 1120px);
+        }
+
+        .hero-copy {
+          padding: 92px 0 56px;
+        }
+
+        .download-row {
+          width: 100%;
+        }
+
+        .features,
+        .support-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .support-actions {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <div class="hero-inner">
+          <div class="hero-copy">
+            <img
+              class="app-mark"
+              src="assets/app-icon.png"
+              alt="待辦事項花園 App 圖示"
+            />
+            <h1>待辦事項花園</h1>
+            <p class="tagline">把待辦事項種成一座專屬花園。</p>
+            <p class="subcopy">
+              結合待辦清單、日曆提醒、語音新增與植物養成，讓每天的努力
+              都看得見。
+            </p>
+            <div class="download-row" aria-label="下載待辦事項花園">
+              <a
+                class="store-badge"
+                href="https://apps.apple.com/app/id6780426568"
+                target="_blank"
+                rel="noopener"
+                aria-label="Download on the App Store"
+              >
+                <img
+                  src="assets/app-store-badge.svg"
+                  alt="Download on the App Store"
+                />
+              </a>
+              <a
+                class="store-badge google-play-badge"
+                href="https://play.google.com/store/apps/details?id=com.time_to_do_garden"
+                target="_blank"
+                rel="noopener"
+                aria-label="Get it on Google Play"
+              >
+                <img
+                  src="assets/google-play-badge.png"
+                  alt="Google Play 立即下載"
+                />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-inner features">
+          <article class="feature">
+            <h2>植物養成</h2>
+            <p>新增任務就像種下一顆種子，完成任務後看見花園逐漸成長。</p>
+          </article>
+          <article class="feature">
+            <h2>日曆提醒</h2>
+            <p>用清楚的日曆檢視安排工作、讀書、生活目標與重要提醒。</p>
+          </article>
+          <article class="feature">
+            <h2>個人化風格</h2>
+            <p>切換主題、頭像框與 App 圖示，打造自己的待辦花園。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="support-band" id="support">
+        <div class="section-inner support-grid">
+          <div>
+            <h2>支援與聯絡</h2>
+            <p>
+              使用時遇到問題、購買需要協助，或想提供功能建議，都可以聯絡我們。
+            </p>
+          </div>
+          <div class="support-actions">
+            <a class="link-button" href="mailto:linjoe.dev@gmail.com">
+              linjoe.dev@gmail.com
+            </a>
+            <a class="link-button" href="https://sites.google.com/view/to-do-garden">隱私權政策</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="section-inner footer-row">
+        <span>© 2026 Sheng Lang Lin</span>
+        <nav class="footer-links" aria-label="頁尾連結">
+          <a href="#support">Support</a>
+          <a href="https://sites.google.com/view/to-do-garden">Privacy Policy</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
