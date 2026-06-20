@@ -14,6 +14,98 @@
             line-height: 1.6;
         }
 
+        :root {
+            --blue: #3b82f6;
+            --teal: #14b8a6;
+        }
+
+        .nav {
+            position: absolute;
+            z-index: 10;
+            top: 24px;
+            left: 50%;
+            width: min(960px, calc(100% - 40px));
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 20px;
+            background: rgba(11, 18, 40, 0.34);
+            color: #fff;
+            text-decoration: none;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 16px 42px rgba(0, 0, 0, 0.16);
+            transition: transform 0.2s ease;
+        }
+
+        .brand:hover {
+            transform: scale(1.02);
+        }
+
+        .brand img {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: block;
+        }
+
+        .brand strong {
+            display: block;
+            font-size: 18px;
+            letter-spacing: 0;
+            line-height: 1.15;
+            font-weight: 800;
+        }
+
+        .brand span {
+            display: block;
+            margin-top: 2px;
+            font-size: 13px;
+            color: rgba(226, 238, 255, 0.82);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-link,
+        .nav-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            padding: 0 18px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 14px;
+            background: rgba(11, 18, 40, 0.34);
+            color: #fff;
+            font-weight: 800;
+            text-decoration: none;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.14);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .nav-link:hover, .nav-button:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-button {
+            background: linear-gradient(135deg, var(--teal), var(--blue));
+            border-color: rgba(255, 255, 255, 0.36);
+        }
+
         .hero-section {
             position: relative;
             min-height: 80vh;
@@ -86,7 +178,15 @@
         }
 
         .download-btn img {
-            height: 55px;
+            display: block;
+        }
+
+        .btn-apple img {
+            height: 48px;
+        }
+
+        .btn-google img {
+            height: 60px;
         }
 
         .download-btn:hover {
@@ -234,7 +334,45 @@
         }
 
         /* 手機版響應式設計 */
+        @media (max-width: 860px) {
+            .nav {
+                align-items: flex-start;
+            }
+            .nav-links {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .nav-link,
+            .nav-button {
+                min-height: 42px;
+                padding: 0 14px;
+                font-size: 14px;
+            }
+        }
+
         @media (max-width: 768px) {
+            .nav {
+                width: calc(100% - 28px);
+                top: 14px;
+                gap: 10px;
+            }
+            .brand {
+                padding: 8px 10px;
+            }
+            .brand img {
+                width: 36px;
+                height: 36px;
+            }
+            .brand strong {
+                font-size: 16px;
+            }
+            .brand span {
+                display: none;
+            }
+            .nav-link {
+                display: none;
+            }
+
             .hero-overlay {
                 background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.8) 70%, #ffffff 100%);
             }
@@ -269,6 +407,19 @@
 
     <!-- 上方區塊：大背景與標題 -->
     <div class="hero-section">
+        <nav class="nav">
+            <a class="brand" href="#">
+                <img src="icon1.png" alt="拼圖大師 Logo">
+                <div>
+                    <strong>拼圖大師</strong>
+                    <span>Puzzle Master</span>
+                </div>
+            </a>
+            <div class="nav-links">
+                <a class="nav-link" href="#features">特色</a>
+                <a class="nav-button" href="#support">支援與聯絡</a>
+            </div>
+        </nav>
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <h1 class="hero-title">拼圖大師 Puzzle Master</h1>
@@ -276,8 +427,10 @@
             <p class="hero-description">結合海量圖庫、多種難度與舒壓音樂，讓每次的拼圖過程都成為一場沉浸式的心靈放鬆之旅。</p>
             
             <div class="download-buttons">
-                <!-- App Store 按鈕依需求先不加上去 -->
-                <a href="https://play.google.com/store/apps/details?id=com.jigsaw.puzzle.master" class="download-btn" target="_blank" rel="noopener noreferrer">
+                <a href="https://apps.apple.com/app/id6781469666" class="download-btn btn-apple" target="_blank" rel="noopener noreferrer">
+                    <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/zh-tw?size=250x83&amp;releaseDate=1276560000" alt="在 App Store 下載">
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=com.jigsaw.puzzle.master" class="download-btn btn-google" target="_blank" rel="noopener noreferrer">
                     <img src="https://play.google.com/intl/en_us/badges/static/images/badges/zh-tw_badge_web_generic.png" alt="在 Google Play 下載">
                 </a>
             </div>
@@ -285,7 +438,7 @@
     </div>
 
     <!-- 下方區塊：特色卡片 -->
-    <div class="features-section">
+    <div id="features" class="features-section">
         <div class="features-grid">
             <div class="feature-card">
                 <h3 class="feature-title">海量精美圖庫</h3>
