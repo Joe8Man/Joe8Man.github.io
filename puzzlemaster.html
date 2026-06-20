@@ -194,21 +194,37 @@
         }
 
         .features-section {
-            padding: 20px 5% 100px 5%;
+            padding: 40px 5% 100px 5%;
             background-color: #ffffff;
             position: relative;
             z-index: 2;
         }
 
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-header h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+        }
+
         .features-grid {
             max-width: 1200px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 30px;
         }
 
         .feature-card {
+            flex: 0 1 calc(33.333% - 20px);
+            min-width: 300px;
+            max-width: 380px;
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
@@ -439,18 +455,33 @@
 
     <!-- 下方區塊：特色卡片 -->
     <div id="features" class="features-section">
+        <div class="section-header">
+            <h2>特色介紹</h2>
+        </div>
         <div class="features-grid">
             <div class="feature-card">
                 <h3 class="feature-title">海量精美圖庫</h3>
-                <p class="feature-text">從自然風景、可愛動物到世界名畫，提供豐富的高畫質圖片，滿足你對美好事物的追求。</p>
+                <p class="feature-text">收錄壯闊風景、超萌動物等高解析度主題，提供豐富的高畫質圖片，滿足您對美好事物的追求。</p>
             </div>
             <div class="feature-card">
-                <h3 class="feature-title">難度自由選擇</h3>
-                <p class="feature-text">無論是想要輕鬆一下的新手，還是追求挑戰的拼圖大師，都能找到最適合自己的難度設定。</p>
+                <h3 class="feature-title">彈性難度選擇</h3>
+                <p class="feature-text">提供 49片、100片、256片三種等級，無論是追求放鬆的新手或挑戰極限的大師，都能滿足不同需求。</p>
             </div>
             <div class="feature-card">
-                <h3 class="feature-title">舒壓放鬆體驗</h3>
-                <p class="feature-text">優雅的介面設計搭配療癒的背景音樂，讓你在拼湊碎片的同時，也拼湊出內心的平靜。</p>
+                <h3 class="feature-title">舒壓極簡介面</h3>
+                <p class="feature-text">現代感 UI 設計搭配療癒的背景音樂，操作直覺，專注於拼圖樂趣，讓你在拼湊中放鬆心靈。</p>
+            </div>
+            <div class="feature-card">
+                <h3 class="feature-title">自動儲存</h3>
+                <p class="feature-text">遊戲進度即時存檔，隨時中斷、隨時續玩，不需擔心進度遺失。</p>
+            </div>
+            <div class="feature-card">
+                <h3 class="feature-title">成就追蹤</h3>
+                <p class="feature-text">完整記錄完成作品，逐步解鎖您的專屬拼圖圖庫，充滿成就感。</p>
+            </div>
+            <div class="feature-card">
+                <h3 class="feature-title">完全離線遊玩</h3>
+                <p class="feature-text">無需網路連線，無論在通勤、飛行中或訊號不佳的地方，都能隨時隨地不受干擾地享受拼圖樂趣。</p>
             </div>
         </div>
     </div>
