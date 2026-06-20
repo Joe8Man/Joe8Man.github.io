@@ -155,7 +155,7 @@
 
       .hero-copy {
         max-width: 680px;
-        padding: 120px 0 84px;
+        padding: 120px 0 40px;
       }
 
       .app-mark {
@@ -217,12 +217,15 @@
       }
 
       .features {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 18px;
       }
 
       .feature {
+        flex: 1 1 calc(33.333% - 18px);
+        min-width: 320px;
         min-height: 180px;
         padding: 24px;
         border: 1px solid var(--line);
@@ -239,6 +242,19 @@
         margin: 0;
         color: var(--muted);
       }
+
+      .section-header {
+        margin-bottom: 32px;
+        text-align: center;
+      }
+
+      .section-header h2 {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 36px);
+        color: var(--ink);
+      }
+
+
 
       .support-band {
         background: linear-gradient(135deg, var(--soft), #fff7f2);
@@ -356,14 +372,16 @@
         }
 
         .hero-copy {
-          padding: 92px 0 56px;
+          padding: 92px 0 24px;
         }
 
         .download-row {
           width: 100%;
         }
 
-        .features,
+        .features {
+          flex-direction: column;
+        }
         .support-grid {
           grid-template-columns: 1fr;
         }
@@ -429,19 +447,36 @@
       </section>
 
       <section id="features">
-        <div class="section-inner features">
-          <article class="feature">
-            <h2>植物養成</h2>
-            <p>新增任務就像種下一顆種子，完成任務後看見花園逐漸成長。</p>
-          </article>
-          <article class="feature">
-            <h2>日曆提醒</h2>
-            <p>用清楚的日曆檢視安排工作、讀書、生活目標與重要提醒。</p>
-          </article>
-          <article class="feature">
-            <h2>個人化風格</h2>
-            <p>切換主題、頭像框與 App 圖示，打造自己的待辦花園。</p>
-          </article>
+        <div class="section-inner">
+          <div class="section-header">
+            <h2>特色介紹</h2>
+          </div>
+          <div class="features">
+            <article class="feature">
+              <h2>植物養成</h2>
+              <p>當您完成待辦事項時，植物會綻放美麗花朵；若任務過期未完成，植物則可能逐漸枯萎。</p>
+            </article>
+            <article class="feature">
+              <h2>日曆提醒</h2>
+              <p>透過清晰的日曆檢視模式，輕鬆安排每日行程、工作計畫、讀書進度與生活目標。<br>有排定任務的日期還會出現可愛植物，讓規劃行程變得更加有趣。</p>
+            </article>
+            <article class="feature">
+              <h2>語音新增任務</h2>
+              <p>不想打字嗎？<br>支援語音輸入功能，只要開口說話，即可快速建立待辦事項與提醒內容。</p>
+            </article>
+            <article class="feature">
+              <h2>強力提醒功能</h2>
+              <p>支援通知提醒與全螢幕鎖屏通知，重要行程、工作任務與待辦事項不再遺漏。</p>
+            </article>
+            <article class="feature">
+              <h2>個人化風格</h2>
+              <p>多款主題自由切換、自訂 App 圖示、專屬頭像框收集，打造屬於自己的待辦花園風格。</p>
+            </article>
+            <article class="feature">
+              <h2>情境使用</h2>
+              <p>每日待辦清單、工作任務管理、讀書計畫安排、習慣養成追蹤、時間管理規劃、提醒事項紀錄、個人目標管理</p>
+            </article>
+          </div>
         </div>
       </section>
 
