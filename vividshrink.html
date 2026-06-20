@@ -325,8 +325,15 @@
 
     @media (max-width: 560px) {
       .hero {
-        min-height: 540px;
-        background-position: 58% 15%;
+        min-height: 520px;
+        background:
+          linear-gradient(180deg, rgba(8, 13, 32, 0.12), rgba(8, 13, 32, 0.18) 40%, rgba(247, 251, 255, 0.92) 80%, #f7fbff 100%),
+          url("google_play_feature_graphic_backup.png") top center / 140% auto no-repeat,
+          #1c2d50; /* Base color for the lower part */
+      }
+
+      .hero::after {
+        height: 20%;
       }
 
       .nav {
