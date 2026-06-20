@@ -37,13 +37,11 @@
     }
 
     .hero {
-      min-height: clamp(400px, 45vw, 540px);
+      min-height: clamp(320px, 40vw, 480px);
       position: relative;
-      display: flex;
-      align-items: flex-end;
       overflow: hidden;
       background:
-        linear-gradient(180deg, rgba(8, 13, 32, 0.12), rgba(8, 13, 32, 0.18) 58%, rgba(247, 251, 255, 0.86)),
+        linear-gradient(180deg, rgba(8, 13, 32, 0.12), rgba(8, 13, 32, 0.18) 58%, rgba(247, 251, 255, 0.6)),
         url("google_play_feature_graphic_backup.png") center / cover no-repeat;
       border-bottom: 1px solid var(--line);
     }
@@ -52,9 +50,17 @@
       content: "";
       position: absolute;
       inset: auto 0 0;
-      height: 36%;
-      background: linear-gradient(180deg, rgba(247, 251, 255, 0), #f7fbff 76%);
+      height: 40%;
+      background: linear-gradient(180deg, rgba(247, 251, 255, 0), rgba(247, 251, 255, 1) 100%);
       pointer-events: none;
+    }
+
+    .hero-panel-container {
+      position: relative;
+      z-index: 10;
+      padding: 0 20px;
+      margin-top: -64px;
+      margin-bottom: 48px;
     }
 
     .nav {
@@ -132,16 +138,14 @@
     }
 
     .hero-panel {
-      position: relative;
-      z-index: 2;
-      width: min(960px, calc(100% - 40px));
-      margin: 0 auto 36px;
-      padding: 20px 24px;
-      border: 1px solid rgba(255, 255, 255, 0.48);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.72);
-      backdrop-filter: blur(18px);
-      box-shadow: 0 22px 80px rgba(18, 42, 82, 0.2);
+      width: min(960px, 100%);
+      margin: 0 auto;
+      padding: 32px 40px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 24px 80px rgba(18, 42, 82, 0.08), 0 4px 12px rgba(18, 42, 82, 0.04);
     }
 
     .hero-panel h1 {
@@ -310,7 +314,11 @@
       }
 
       .hero-panel {
-        margin-bottom: 28px;
+        padding: 28px 24px;
+      }
+      .hero-panel-container {
+        margin-top: -48px;
+        margin-bottom: 32px;
       }
 
       .cards,
@@ -325,15 +333,15 @@
 
     @media (max-width: 560px) {
       .hero {
-        min-height: 520px;
+        min-height: 380px;
         background:
-          linear-gradient(180deg, rgba(8, 13, 32, 0.12), rgba(8, 13, 32, 0.18) 40%, rgba(247, 251, 255, 0.92) 80%, #f7fbff 100%),
+          linear-gradient(180deg, rgba(8, 13, 32, 0.12), rgba(8, 13, 32, 0.18) 40%, rgba(247, 251, 255, 0.7) 80%, rgba(247, 251, 255, 1) 100%),
           url("google_play_feature_graphic_backup.png") top center / 140% auto no-repeat,
-          #1c2d50; /* Base color for the lower part */
+          #1c2d50;
       }
 
       .hero::after {
-        height: 20%;
+        height: 30%;
       }
 
       .nav {
@@ -364,9 +372,8 @@
       }
 
       .hero-panel {
-        width: calc(100% - 28px);
-        padding: 20px;
-        margin-top: auto;
+        width: 100%;
+        padding: 24px 20px;
       }
 
       .section {
@@ -408,22 +415,23 @@
         <a class="button" href="#support">支援與聯絡</a>
       </div>
     </nav>
-
-    <div class="hero-panel" id="top">
-      <h1>圖片壓縮更輕巧，批次整理更省時。</h1>
-      <p>微影無損VividShrink 讓照片容量快速變小，支援格式轉換與多張圖片批次處理，適合日常分享、備份與上傳前整理。</p>
-      <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
-        <a href="https://apps.apple.com/app/id6780706795" target="_blank" rel="noopener noreferrer" aria-label="Download on the App Store" style="transition: opacity 0.2s; display: block;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
-          <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/zh-tw?size=250x83&amp;releaseDate=1276560000" alt="Download on the App Store" style="height: 48px; width: auto; display: block;">
-        </a>
-        <a href="#" aria-label="Get it on Google Play" style="transition: opacity 0.2s; display: block;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
-          <img src="https://play.google.com/intl/en_us/badges/static/images/badges/zh-tw_badge_web_generic.png" alt="Get it on Google Play" style="height: 60px; width: auto; display: block;">
-        </a>
-      </div>
-    </div>
   </header>
 
   <main>
+    <div class="hero-panel-container">
+      <div class="hero-panel" id="top">
+        <h1>圖片壓縮更輕巧，批次整理更省時。</h1>
+        <p>微影無損VividShrink 讓照片容量快速變小，支援格式轉換與多張圖片批次處理，適合日常分享、備份與上傳前整理。</p>
+        <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+          <a href="https://apps.apple.com/app/id6780706795" target="_blank" rel="noopener noreferrer" aria-label="Download on the App Store" style="transition: opacity 0.2s; display: block;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+            <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/zh-tw?size=250x83&amp;releaseDate=1276560000" alt="Download on the App Store" style="height: 48px; width: auto; display: block;">
+          </a>
+          <a href="#" aria-label="Get it on Google Play" style="transition: opacity 0.2s; display: block;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/zh-tw_badge_web_generic.png" alt="Get it on Google Play" style="height: 60px; width: auto; display: block;">
+          </a>
+        </div>
+      </div>
+    </div>
     <section class="section" id="features">
       <div class="wrap">
         <h2 class="section-title">特色介紹</h2>
