@@ -66,6 +66,9 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 @keyframes sword-swing-a{0%{transform:rotate(-25deg)}25%{transform:rotate(35deg)}50%{transform:rotate(-10deg)}100%{transform:rotate(0)}}@keyframes sword-swing-b{0%{transform:rotate(20deg)}25%{transform:rotate(-35deg)}50%{transform:rotate(10deg)}100%{transform:rotate(0)}}@keyframes sword-light-a{0%,12%{opacity:0;stroke-dashoffset:250}25%,40%{opacity:1;stroke-dashoffset:0}70%,100%{opacity:0;stroke-dashoffset:-250}}@keyframes sword-light-b{0%,12%{opacity:0;stroke-dashoffset:-250}25%,40%{opacity:1;stroke-dashoffset:0}70%,100%{opacity:0;stroke-dashoffset:250}}@keyframes enemy-recoil-a{28%{translate:8px -2px;filter:brightness(1.6)}55%{translate:-2px 0}100%{translate:0 0}}@keyframes enemy-recoil-b{28%{translate:8px -2px;filter:brightness(1.6)}55%{translate:-2px 0}100%{translate:0 0}}@keyframes impact-a{20%{opacity:.9;transform:scale(.3)}65%{opacity:0;transform:scale(1.5)}}@keyframes impact-b{20%{opacity:.9;transform:scale(.3)}65%{opacity:0;transform:scale(1.5)}}@keyframes battle-float{0%{opacity:0;translate:0 8px}20%{opacity:1}80%{opacity:1}100%{opacity:0;translate:0 -42px}}
 @media(max-width:760px){.battle-float{font-size:20px}.expedition-label{backdrop-filter:none}.ambient-mote:nth-child(n+9){display:none}}
 @media(prefers-reduced-motion:reduce){.expedition-window *,.encounter-scene *{animation:none!important;transition:none!important}.battle-float{animation:battle-accessible 1.3s linear forwards!important}@keyframes battle-accessible{to{opacity:0}}}
+
+/* Real melee poses: SVG joint coordinates avoid CSS transform-origin ambiguity. */
+.melee-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;overflow:visible}.melee-overlay *{animation:none!important}.has-melee-overlay>.expedition-art .expedition-hero,.has-melee-overlay>.expedition-art .expedition-enemy,.has-melee-overlay>.expedition-art .expedition-slash,.has-melee-overlay>.expedition-art .impact-ring{visibility:hidden}.expedition-label{bottom:3px;font-size:10px;padding:5px 8px}.expedition-label strong{font-size:11px}
 </style>
 </head>
 <body>
@@ -236,6 +239,7 @@ function resolveEncounter(action){
   if(action!=='retreat'&&!allowed[e.kind].includes(action))return;
   if(action==='aid'&&state.stones<30*(e.map+1))return toast('靈石不足，可選擇護送或撤退。');
   if(action==='escort'&&state.hp<=maxHP()*.08)return toast('氣血不足以護送，請選援助或撤退。');
+  if(action==='fight')playExpeditionSlash();
   // Consume the pending choice before rewards, so a double click cannot claim twice.
   j.pending=null;closeModal();
   const m=MAPS[e.map],r=REGIONS[e.map],mult=e.risk?1.6:1;
@@ -635,6 +639,7 @@ function autoTick(dt){
   const f=a.fight,m=MAPS[a.map];f.round++;
   const damage=Math.max(4,Math.round(power()*.16));
   f.hp-=damage;
+  playExpeditionSlash(f.hp<=0);
   if(f.hp>0)expeditionFeedback('−'+fmt(damage));
   if(f.hp<=0){
     const mult=f.elite?2:1,xp=Math.max(1,Math.round(Math.min(gatherValue()*(.75+a.map*.2)*(a.goal==='xp'?1.35:.8)*mult,NEED[[0,0,1,2,3,4][a.map]]*.025*mult))),money=Math.round(m.reward*.45*mult);
@@ -666,6 +671,26 @@ let autoViewKey='';
 const EXPEDITION_THEMES=[['#193e38','#102820','#bdd6a3','竹影幽徑'],['#243e43','#142b32','#b4d8d5','水澤迷霧'],['#50362b','#281d1a','#deb383','赤岩峽谷'],['#3d5260','#1e303b','#d5e4e6','雪嶺寒風'],['#203d54','#102433','#a8d4dd','東海潮聲'],['#383653','#201f34','#d1c3e1','天闕雲海']];
 function expeditionHero(){return `<ellipse cx="0" cy="5" rx="37" ry="8" fill="#000" opacity=".3"/><g class="hero-motion"><path class="hero-ribbon" d="M-6-91q-30 8-43-4 9 20 39 13m4 25q-34 32-49 17 12 27 48-7" fill="#608f89"/><path d="M-18-61q-16 24-20 51l-8 12q26 11 45 0 17 9 40-3-17-12-16-37L11-66Z" fill="#273e4a" stroke="#8aaca7" stroke-width="1.2"/><path d="M-14-61q-10 28-13 60L-4-6 6-58Z" fill="#90b9b0"/><path d="M7-63q12 18 13 37l9 26-19-5L-4-48Z" fill="#456e73"/><path d="m-7-57 7 35 12-36-11 12Z" fill="#e2e0c3"/><path d="m-22-20 34 3" stroke="#b7a779" stroke-width="5"/><path d="m-19-17-7 20m32-18 8 19" stroke="#1a2b35" stroke-width="8"/><path d="m-20-55-15 26 11 8 16-29" fill="#739c9a"/><path d="m-27-35 13 11" stroke="#c1d1be" stroke-width="2"/><path d="M-11-90q10-16 23 0l-2 21q-11 13-21-1Z" fill="#d4bb9c"/><path d="M-13-79q-9-29 10-30 23-1 21 25L6-98q-6 15-19 19" fill="#192b32"/><path d="M-8-105q-3-17 11-14 13 5 6 15" fill="#1e3238"/><path d="m-7-108 20 2" stroke="#adc3ae" stroke-width="2"/><path d="m4-84 7 1m-5 9 5-1" stroke="#756953" stroke-width="1.2"/><g class="hero-sword-arm"><path d="m12-58 20 18-9 14L3-48" fill="#8aacaa"/><path d="m22-36 12 4 4-6-9-6" fill="#d4bb9c"/><path d="m32-35 37-64 5-2-1 6-37 63Z" fill="#d7eee3" stroke="#7eaea8"/><path d="m28-42 15 9" stroke="#c6b583" stroke-width="4"/><path d="m29-30-7 12" stroke="#81774f" stroke-width="4"/><path d="m37-46 30-50" stroke="#fffbe3" stroke-width="1"/></g><path d="m-18-9 9-35m18 12 9 26m-27-48-7 23" stroke="#d3e4cc" stroke-opacity=".3" fill="none"/></g>`}
 function expeditionBeast(elite=false){const fur=elite?'#93675c':'#627f85',light=elite?'#c49676':'#a6bdb6';return `<ellipse cy="6" rx="48" ry="10" fill="#000" opacity=".3"/><g transform="scale(-1 1)"><g class="beast-motion"><path class="beast-tail" d="M-33-36q-47 8-48-26 14 15 30 5l20 4" fill="${fur}"/><path d="M-38-30q-8-19 7-31 16-15 47-7 15 5 23 27l-16 18-45 2Z" fill="${fur}" stroke="${light}" stroke-opacity=".3"/><path d="m-31-29-10 28 15 2 15-29m22 0L22 1h15l-5-36" fill="${fur}"/><path d="m-40 0 14 1m48 0h15" stroke="${light}" stroke-width="3"/><path d="M17-53 9-70l17 1-1-28 19 20 16-4-5 29 15 15-23 14-23-12-14-4Z" fill="${light}"/><path d="m27-79 1-12 10 14m12 6 6-5-3 13" fill="#3c4c51"/><path d="m21-53 17-5-7 14m9 12 13-7 14 2-17 11" fill="${fur}"/><path d="m33-61 8 4m6 0 8-1" stroke="${elite?'#ffd88d':'#c7f5cf'}" stroke-width="3"/><path d="m45-31 3 7 4-8m3-2 3 5 3-7" fill="#f1e9d1"/><path d="m-21-57 9 12-9 12m10-28 10 15-9 12m20-17 11 9-8 13" fill="none" stroke="${light}" stroke-opacity=".4" stroke-width="2"/>${elite?'<path d="m18-74-8-24 18 16m15 3 4-26 7 27" stroke="#e2cba0" stroke-width="4" fill="none"/>':''}</g></g>`}
+let meleeAnimationSerial=0;
+function playExpeditionSlash(finishing=false){
+ const host=$('expeditionWindow'),canvas=host?.querySelector('.expedition-canvas');if(!canvas||route!=='map'||document.hidden)return;
+ const source=canvas.querySelector('.expedition-art'),hero=source?.querySelector('.expedition-hero'),enemy=source?.querySelector('.expedition-enemy');if(!hero||!enemy)return;
+ const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 600 420');svg.setAttribute('preserveAspectRatio','xMidYMid slice');svg.classList.add('melee-overlay');svg.setAttribute('aria-hidden','true');
+ canvas.querySelector('.melee-overlay')?.remove();const h=hero.cloneNode(true),foe=enemy.cloneNode(true),arm=h.querySelector('.hero-sword-arm'),baseHero=h.getAttribute('transform'),baseEnemy=foe.getAttribute('transform');
+ svg.append(h,foe);const arc=document.createElementNS(ns,'path');arc.setAttribute('d','M345 203 Q450 275 359 352 Q403 275 345 203');arc.setAttribute('fill','#dffff0');arc.setAttribute('opacity','0');svg.append(arc);
+ const spark=document.createElementNS(ns,'path');spark.setAttribute('d','m405 260 8 22 27-7-18 19 13 22-24-9-14 21 1-27-25-8 25-7Z');spark.setAttribute('fill','#fff0be');spark.setAttribute('opacity','0');svg.append(spark);canvas.append(svg);canvas.classList.add('has-melee-overlay');
+ const serial=++meleeAnimationSerial,start=performance.now(),reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+ const frames=[[0,0,0],[.2,22,-60],[.43,145,112],[.62,130,102],[.82,45,28],[1,0,0]],lerp=(a,b,t)=>a+(b-a)*t;
+ function draw(now){
+  if(serial!==meleeAnimationSerial||!svg.isConnected||route!=='map'){svg.remove();if(!host.querySelector('.melee-overlay'))host.querySelector('.expedition-canvas')?.classList.remove('has-melee-overlay');return}
+  const progress=Math.min(1,(now-start)/850),pose=reduced?.43:progress;let n=0;while(n<frames.length-2&&pose>frames[n+1][0])n++;
+  const a=frames[n],b=frames[n+1],t=(pose-a[0])/(b[0]-a[0]),ease=t*t*(3-2*t),move=lerp(a[1],b[1],ease),angle=lerp(a[2],b[2],ease);
+  h.setAttribute('transform',baseHero+` translate(${move} 0)`);arm?.setAttribute('transform',`rotate(${angle} 12 -52)`);
+  const impact=pose>.38&&pose<.7;foe.setAttribute('transform',baseEnemy+` translate(${impact?10:0} 0)`);foe.style.opacity=finishing&&pose>.5?String(Math.max(0,1-(pose-.5)*2)):impact?'.65':'1';arc.setAttribute('opacity',pose>.27&&pose<.56?'.8':'0');spark.setAttribute('opacity',impact?'1':'0');
+  if(progress<1)requestAnimationFrame(draw);else{svg.remove();host.querySelector('.expedition-canvas')?.classList.remove('has-melee-overlay')}
+ }
+ draw(start);
+}
 function expeditionFeedback(text,type='damage'){
  const canvas=$('expeditionWindow')?.querySelector('.expedition-canvas');if(!canvas||route!=='map'||document.hidden)return;
  const label=document.createElement('span');label.className='battle-float '+type;label.textContent=text;canvas.append(label);setTimeout(()=>label.remove(),1400);
@@ -686,7 +711,7 @@ function expeditionAtmosphere(map){
 let expeditionViewKey='';
 function renderExpedition(){
  if(!state||!$('expeditionWindow'))return;const a=state.auto,e=state.journey.pending,i=state.location,fight=a.active&&!!a.fight,kind=e?.kind??-1,key=[i,kind,a.active,fight,a.fight?.elite,state.name].join('|');
- if(expeditionViewKey!==key){expeditionViewKey=key;$('expeditionWindow').innerHTML=`<div class="expedition-caption"><div><span class="tiny">${EXPEDITION_THEMES[i][3]}</span><h3>${MAPS[i].name}</h3></div><span id="expeditionMode" class="tag"></span></div><div class="expedition-canvas">${expeditionArtwork(i,kind,fight,a.fight?.elite)}<div class="expedition-label player"><strong>${esc(state.name)}</strong><span id="expeditionHP"></span><div class="bar hpbar"><span id="expeditionHPBar"></span></div></div><div class="expedition-label target ${kind<0&&!fight?'hidden':''}"><strong>${e?kind===1?REGIONS[i].enemy:kind===5?REGIONS[i].sites[3]:ENCOUNTERS[kind]:fight?(a.fight.elite?'精英 · ':'')+REGIONS[i].enemy:''}</strong><span id="expeditionEnemyHP"></span><div class="bar ${!fight?'hidden':''}"><span id="expeditionEnemyBar"></span></div></div></div><div class="expedition-bottom"><p id="expeditionNarration"></p><div id="expeditionActions" class="travel-actions"></div></div>`}
+ if(expeditionViewKey!==key){const meleeLayer=$('expeditionWindow').querySelector('.melee-overlay');expeditionViewKey=key;$('expeditionWindow').innerHTML=`<div class="expedition-caption"><div><span class="tiny">${EXPEDITION_THEMES[i][3]}</span><h3>${MAPS[i].name}</h3></div><span id="expeditionMode" class="tag"></span></div><div class="expedition-canvas">${expeditionArtwork(i,kind,fight,a.fight?.elite)}<div class="expedition-label player"><strong>${esc(state.name)}</strong><span id="expeditionHP"></span><div class="bar hpbar"><span id="expeditionHPBar"></span></div></div><div class="expedition-label target ${kind<0&&!fight?'hidden':''}"><strong>${e?kind===1?REGIONS[i].enemy:kind===5?REGIONS[i].sites[3]:ENCOUNTERS[kind]:fight?(a.fight.elite?'精英 · ':'')+REGIONS[i].enemy:''}</strong><span id="expeditionEnemyHP"></span><div class="bar ${!fight?'hidden':''}"><span id="expeditionEnemyBar"></span></div></div></div><div class="expedition-bottom"><p id="expeditionNarration"></p><div id="expeditionActions" class="travel-actions"></div></div>`;if(meleeLayer){const c=$('expeditionWindow').querySelector('.expedition-canvas');c.append(meleeLayer);c.classList.add('has-melee-overlay')}}
  const el=$('expeditionWindow');el.classList.toggle('strike-a',fight&&a.fight.round>0&&a.fight.round%2===0);el.classList.toggle('strike-b',fight&&a.fight.round>0&&a.fight.round%2===1);el.classList.toggle('is-patrolling',a.active&&!fight);
  setText('expeditionMode',e?'探索事件':fight?'交戰中':a.active?'自動巡行':'整裝待發');setText('expeditionHP',`氣血 ${fmt(state.hp)} / ${fmt(maxHP())}`);$('expeditionHPBar').style.width=`${Math.min(100,state.hp/maxHP()*100)}%`;
  setText('expeditionEnemyHP',fight?`${fmt(a.fight.hp)} / ${fmt(a.fight.max)}`:kind===5?'秘境首領':kind===1?'選擇交鋒或繞行':'等待你的選擇');$('expeditionEnemyBar').style.width=fight?`${a.fight.hp/a.fight.max*100}%`:'0%';
