@@ -313,9 +313,9 @@ const PAINTED_ITEM_SLOTS={heal:0,qi:1,ward:2,herb:3,weapon:4,robe:5,charm:6,ring
 function pageCutout(key,css,label){const m=PAGE_ART_META[key],box=[...m.box];if(key==='merchant')box[3]=Math.round(box[3]*.64);return `<svg class="${css}" viewBox="${box.join(' ')}" role="img" aria-label="${label}" preserveAspectRatio="xMidYMax meet"><image href="${PAGE_ART+key}.webp" width="${m.width}" height="${m.height}"/></svg>`}
 function paintedItemIcon(kind,rare){const n=PAINTED_ITEM_SLOTS[kind];if(n===undefined)return '';const m=PAGE_ART_META.items,cw=m.width/4,ch=m.height/3,x=n%4*cw,y=Math.floor(n/4)*ch;return `<svg class="bag-icon painted-item ${rare?'rare-icon':''}" viewBox="${x} ${y} ${cw} ${ch}" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><image href="${PAGE_ART}items.webp" width="${m.width}" height="${m.height}"/></svg>`}
 function chosenGender(){return state?.gender==='female'?'female':state?'male':draftGender}
-function heroAsset(gender=chosenGender()){return gender==='female'?'assets/characters-v1/female-hero.webp':'assets/qingzhou-v1/hero.webp'}
-function paintedCharacter(gender=chosenGender()){return `<svg class="character-illustration" viewBox="${gender==='female'?'110 0 510 512':'140 0 610 520'}" role="img" aria-label="${gender==='female'?'女修':'男修'}全身立繪" style="overflow:hidden"><image href="${heroAsset(gender)}" width="1536" height="1024"/></svg>`}
-function characterPortrait(gender=chosenGender()){return `<svg class="portrait-medallion" viewBox="${gender==='female'?'245 0 240 220':'260 12 330 280'}" role="img" aria-label="${gender==='female'?'女修':'男修'}肖像"><image href="${heroAsset(gender)}" width="1536" height="1024"/></svg>`}
+function heroAsset(gender=chosenGender()){return gender==='female'?'assets/characters-v1/female-hero-v2.webp':'assets/qingzhou-v1/hero.webp'}
+function paintedCharacter(gender=chosenGender()){return `<svg class="character-illustration" viewBox="${gender==='female'?'70 0 620 512':'140 0 610 520'}" role="img" aria-label="${gender==='female'?'女修':'男修'}全身立繪" style="overflow:hidden"><image href="${heroAsset(gender)}" width="1536" height="1024"/></svg>`}
+function characterPortrait(gender=chosenGender()){return `<svg class="portrait-medallion" viewBox="${gender==='female'?'280 0 230 220':'260 12 330 280'}" role="img" aria-label="${gender==='female'?'女修':'男修'}肖像"><image href="${heroAsset(gender)}" width="1536" height="1024"/></svg>`}
 let characterArtKey='';
 function renderCharacterArt(){
  const gender=chosenGender();if(characterArtKey===gender)return;characterArtKey=gender;
@@ -733,8 +733,9 @@ let autoViewKey='';
 const EXPEDITION_THEMES=[['#193e38','#102820','#bdd6a3','竹海晨光'],['#243e43','#142b32','#b4d8d5','煙波迷霧'],['#203d54','#102433','#a8d4dd','滄海龍宮'],['#3d5260','#1e303b','#d5e4e6','崑崙飛雪'],['#38304b','#20182c','#c7b1df','古域魂燈'],['#454255','#262334','#e4d4b1','雲海仙庭']];
 const QINGZHOU_ART='assets/qingzhou-v1/';
 function qingzhouHero(){
- const cells=chosenGender()==='female'?[[0,0,768,512,-164,322],[768,0,768,512,-164,322],[0,520,880,504,-164,369],[880,512,656,512,-117,275]]:[[0,0,768,520,-172,315],[768,0,768,520,-170,315],[0,520,925,504,-153,379],[925,520,611,504,-120,250]];
- return `<ellipse cy="1" rx="45" ry="8" fill="#0b1716" opacity=".42"/><g class="painted-hero">${cells.map(([x,y,w,h,left,width],n)=>`<svg class="painted-pose" data-pose="${n}" x="${left}" y="-215" width="${width}" height="215" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="none" style="display:${n===0?'inline':'none'}"><image href="${heroAsset()}" width="1536" height="1024"/></svg>`).join('')}</g>`;
+ const female=chosenGender()==='female',height=female?235:215;
+ const cells=female?[[0,0,768,512,-184,352.5],[768,0,768,512,-184,352.5],[0,512,925,512,-184,424.5],[835,512,701,512,-121.3,321.8]]:[[0,0,768,520,-172,315],[768,0,768,520,-170,315],[0,520,925,504,-153,379],[925,520,611,504,-120,250]];
+ return `<ellipse cy="1" rx="45" ry="8" fill="#0b1716" opacity=".42"/><g class="painted-hero" data-character="${female?'female':'male'}">${cells.map(([x,y,w,h,left,width],n)=>`<svg class="painted-pose" data-pose="${n}" x="${left}" y="-${height}" width="${width}" height="${height}" viewBox="${x} ${y} ${w} ${h}" preserveAspectRatio="none" style="display:${n===0?'inline':'none'}"><image href="${heroAsset()}" width="1536" height="1024" ${female&&n===3?'style="clip-path:polygon(60.22% 50%,100% 50%,100% 100%,54.36% 100%,54.36% 70.8%,60.22% 68.36%)"':''}/></svg>`).join('')}</g>`;
 }
 function qingzhouWolf(elite=false){return `<ellipse cy="1" rx="79" ry="9" fill="#10221b" opacity=".45"/><g class="painted-wolf ${elite?'painted-elite':''}"><image href="${QINGZHOU_ART}wolf.webp" x="-108" y="-153" width="216" height="153" preserveAspectRatio="xMidYMax meet"/></g>`}
 // One shared four-pose swordsman, with region-specific painted environments and enemies.
