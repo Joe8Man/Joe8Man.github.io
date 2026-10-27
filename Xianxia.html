@@ -899,8 +899,15 @@ function playExpeditionSlash(finishing=false,hostId='expeditionWindow'){
  const source=canvas.querySelector('.expedition-art'),hero=source?.querySelector('.expedition-hero'),enemy=source?.querySelector('.expedition-enemy');if(!hero||!enemy)return;
  const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 600 420');svg.setAttribute('preserveAspectRatio','xMidYMid slice');svg.classList.add('melee-overlay');svg.setAttribute('aria-hidden','true');
  canvas.querySelector('.melee-overlay')?.remove();const h=hero.cloneNode(true),foe=enemy.cloneNode(true),arm=h.querySelector('.hero-sword-arm'),baseHero=h.getAttribute('transform'),baseEnemy=foe.getAttribute('transform');
- svg.append(h,foe);const arc=document.createElementNS(ns,'path');arc.setAttribute('d','M345 203 Q450 275 359 352 Q403 275 345 203');arc.setAttribute('fill','#dffff0');arc.setAttribute('opacity','0');svg.append(arc);
- const spark=document.createElementNS(ns,'path');spark.setAttribute('d','m405 260 8 22 27-7-18 19 13 22-24-9-14 21 1-27-25-8 25-7Z');spark.setAttribute('fill','#fff0be');spark.setAttribute('opacity','0');svg.append(spark);canvas.append(svg);canvas.classList.add('has-melee-overlay');
+ svg.append(h,foe);
+ const uid='blade-hit-'+(meleeAnimationSerial+1),defs=document.createElementNS(ns,'defs');
+ defs.innerHTML=`<radialGradient id="${uid}-glow"><stop stop-color="#fffde3" stop-opacity=".95"/><stop offset=".22" stop-color="#e1f6cb" stop-opacity=".65"/><stop offset="1" stop-color="#a4e4c8" stop-opacity="0"/></radialGradient><linearGradient id="${uid}-trail" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b6e3cc" stop-opacity="0"/><stop offset=".52" stop-color="#efffee" stop-opacity=".85"/><stop offset="1" stop-color="#d5efd4" stop-opacity="0"/></linearGradient>`;svg.append(defs);
+ const arc=document.createElementNS(ns,'g');arc.classList.add('blade-trails');arc.innerHTML=`<path d="M344 207Q435 270 360 348" fill="none" stroke="url(#${uid}-trail)" stroke-width="4" stroke-linecap="round"/><path d="M338 218Q420 270 354 337" fill="none" stroke="#d0f1dc" stroke-width="1" stroke-opacity=".35"/>`;arc.setAttribute('opacity','0');svg.append(arc);
+ const spark=document.createElementNS(ns,'g');spark.dataset.hitEffect='blade-impact';spark.setAttribute('opacity','0');
+ const glow=document.createElementNS(ns,'ellipse');glow.setAttribute('cx','407');glow.setAttribute('cy','274');glow.setAttribute('rx','27');glow.setAttribute('ry','16');glow.setAttribute('fill',`url(#${uid}-glow)`);spark.append(glow);
+ const ripple=document.createElementNS(ns,'ellipse');ripple.setAttribute('cx','407');ripple.setAttribute('cy','274');ripple.setAttribute('fill','none');ripple.setAttribute('stroke','#cbedd6');ripple.setAttribute('stroke-width','1');ripple.setAttribute('transform','rotate(-24 407 274)');spark.append(ripple);
+ const particles=[[-58,42],[-24,63],[9,47],[38,34],[117,25],[158,32]].map(([angle,speed],i)=>{const line=document.createElementNS(ns,'line');line.setAttribute('stroke',i%3===0?'#fff5c1':'#d5f6dd');line.setAttribute('stroke-width',i%2===0?'1.8':'1.1');line.setAttribute('stroke-linecap','round');spark.append(line);return {line,angle:angle*Math.PI/180,speed}});
+ svg.append(spark);canvas.append(svg);canvas.classList.add('has-melee-overlay');
  const serial=++meleeAnimationSerial,start=performance.now(),reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  const frames=[[0,0,0],[.2,22,-60],[.43,145,112],[.62,130,102],[.82,45,28],[1,0,0]],lerp=(a,b,t)=>a+(b-a)*t;
  function draw(now){
@@ -908,7 +915,12 @@ function playExpeditionSlash(finishing=false,hostId='expeditionWindow'){
   const progress=Math.min(1,(now-start)/850),pose=reduced?.43:progress;let n=0;while(n<frames.length-2&&pose>frames[n+1][0])n++;
   const a=frames[n],b=frames[n+1],t=(pose-a[0])/(b[0]-a[0]),ease=t*t*(3-2*t),move=lerp(a[1],b[1],ease),angle=lerp(a[2],b[2],ease);
   const painted=h.querySelector('.painted-hero');h.setAttribute('transform',baseHero+` translate(${painted?move*.5:move} 0)`);arm?.setAttribute('transform',`rotate(${angle} 12 -52)`);if(painted){const frame=pose<.12?0:pose<.33?1:pose<.7?2:3;painted.querySelectorAll('[data-pose]').forEach(el=>el.style.display=Number(el.dataset.pose)===frame?'inline':'none')}
-  const impact=pose>.38&&pose<.7;foe.setAttribute('transform',baseEnemy+` translate(${impact?10:0} 0)`);foe.style.opacity=finishing&&pose>.5?String(Math.max(0,1-(pose-.5)*2)):impact?'.65':'1';arc.setAttribute('opacity',pose>.27&&pose<.56?'.8':'0');spark.setAttribute('opacity',impact?'1':'0');
+  const impact=pose>.38&&pose<.78,hitTime=Math.max(0,Math.min(1,(pose-.38)/.4)),recoil=impact?Math.sin(Math.min(1,hitTime*2)*Math.PI)*9:0;
+  foe.setAttribute('transform',baseEnemy+` translate(${reduced?0:recoil} 0)`);foe.style.opacity=finishing&&pose>.5?String(Math.max(0,1-(pose-.5)*2)):'1';foe.style.filter=impact&&!reduced?`brightness(${1+.22*Math.max(0,1-hitTime*4)})`:'';
+  arc.setAttribute('opacity',pose>.27&&pose<.56?String(.65*Math.sin((pose-.27)/.29*Math.PI)):'0');spark.setAttribute('opacity',impact?'1':'0');
+  glow.setAttribute('opacity',String(reduced?.24:Math.max(0,1-hitTime*4)));glow.setAttribute('rx',String(reduced?12:19+hitTime*23));glow.setAttribute('ry',String(reduced?6:10+hitTime*9));
+  ripple.setAttribute('rx',String(10+hitTime*45));ripple.setAttribute('ry',String(5+hitTime*18));ripple.setAttribute('opacity',String(reduced?0:.26*(1-hitTime)*(1-hitTime)));
+  particles.forEach(({line,angle,speed},i)=>{const t=hitTime,tail=Math.max(0,t-.09),x=407+Math.cos(angle)*speed*t,y=274+Math.sin(angle)*speed*t+12*t*t;line.setAttribute('x1',String(407+Math.cos(angle)*speed*tail));line.setAttribute('y1',String(274+Math.sin(angle)*speed*tail+12*tail*tail));line.setAttribute('x2',String(x));line.setAttribute('y2',String(y));line.setAttribute('opacity',String(reduced?0:Math.max(0,1-t/(.65+i*.05))))});
   if(progress<1)requestAnimationFrame(draw);else{svg.remove();host.querySelector('.expedition-canvas')?.classList.remove('has-melee-overlay')}
  }
  draw(start);
