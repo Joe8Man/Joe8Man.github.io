@@ -127,7 +127,7 @@ const FEMALE_NAMES=['沈映月','葉清霜','洛知微','蘇聽雪','顧晚棠',
 let draftGender='male';
 const NAMES=['厲飛雨','韓立','玄真子','洛清秋','沈長生','顧青辭','葉知微','陸離','白雲舟','蘇忘塵','林聽雪','楚觀瀾'];
 const STATS=['根骨','悟性','神識','福緣','真氣','身法'];
-const ROOTS=[{name:'五行雜靈根',mul:1,desc:'五行微瀾，厚積而薄發'},{name:'三系靈根',mul:1.25,desc:'三脈相生，吐納漸入佳境'},{name:'雙系靈根',mul:1.5,desc:'陰陽交匯，靈氣自來'},{name:'天靈根',mul:1.9,desc:'一脈通天，仙路可期'},{name:'變異冰靈根',mul:2.15,desc:'玄冰無垢，心若明鏡'},{name:'變異雷靈根',mul:2.5,desc:'九霄雷動，天生近道'},{name:'無靈根',mul:.85,desc:'難循常法，尋得浮仙殘劍後修行另享 ×1.6'}];
+const ROOTS=[{name:'五行雜靈根',mul:1,desc:'五行微瀾，厚積而薄發'},{name:'三系靈根',mul:1.25,desc:'三脈相生，吐納漸入佳境'},{name:'雙系靈根',mul:1.5,desc:'陰陽交匯，靈氣自來'},{name:'天靈根',mul:1.9,desc:'一脈通天，仙路可期'},{name:'變異冰靈根',mul:2.15,desc:'玄冰無垢，心若明鏡'},{name:'變異雷靈根',mul:2.5,desc:'九霄雷動，天生近道'},{name:'無靈根',mul:.85,desc:'難循常法，尋得照玄殘劍後修行另享 ×1.6'}];
 const BODIES=[{name:'凡人軀',mul:1,power:0},{name:'青木靈體',mul:1.2,power:30},{name:'先天道體',mul:1.4,power:65},{name:'荒古聖體',mul:1.65,power:100},{name:'至尊骨',mul:2,power:160}];
 // Progression uses drama-inspired concepts; stage counts and balance are game adaptations.
 const REALMS=['煉氣','築基','金丹','元嬰','元神','洞虛','涅槃','準聖','聖人','準帝','大帝'];
@@ -215,11 +215,11 @@ const SWORD_FORMS=[
  {at:5,name:'殘鋒續接',desc:'裂口漸合，斷刃重新延伸。靈力開始沿著修復的金線流轉。',color:'#c8bc88'},
  {at:10,name:'青紋初醒',desc:'劍身完整，青玉靈紋逐一甦醒，吐息間隱有劍鳴。',color:'#90d8ba'},
  {at:15,name:'劍靈通明',desc:'玉光入刃，靈與劍共鳴。距離仙劍圓成只差最後的溫養。',color:'#b1e9da'},
- {at:20,name:'浮仙劍 · 圓成',desc:'殘鋒重鑄，仙劍歸真。你親手溫養的本命法寶已經完整，從此與道心相伴。',color:'#f2d895'}
+ {at:20,name:'照玄仙劍 · 圓成',desc:'殘鋒重鑄，仙劍歸真。你親手溫養的本命法寶已經完整，從此與道心相伴。',color:'#f2d895'}
 ];
 let artifactFeedingUntil=0;
 function swordForm(level=state.artifact.level){return Math.min(4,Math.floor(level/5))}
-function artifactName(){return state.artifact.level>=20?'浮仙劍':'浮仙殘劍'}
+function artifactName(){return state.artifact.level>=20?'照玄仙劍':'照玄殘劍'}
 function artifactIcon(form=swordForm(),css='bag-icon artifact-icon'){
  const w=1536/5;return `<svg class="${css}" viewBox="${form*w} 0 ${w} 1024" role="img" aria-label="${SWORD_FORMS[form].name}" preserveAspectRatio="xMidYMid meet" style="overflow:hidden"><image href="assets/artifact-v1/evolution-refined.webp" width="1536" height="1024" style="clip-path:inset(0 ${80-form*20}% 0 ${form*20}%)"/></svg>`;
 }
@@ -235,7 +235,7 @@ function renderArtifact(){
 function playArtifactFeed(oldLevel){
  const changed=swordForm(oldLevel)!==swordForm(),host=$('artifactPanel');
  if(host){const sparks=document.createElement('div');sparks.className='artifact-feed-sparks';sparks.setAttribute('aria-hidden','true');sparks.innerHTML=Array.from({length:8},(_,i)=>`<i style="--angle:${i*45}deg;--delay:${i*.04}s"></i>`).join('');host.querySelector('.artifact-shrine')?.append(sparks);setTimeout(()=>sparks.remove(),1300);host.querySelector('.artifact-shrine')?.classList.add(changed?'artifact-evolving':'artifact-feeding');const msg=document.createElement('div');msg.className='artifact-feed-message';msg.textContent=state.artifact.level===20?'仙劍圓成 · 培養完成':changed?'形態蛻變 · '+SWORD_FORMS[swordForm()].name:'溫養成功 · 第 '+state.artifact.level+' 階';host.querySelector('.artifact-shrine')?.append(msg);setTimeout(()=>msg.remove(),1800)}
- if(changed){log(`本命法寶蛻變為「${SWORD_FORMS[swordForm()].name}」。${state.artifact.level===20?'二十階圓滿，浮仙劍重鑄完成！':'劍靈與你更為親近。'}`,'蛻變');toast(state.artifact.level===20?'浮仙劍重鑄完成！':SWORD_FORMS[swordForm()].name+' · 形態蛻變')}
+ if(changed){log(`本命法寶蛻變為「${SWORD_FORMS[swordForm()].name}」。${state.artifact.level===20?'二十階圓滿，照玄仙劍重鑄完成！':'劍靈與你更為親近。'}`,'蛻變');toast(state.artifact.level===20?'照玄仙劍重鑄完成！':SWORD_FORMS[swordForm()].name+' · 形態蛻變')}
 }
 
 const OLD_NEED=[160,360,720,1400,2600,5000,9000,16000,30000,60000,120000,240000,480000];
@@ -390,7 +390,7 @@ function resolveEncounter(action){
   const xp=Math.max(1,Math.round(Math.min(needXP()*(.025+e.map*.005),NEED[[0,0,1,2,3,4][e.map]]*.06)*mult)),money=Math.round(m.reward*mult);
   if(success){
     if(e.kind<4)j.seen[e.map]|=1<<e.kind;
-    if(action==='sword'){state.artifact.unlocked=true;state.materials.fragment+=2;addXP(xp);text='你握住浮仙殘劍，靈力沿劍身流入丹田。揮劍修行開啟，獲殘片 2。'}
+    if(action==='sword'){state.artifact.unlocked=true;state.materials.fragment+=2;addXP(xp);text='你握住照玄殘劍，靈力沿劍身流入丹田。揮劍修行開啟，獲殘片 2。'}
     if(action==='harvest'){state.items.herb+=e.risk?2:1;state.materials.crystal++;text=`採得${r.herb}，獲靈草 ${e.risk?2:1}、靈晶 1。`}
     if(action==='absorb'){addXP(xp*2);state.materials.insight++;text=`煉化${r.herb}，修為 +${fmt(xp*2)}、感悟 1。`}
     if(action==='fight'){state.stones+=money;addXP(xp);const damage=maxHP()*(e.kind===5?.12:.06)*(e.risk?1.5:1)*(1-(martial?.defense||0));state.hp=Math.max(1,state.hp-damage);text=`擊退${e.kind===5?r.sites[3]:r.enemy}，獲靈石 ${money}、修為 ${fmt(xp)}，損失 ${Math.round(damage)} 氣血。`}
@@ -697,7 +697,7 @@ function buttonState(id,reason,label){const el=$(id);if(!el)return;el.disabled=!
 function costReason(cost){return state.stones<cost?`尚缺 ${fmt(cost-state.stones)} 靈石`:''}
 function buyingReason(cost){return combat?'宗主戰鬥中，無法購物':costReason(cost)}
 function resourceGuide(kind){
-  const info={crystal:['靈晶','跨境突破、重塑道基','秘境通關、採集奇遇、旅人援助，或當地商店的限量靈晶'],insight:['感悟','煉體、養神、天道築基','參悟古陣、煉化靈植、完成秘境，或自動歷練的材料採集'],fragment:['殘片','淬煉浮仙殘劍','古陣遺跡、秘境通關，或自動歷練的材料採集']}[kind];
+  const info={crystal:['靈晶','跨境突破、重塑道基','秘境通關、採集奇遇、旅人援助，或當地商店的限量靈晶'],insight:['感悟','煉體、養神、天道築基','參悟古陣、煉化靈植、完成秘境，或自動歷練的材料採集'],fragment:['殘片','淬煉照玄殘劍','古陣遺跡、秘境通關，或自動歷練的材料採集']}[kind];
   if(!info)return;
   showModal('resource',`<h2 id="modalTitle">${info[0]}怎麼取得？</h2><p>目前持有 ${state.materials[kind]}，用於${info[1]}。</p><p>${info[2]}。</p><div class="modal-actions"><button class="btn" data-go="map" data-dismiss="true">前往探索</button>${kind==='crystal'?'<button class="btn ghost" data-go="shop" data-dismiss="true">查看商店</button>':''}</div>`);
 }
@@ -731,7 +731,7 @@ function renderCultivation(){
 function goalInfo(){
   if(state.journey.pending)return {title:'有一段探險等待你的決定',text:'事件已暫存。你仍可修行或整理裝備，返回後繼續選擇。',action:'encounter',label:'接續事件'};
   if(state.auto.active)return {title:'角色正在自動歷練',text:'收穫會自動累積；換裝或跨境前，可先使用上方的停止歷練按鈕。',action:'guideAuto',label:'查看歷練'};
-  if(!state.artifact.unlocked)return {title:'第一個目標：尋得浮仙殘劍',text:'到青州竹林手動探索一次，開啟揮劍修行與自動歷練。',action:'guideSword',label:'前往竹林'};
+  if(!state.artifact.unlocked)return {title:'第一個目標：尋得照玄殘劍',text:'到青州竹林手動探索一次，開啟揮劍修行與自動歷練。',action:'guideSword',label:'前往竹林'};
   const gear=state.ownedGear.find(id=>!state.equipment[GEAR[id].slot]);
   if(gear)return {title:`你有尚未穿戴的${GEAR[gear].name}`,text:'到角色頁比較能力，或直接穿戴。',action:'guideGear',label:'查看裝備'};
   if(state.xp>=needXP()&&state.stage<LIMITS[state.realm]-1)return {title:'修為已滿，可以提升一階',text:state.stage>=8?'也已開放跨境；你可以先看條件，再決定是否繼續蛻變。':'小境提升必定成功，多餘修為會保留。',action:'guideCultivation',label:'查看修行'};
@@ -788,7 +788,7 @@ function breakthrough(){
 
 function autoDefaults(){return {active:false,map:0,goal:'xp',policy:'safe',healAt:.35,useHeal:true,clock:0,fight:null,kills:0,xp:0,stones:0,materials:0,gear:0,reason:'尚未開始歷練',history:[]}}
 function autoUnlocked(i=state.location){return state.artifact.unlocked&&(state.journey.progress[i]>0||state.journey.clears[i]>0||state.journey.seen[i]>0)}
-function autoStartReason(){return combat?'請先完成宗主戰鬥':state.journey.pending?'先處理或撤退眼前的探索事件':!state.artifact.unlocked?'先在青州竹林手動探索，尋得浮仙殘劍':!autoUnlocked()?'先在此地完成一次手動探索':!travelReady(state.location)?'目前境界或戰力不足以在此地歷練':state.hp<maxHP()*.25?'氣血低於 25%，先療傷':''}
+function autoStartReason(){return combat?'請先完成宗主戰鬥':state.journey.pending?'先處理或撤退眼前的探索事件':!state.artifact.unlocked?'先在青州竹林手動探索，尋得照玄殘劍':!autoUnlocked()?'先在此地完成一次手動探索':!travelReady(state.location)?'目前境界或戰力不足以在此地歷練':state.hp<maxHP()*.25?'氣血低於 25%，先療傷':''}
 function autoHistory(text){const a=state.auto;a.history.push(text);a.history=a.history.slice(-8)}
 function beginAuto(){
   if(state.auto.active)return;
@@ -1061,7 +1061,7 @@ $('chatForm').onsubmit=e=>{e.preventDefault();const input=$('chatInput'),text=in
 // Inventory keeps the existing save schema. All transactions recheck stock before settlement.
 let bagFilter='all',bagUnworn=false,inventoryTransaction=null,inventorySerial=0;
 const BAG_FILTERS={all:'全部',gear:'裝備',item:'丹藥／靈物',material:'材料'};
-const BAG_MATERIALS={crystal:{name:'靈晶',base:120,desc:'跨境突破與重塑道基的材料。出售前請確認突破需求。',icon:'crystal'},insight:{name:'感悟',base:0,protected:true,desc:'修行心得，用於煉體、養神與重塑道基；屬於角色累積，不能販賣或丟棄。',icon:'insight'},fragment:{name:'殘劍碎片',base:60,desc:'淬煉浮仙殘劍的材料。出售前請確認淬煉需求。',icon:'fragment'}};
+const BAG_MATERIALS={crystal:{name:'靈晶',base:120,desc:'跨境突破與重塑道基的材料。出售前請確認突破需求。',icon:'crystal'},insight:{name:'感悟',base:0,protected:true,desc:'修行心得，用於煉體、養神與重塑道基；屬於角色累積，不能販賣或丟棄。',icon:'insight'},fragment:{name:'殘劍碎片',base:60,desc:'淬煉照玄殘劍的材料。出售前請確認淬煉需求。',icon:'fragment'}};
 function inventoryIcon(kind,rare=false){
  if(kind==='sword')return artifactIcon();
  const painted=paintedItemIcon(kind,rare);if(painted)return painted;
