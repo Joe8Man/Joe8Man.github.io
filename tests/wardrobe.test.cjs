@@ -19,7 +19,7 @@ state.contribution=1000;buyRobe(outer);check(state.contribution===1000&&state.wa
 wearRobe(elder);check(currentOutfit()===null,'unowned blocked');
 wearRobe(outer);check(currentOutfit().id===outer,'wear');
 const base=heroLayers('male',null),male=heroLayers('male'),female=heroLayers('female');
-check(!base.includes('feColorMatrix')&&male.includes('feColorMatrix')&&female.includes('female-hero-v2.webp'),'default and both genders');
+check(!base.includes('feColorMatrix')&&male.includes('feColorMatrix')&&female.includes('wardrobe-v2/female.webp'),'default and both genders');
 check(qingzhouHero().includes('feColorMatrix'),'combat uses robe');
 wearRobe('default');check(currentOutfit()===null&&state.wardrobe.owned.includes(outer),'unequip retains collection');
 state.rank=4;state.contribution=10000;buyRobe(elder);wearRobe(elder);check(currentOutfit().id===elder,'higher rank purchases lower');
@@ -31,8 +31,9 @@ draft={root:0,body:0,stats:[10,10,10,10,10,10]};state=initial();check(validSave(
 for(let sect=0;sect<6;sect++)for(let rank=0;rank<5;rank++){
  const id='sect-'+sect+'-robe-'+rank;state={sect,rank,contribution:ROBE_PRICES[rank],wardrobe:wardrobeDefaults()};buyRobe(id);wearRobe(id);
  check(state.contribution===0&&currentOutfit()?.id===id,'every sect and rank can purchase and wear');
- for(const gender of ['male','female']){const layer=heroLayers(gender);check(layer.includes(ROBE_SEALS[sect])&&layer.includes(heroAsset(gender)),'every gender has sect embroidery');check(layer.match(/values="([^"]+)"/)[1].split(' ').length===20,'valid dye matrix')}
+ for(const gender of ['male','female']){const layer=heroLayers(gender);check(layer.includes(ROBE_SEALS[sect])&&layer.includes('wardrobe-v2/'+gender+'.webp'),'every gender has sect embroidery');check(layer.includes('-crop')&&layer.includes(RANK_ATLAS_META[gender].clips[rank][0]),'sprite clipped within own cell to prevent neighbors bleeding');check(sanctuaryCharacter(gender).includes('data-costume-pose="4"')&&sanctuaryCharacter(gender).includes(id),'sanctuary uses equipped rank and seated pose');check(costumeSVG(gender,currentOutfit()).includes('viewBox="'+robeCell(gender,currentOutfit()).join(' ')+'"'),'rank selects its own sprite region');check(layer.match(/values="([^"]+)"/)[1].split(' ').length===20,'valid dye matrix')}
 }
+state={sect:null,rank:0,wardrobe:wardrobeDefaults()};check(sanctuaryCharacter('female').includes('female-meditator.webp'),'sectless female retains original meditation art');check(sanctuaryCharacter('male').includes('pages-v1/meditator.webp'),'sectless male retains original meditation art');
 console.log(tests+' wardrobe behavior and save checks passed');
 `,sandbox);
 new vm.Script(html.split('<script>').pop().split('</script>')[0]);
