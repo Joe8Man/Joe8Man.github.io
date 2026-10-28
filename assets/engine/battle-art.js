@@ -74,3 +74,13 @@ export function playTechnique(scene,{actor,enemy,action,presentation={},onImpact
  scene.time.delayedCall(still?330:1030,()=>{if(presentation.harm>0&&enemy){if(!still)scene.tweens.add({targets:enemy,x:enemy.x-105,duration:140,yoyo:true,hold:60,ease:'Cubic.easeInOut'});actor.hit();onCounter(style);}});
  return {duration,style};
 }
+
+// Immediate effects for real-time combat; damage timing is owned by the hunt clock.
+export function playHuntEffect(scene,{actor,enemy,id='normal',type,phase='impact',critical=false}){
+ const style=techniqueStyle(id,type),hero={x:actor.root.x,y:actor.root.y},x=enemy?.x??730,y=(enemy?.y??425)-120;
+ const travelling=['swords','summon'].includes(style.family);
+ if(reducedMotion()){if(phase==='impact')ring(scene,style.self?hero.x:x,style.self?hero.y-90:y,style.colors[0],45,25,200);return style;}
+ if((phase==='windup')===travelling)techniqueEffect(scene,style,x,y,hero);
+ if(phase==='impact'&&critical){glow(scene,x,y,0xffdc93,170,.6,280);sparks(scene,x,y,0xffe5a6,18,110);}
+ return style;
+}
