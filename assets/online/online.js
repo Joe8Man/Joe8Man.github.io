@@ -33,3 +33,5 @@ async function perform(action){
 }
 dialog.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.online==='close'){dialog.close();return;}if(busy)return;busy=true;b.disabled=true;try{await init();if(b.dataset.opponent){const {data,error}=await client.rpc('xianxia_spar',{opponent:b.dataset.opponent});if(error)throw error;dialog.querySelector('#onlineBattle').innerHTML=`<h3>${h(data.selfName)} 對 ${h(data.opponentName)} · ${{win:'勝出',loss:'落敗',draw:'平手'}[data.result]}</h3><p>${h(labels[data.selfStance])} 對 ${h(labels[data.opponentStance])}</p><ol>${data.rounds.map(r=>`<li>造成 ${r.attack}、承受 ${r.received}；氣血 ${r.selfHP}／對手 ${r.opponentHP}</li>`).join('')}</ol>`;}else await perform(b.dataset.online);}catch(e){status(e.message||'連線失敗，請稍後重試。');}finally{busy=false;b.disabled=false;}});
 document.getElementById('onlineBtn')?.addEventListener('click',open);
+
+document.getElementById('creatorOnlineBtn')?.addEventListener('click',open);
