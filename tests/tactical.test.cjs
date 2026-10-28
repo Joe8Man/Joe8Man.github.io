@@ -6,5 +6,7 @@ fresh();const begin=qz().fight.hp;engineCommand('guard');ok(qz().fight.hp===begi
 fresh();state.hp=maxHP()*.3;state.items.heal=3;engineCommand('heal');ok(state.items.heal===2&&qz().fight.pills===1,'one heal consumes one item and allowance');ok(qz().fight.round===1,'healing is an action');
 fresh();let skills=engineView().moves;ok(skills.length>0,'configured skills exposed');engineCommand(skills[0].id);ok(qz().fight.martial.cds[skills[0].id]>0,'explicit skill enters cooldown');ok(engineCommand('not-an-art').error,'unknown command rejected');
 fresh();const herbs=state.items.herb;engineGather();engineGather();ok(state.items.herb===herbs+1,'exploration encounter can only be gathered once');ok(validSave(snapshot()),'gathered journey validates');
-engineCommand('retreat');ok(!qz().fight&&!qz().run,'retreat clears active combat');console.log(n+' tactical command, save, cooldown and exploration reward checks passed');}
+engineCommand('retreat');ok(!qz().fight&&!qz().run,'retreat clears active combat');for(const gender of ['male','female'])for(const outfit_id of [null,'sect-0-robe-0','sect-3-robe-4']){const art=publicCharacterArt({gender,outfit_id});ok(art.includes('clipPathUnits="userSpaceOnUse"')&&art.includes('<g clip-path='),'public character clips atlas in every appearance');}
+let suspended=false,entered=false;window.xianxiaGame={suspend(){suspended=true}};routeTo=()=>{};enterRegionScene=()=>{entered=true};document.getElementById=()=>({scrollIntoView(){}});guide('guideAuto');ok(suspended&&entered,'auto settings exits hidden exploration before entering region');
+console.log(n+' tactical command, save, cooldown, appearance and exploration reward checks passed');}
 vm.runInContext('('+tests.toString()+')()',sandbox);
