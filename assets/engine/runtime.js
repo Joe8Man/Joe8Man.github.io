@@ -12,8 +12,14 @@ export async function prepareRig(profile={}){
  const image=new Image();await new Promise((ok,no)=>{image.onload=ok;image.onerror=no;image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);});return image;}));return {key,frames};})();
  rigCache.set(key,work);try{return await work;}catch(e){rigCache.delete(key);throw e;}
 }
+// Layer faint ellipses to fade the contact shadow into the painted ground.
+export function makeGroundShadow(scene,x,y,width,height){
+ const shadow=scene.add.container(x,y);
+ for(let layer=8;layer>=1;layer--){const size=layer/8;shadow.add(scene.add.ellipse(0,0,width*size,height*size,0x07171b,.025));}
+ return shadow;
+}
 export function makeRig(scene,rig,x,y,scale=1,flip=false){
- const root=scene.add.container(x,y);root.setScale(flip?-scale:scale,scale);const shadow=scene.add.ellipse(0,-3,95,16,0x07171b,.35);root.add(shadow);
+ const root=scene.add.container(x,y);root.setScale(flip?-scale:scale,scale);const shadow=makeGroundShadow(scene,0,-3,95,16);root.add(shadow);
  const frames=rig.frames.map((image,i)=>{const key='painted:'+rig.key+':'+i;if(!scene.textures.exists(key))scene.textures.addImage(key,image);const node=scene.add.image(0,0,key).setOrigin(.5,1).setVisible(i===0);root.add(node);return node;});
  let active=false,moving=false;const timers=[];const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  const pose=i=>frames.forEach((f,n)=>f.setVisible(n===i));const later=(ms,fn)=>timers.push(scene.time.delayedCall(ms,fn));
