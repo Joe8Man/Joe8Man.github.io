@@ -1,0 +1,22 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const elements={};const el=()=>({innerHTML:'',textContent:'',style:{},setAttribute(){},addEventListener(){},querySelector(s){return elements[s]??=el();},showModal(){this.open=true},close(){this.open=false}});
+const dialog=el(),storage=new Map();let applied=null,queryCalls=[];
+const chain={select(){return this},eq(...a){queryCalls.push(a);return this},maybeSingle:async()=>({data:null,error:null}),single:async()=>({data:{revision:1},error:null}),insert(){return this},update(){return this},upsert:async()=>({error:null}),delete(){return this},neq(){return this},order(){return this},limit:async()=>({data:[],error:null})};
+const ctx={document:{createElement:()=>dialog,body:{append(){}},getElementById:()=>el()},window:{xianxiaBridge:{snapshot:()=>({name:'甲',solo:{stance:'steady'}}),valid:s=>!!s.name,locked:()=>false,apply:s=>applied=s,level:()=>'<境界>',save(){}}},localStorage:{setItem:(k,v)=>storage.set(k,v)},location:{origin:'https://example.com',pathname:'/Xianxia.html'},console,Date,JSON,Error,String,Object,fetch(){throw Error('unexpected network')}};
+vm.createContext(ctx);vm.runInContext(fs.readFileSync('assets/online/online.js','utf8'),ctx);
+(async()=>{await vm.runInContext(`(async()=>{
+ client={from(){return globalThis.mockChain}};user={id:'user-a'};render();
+ if(h('<script>')!=='&lt;script&gt;')throw Error('escape');
+ await perform('upload');if(revision!==0)throw Error('revision inspect');
+ await perform('upload-confirm');
+ selected={payload:{name:'乙'},revision:2};await perform('download-confirm');
+ if(!dialog.querySelector('#onlineSave').innerHTML.includes('確認備份並載入'))throw Error('missing confirmation');
+ await perform('download-apply');
+})()`,Object.assign(ctx,{mockChain:chain}));
+ assert.equal(applied.name,'乙');assert.equal(JSON.parse(storage.get('xianxia-before-cloud-restore')).name,'甲');
+ assert(queryCalls.some(([k,v])=>k==='user_id'&&v==='user-a'));
+ chain.maybeSingle=async()=>({data:null,error:null});
+ await assert.rejects(vm.runInContext(`revision=3;perform('upload-confirm')`,ctx),/另一裝置/);
+ assert(queryCalls.some(([k,v])=>k==='revision'&&v===3));
+ console.log('Online checks passed: escaping, explicit upload, owner filters, revision conflict, download confirmation, pre-restore backup.');
+})().catch(e=>{console.error(e);process.exitCode=1});
