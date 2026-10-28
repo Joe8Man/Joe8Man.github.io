@@ -28,7 +28,7 @@ for(let map=0;map<6;map++){
  // Break a telegraphed ape strike and prevent its incoming damage.
  f.round=3;f.stanceUntil=0;f.martial={qi:100,cds:{}};soloBreak();ok(f.breakNext&&f.martial.qi===75,'break reserves qi');martialTurn=()=>({damage:0,defense:0,qi:75,name:'測試',healed:0});const before=state.hp;qzTick(1);ok(state.hp===before&&!f.breakNext,'break blocks heavy');soloBreak();ok(!f.breakNext,'break cooldown');ok(validSave(snapshot()),'tactical save valid');qzRetreat();
  // Fixed stats: a fitting route needs multiple normal attacks; overpowered builds retain speed.
- const reference=map?qzDepths()[0].p*1.6:600;const ordinary=qzEnemyStats('wolf',0).max,boss=qzEnemyStats('wolfking',0).max;ok(ordinary/(reference*.14)>=4,'normal lives several rounds');ok(boss/(reference*.14)>=12,'boss has time for mechanics');testPower=1;const stats=qzEnemyStats('wolf',0).max;testPower=999999;ok(qzEnemyStats('wolf',0).max===stats,'no player scaling');
+ const reference=encounterReference(map,0).power;const ordinary=qzEnemyStats('wolf',0).max,boss=qzEnemyStats('wolfking',0).max;ok(ordinary/(reference*.14)>=4,'normal lives several rounds');ok(boss/(encounterReference(map,0,'wolfking').power*.14)>=12,'boss has time for mechanics');testPower=1;const stats=qzEnemyStats('wolf',0).max;testPower=999999;ok(qzEnemyStats('wolf',0).max===stats,'no player scaling');
 }
 fresh();const bad=JSON.parse(JSON.stringify(snapshot()));bad.solo.forge['0-weapon']=6;ok(!validSave(bad),'reject invalid upgrades');solo().contract={map:0,id:'wolf',base:100,target:3};ok(!validSave(snapshot()),'reject future base count');
 help();ok(body.includes('百藝修行')&&body.includes('戰術暫停')&&body.includes('出售或丟棄'),'handbook');
