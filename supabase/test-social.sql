@@ -2,11 +2,12 @@ begin;
 insert into auth.users(id) values ('00000000-0000-4000-8000-000000000001'),('00000000-0000-4000-8000-000000000002');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-insert into public.xianxia_profiles(user_id,name,realm_label,stance) values ('00000000-0000-4000-8000-000000000001','甲','測試','steady');
+insert into public.xianxia_profiles(user_id,name,realm_label,realm,gender,outfit_id,stance) values ('00000000-0000-4000-8000-000000000001','甲','煉氣',0,'female','sect-0-robe-1','steady');
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
-insert into public.xianxia_profiles(user_id,name,realm_label,stance) values ('00000000-0000-4000-8000-000000000002','乙','測試','assault');
+insert into public.xianxia_profiles(user_id,name,realm_label,realm,gender,outfit_id,stance) values ('00000000-0000-4000-8000-000000000002','乙','金丹',2,'male','sect-2-robe-1','assault');
 do $$ declare v jsonb; n int; begin
  v:=public.xianxia_spar('00000000-0000-4000-8000-000000000001');
+ if v->>'selfRealm'<>'2' or v->>'opponentRealm'<>'0' or v->>'opponentGender'<>'female' or v->>'opponentOutfit'<>'sect-0-robe-1' then raise exception 'appearance and cross realm metadata missing'; end if;
  if v->>'selfName'<>'乙' or v->>'opponentName'<>'甲' or jsonb_array_length(v->'rounds')<1 or v->>'result' not in ('win','loss','draw') then raise exception 'invalid duel'; end if;
  update public.xianxia_profiles set stance='focus' where user_id='00000000-0000-4000-8000-000000000001';
  get diagnostics n=row_count;if n<>0 then raise exception 'cross owner profile update'; end if;

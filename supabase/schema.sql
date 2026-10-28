@@ -15,6 +15,12 @@ comment on table public.xianxia_cloud_saves is 'Private single-player backups; c
 create table public.xianxia_profiles(
  user_id uuid primary key references auth.users(id) on delete cascade,
  name text not null check(char_length(name) between 1 and 12),
+ realm smallint check(realm between 0 and 10),
+ gender text not null default 'male' check(gender in ('male','female')),
+ outfit_id text check(char_length(outfit_id)<=40),
+ equipment jsonb not null default '{}' check(jsonb_typeof(equipment)='object' and octet_length(equipment::text)<=2000),
+ sect smallint check(sect between 0 and 5),
+ rank smallint check(rank between 0 and 5),
  realm_label text not null check(char_length(realm_label) between 1 and 50),
  stance text not null check(stance in ('steady','assault','focus')),
  updated_at timestamptz not null default now()
@@ -26,6 +32,7 @@ create policy profiles_read on public.xianxia_profiles for select to authenticat
 create policy profiles_insert on public.xianxia_profiles for insert to authenticated with check((select auth.uid())=user_id);
 create policy profiles_update on public.xianxia_profiles for update to authenticated using((select auth.uid())=user_id) with check((select auth.uid())=user_id);
 create policy profiles_delete on public.xianxia_profiles for delete to authenticated using((select auth.uid())=user_id);
+create index xianxia_profiles_realm_updated on public.xianxia_profiles(realm,updated_at desc);
 create function public.xianxia_spar(opponent uuid) returns jsonb
 language plpgsql security invoker set search_path = '' as $$
 declare a public.xianxia_profiles; b public.xianxia_profiles;
@@ -45,7 +52,7 @@ begin
   history:=history||jsonb_build_array(jsonb_build_object('round',r,'attack',ad,'received',bd,'selfHP',ah,'opponentHP',bh));
   exit when ah=0 or bh=0;
  end loop;
- return jsonb_build_object('selfName',a.name,'opponentName',b.name,'selfStance',a.stance,'opponentStance',b.stance,
+ return jsonb_build_object('selfName',a.name,'opponentName',b.name,'selfStance',a.stance,'opponentStance',b.stance,'selfGender',a.gender,'opponentGender',b.gender,'selfOutfit',a.outfit_id,'opponentOutfit',b.outfit_id,'selfRealm',a.realm,'opponentRealm',b.realm,'selfRealmLabel',a.realm_label,'opponentRealmLabel',b.realm_label,
   'result',case when ah=bh then 'draw' when ah>bh then 'win' else 'loss' end,'rounds',history);
 end $$;
 revoke all on function public.xianxia_spar(uuid) from public,anon;
