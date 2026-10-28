@@ -1,0 +1,19 @@
+const assert=require('node:assert/strict');
+const {pathToFileURL}=require('node:url');
+const path=require('node:path');
+let reduced=false;global.matchMedia=()=>({matches:reduced});
+function sceneFixture(){
+ let now=0;const jobs=[],nodes=[],tweens=[];const textureKeys=new Set(['monster-wolf']);
+ function node(kind,x=0,y=0){const n={kind,x,y,scaleX:1,scaleY:1,alpha:1,dead:false,destroy(){this.dead=true;},setDepth(){return this;},setTint(){return this;},setDisplaySize(w,h){assert.ok(Number.isFinite(w)&&Number.isFinite(h));this.scaleX=w/128;this.scaleY=h/128;return this;},setAlpha(v){this.alpha=v;return this;},setPosition(x,y){this.x=x;this.y=y;return this;},setRotation(v){this.rotation=v;return this;},setScale(x,y=x){this.scaleX=x;this.scaleY=y;return this;},setOrigin(){return this;},lineStyle(){return this;},beginPath(){},moveTo(){},lineTo(){},strokePath(){},fillStyle(){},fillTriangle(){},strokeEllipse(){},fillEllipse(){},fillPoints(){}};nodes.push(n);return n;}
+ const scene={add:{graphics:()=>node('graphics'),image:(x,y)=>node('image',x,y),circle:(x,y)=>node('circle',x,y),text:(x,y)=>node('text',x,y)},textures:{exists:key=>textureKeys.has(key),createCanvas(key){textureKeys.add(key);return {context:{createRadialGradient(){return{addColorStop(){}}},fillRect(){}},refresh(){}}}},time:{delayedCall(ms,fn){jobs.push({at:now+ms,fn});return {remove(){}};}},tweens:{add(config){tweens.push(config);if(config.repeat===-1)return {};scene.time.delayedCall((config.delay||0)+(config.duration||0)+(config.hold||0),()=>{for(const target of [config.targets].flat()){for(const key of ['x','y','t','scaleX','scaleY','alpha'])if(typeof config[key]==='number')target[key]=config[key];}config.onUpdate?.();config.onComplete?.();});return {}; }},cameras:{main:{shake(){scene.shakes++;}}},shakes:0};
+ return {scene,nodes,tweens,flush(){let n=0;while(jobs.length){assert.ok(++n<3000,'effects must finish');jobs.sort((a,b)=>a.at-b.at);const job=jobs.shift();now=job.at;job.fn();}}};
+}
+(async()=>{
+ const {playTechnique,techniqueStyle}=await import(pathToFileURL(path.resolve('assets/engine/battle-art.js')));
+ const ids=['normal','edge','fallenleaf','cloud','void','windblade','rockfist','wildstrike','riverpalm','drain','burn','thunder','thunderfinger','frost','freeze','poison','herbpoison','claw','summon','guard','stoneguard','aegis','heal','mend','wildheal','elixir','break'];
+ let checks=0;
+ for(const minimal of [false,true]){reduced=minimal;for(const id of ids){const f=sceneFixture(),root={x:230,y:440},style=techniqueStyle(id);let hits=0,counters=0,performed='';const {duration}=playTechnique(f.scene,{actor:{root,perform(family){performed=family;},hit(){}},enemy:{x:730,y:425},action:['guard','heal','break'].includes(id)?id:id==='normal'?'attack':id,presentation:{id,name:style.name,damage:style.self?0:36,harm:12},onImpact(){hits++;},onCounter(){counters++;}});f.flush();assert.equal(hits,1,id+' resolves damage display once');assert.equal(counters,1,id+' counter follows impact');assert.equal(performed,style.family);assert.ok(duration>=500&&duration<2000);assert.ok(f.nodes.every(n=>n.dead),id+' must clean temporary effects');if(style.self||!style.melee||minimal)assert.ok(!f.tweens.some(t=>t.targets===root),id+' must cast without lunging');if(minimal)assert.equal(f.scene.shakes,0,'reduced motion disables camera shake');checks++;}}
+ // An interrupted foe must not perform a counter or display invented damage.
+ const f=sceneFixture();let counters=0;playTechnique(f.scene,{actor:{root:{x:230,y:440},perform(){},hit(){throw Error('frozen enemy countered');}},enemy:{x:730,y:425},action:'freeze',presentation:{id:'freeze',harm:0,control:true,damage:20},onCounter(){counters++;}});f.flush();assert.equal(counters,0);
+ console.log(checks+' full/reduced-motion technique lifecycles and interrupted counter verified');
+})().catch(error=>{console.error(error);process.exitCode=1;});
