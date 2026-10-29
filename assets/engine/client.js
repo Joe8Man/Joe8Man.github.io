@@ -81,6 +81,16 @@ function pagedRows(rows,y,bottom,key){const width=uiWidth(),w=Math.min(900,width
  pager(key,p,pages.length);
 }
 function renderWorkspace(v){const width=uiWidth(),height=uiHeight(),w=Math.min(900,width-32),x=(width-w)/2,bottom=height-126,cols=width>=700?4:3;content.clearMask();content.setPosition(0,0);offset=0;total=0;
+ const spar=v.root.querySelector('#onlineBattle[data-active]');if(spar){
+  const c=scene.add.container();addUI(c);const canvas=spar.querySelector('canvas'),status=spar.querySelector('[data-commentary]')?.textContent||spar.querySelector('[role=status]')?.textContent||'雙方登台，準備交手。';
+  c.add(text(x,80,'道友切磋 · '+(spar.querySelector('[data-round]')?.textContent||'準備中'),19,'#ead6a2',w));
+  const score=[...spar.querySelectorAll('.spar-score>div')].map(el=>el.querySelector('strong').textContent+'  '+el.querySelector('[data-hp]').textContent).join('    對決    ');c.add(text(x,116,score,13,'#dde9ce',w));
+  const artW=Math.min(w,Math.max(160,(height-350)*2)),artH=artW/2;
+  if(canvas){let key=liveCanvases.get(canvas);if(!key){key='spar-canvas-'+Date.now();scene.textures.addCanvas(key,canvas);liveCanvases.set(canvas,key);}c.add(scene.add.image(width/2,160+artH/2,key).setDisplaySize(artW,artH));}
+  c.add(text(x,176+artH,status,14,'#e5d7b8',w));
+  const controls=[...spar.querySelectorAll('button')].filter(el=>!el.hidden),bw=(w-(controls.length-1)*8)/Math.max(1,controls.length),y=Math.min(height-140,234+artH);controls.forEach((el,i)=>button(c,x+i*(bw+8),y,bw,48,el.textContent,()=>invoke(el),el.disabled));return true;
+ }
+
  const actions=root=>[...root.querySelectorAll('button')].filter(el=>shown(el));
  if(v.key==='character'){
  const selected=paneTabs.character;tabs(v.key,['總覽','裝備','功法','法寶','修習'],selected,label=>chooseTab(v.key,label));
@@ -160,4 +170,5 @@ async function start(){const Phaser=await loadPhaser();for(let n=0;n<50&&!window
  document.addEventListener('visibilitychange',()=>{if(document.hidden){game.loop.sleep();releaseStick();}else{game.loop.wake();stamp='';}});window.xianxiaPhaserClient={get ready(){return ready;},refresh(){if(!['map','battle'].includes(screenKey))stamp='';},destroy(){releaseStick();window.removeEventListener('blur',releaseStick);game.canvas.removeEventListener('pointercancel',releaseStick);window.removeEventListener('resize',syncViewport);window.removeEventListener('orientationchange',syncViewport);window.visualViewport?.removeEventListener('resize',syncViewport);cancelAnimationFrame(viewportFrame);clearInterval(refreshTimer);for(const node of document.querySelectorAll('[data-phaser-legacy]')){node.removeAttribute('aria-hidden');node.removeAttribute('data-phaser-legacy');}HTMLDialogElement.prototype.showModal=originalModal;game.destroy(true);host.remove();document.body.classList.remove('phaser-client-active');}};
 }
 start().catch(error=>{console.error(error);document.body.classList.remove('phaser-client-active');dom('phaser-client')?.remove();});
+
 
