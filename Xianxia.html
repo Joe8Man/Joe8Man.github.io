@@ -143,6 +143,7 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 <link rel="stylesheet" href="assets/engine/world.css?v=9">
 <script src="assets/engine/world-core.js?v=5"></script>
 <script src="assets/engine/field-core.js?v=4"></script>
+<link rel="stylesheet" href="assets/engine/client.css?v=1">
 </head>
 <body>
 <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"><defs>
@@ -1653,7 +1654,7 @@ if(el.dataset.bagEquip){inventoryUseOrEquip(el.dataset.bagEquip,'equip');return}
 if(el.dataset.bagUnequip){inventoryUseOrEquip(el.dataset.bagUnequip,'unequip');return}
 if(el.dataset.dismiss)closeModal();if(el.dataset.resource){resourceGuide(el.dataset.resource);return}if(el.dataset.buywear){buyGear(el.dataset.buywear,true);return}if(el.dataset.action?.startsWith('guide')){guide(el.dataset.action);return}if(el.dataset.choice){resolveEncounter(el.dataset.choice);return}if(el.dataset.ascend){ascend(el.dataset.ascend);return}if(el.dataset.train){cultivateUpgrade(el.dataset.train);return}if(el.dataset.travel!==undefined){travel(Number(el.dataset.travel));return}if(el.dataset.buygear){buyGear(el.dataset.buygear);return}if(el.dataset.equip){equipGear(el.dataset.equip);return}if(el.dataset.unequip){unequipGear(el.dataset.unequip);return}if(el.dataset.route)routeTo(el.dataset.route);if(el.dataset.go)routeTo(el.dataset.go);if(el.dataset.feed)setFeed(el.dataset.feed);if(el.dataset.join!==undefined)join(Number(el.dataset.join));if(el.dataset.quest!==undefined)takeQuest(Number(el.dataset.quest));if(el.dataset.explore!==undefined)explore(Number(el.dataset.explore),Number(el.dataset.risk||0));if(el.dataset.buy)buy(el.dataset.buy);if(el.dataset.use)use(el.dataset.use);const actions={help,engineHunt:()=>window.xianxiaHunt?.open(),engineStart,qzStart,qzGuard,qingzhouPreview,qingzhouDemoSlash:()=>playExpeditionSlash(false,'qingzhouDemoHost'),talkKeeper:talkToKeeper,beginAuto,stopAuto:()=>stopAuto(),foundationGuide,transform,encounter:showEncounter,localMaterial:buyLocalMaterial,resolveEvent,ignoreEvent,close:closeModal,promote,book:learn,betray,confirmBetray,usurp:startBoss,trial:startTrial,confirmTrial,confirmBoss,export:exportSave,import:()=>$('importFile').click(),reset:resetAsk,confirmReset:reset,settings:settingsMenu,accountSettings:accountSettings,saveMenu,battle:showBattle,refreshQuest:refreshQuests};if(el.dataset.action&&actions[el.dataset.action])actions[el.dataset.action]()});
 document.addEventListener('change',e=>{if(e.target.dataset.qzSetting)qzSet(e.target.dataset.qzSetting,e.target.value)});
-document.addEventListener('keydown',e=>{const overlay=!$('creatorOverlay').classList.contains('hidden')?$('creatorOverlay'):modalKind?$('modalOverlay'):null;if(e.key==='Escape'&&modalKind){closeModal();return}if(e.key==='Tab'&&overlay){const list=[...overlay.querySelectorAll('button:not(:disabled),input,select,[tabindex="0"]')].filter(x=>x.getClientRects().length);if(!list.length)return;const first=list[0],last=list[list.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
+document.addEventListener('keydown',e=>{if(document.body.classList.contains('phaser-client-active'))return;const overlay=!$('creatorOverlay').classList.contains('hidden')?$('creatorOverlay'):modalKind?$('modalOverlay'):null;if(e.key==='Escape'&&modalKind){closeModal();return}if(e.key==='Tab'&&overlay){const list=[...overlay.querySelectorAll('button:not(:disabled),input,select,[tabindex="0"]')].filter(x=>x.getClientRects().length);if(!list.length)return;const first=list[0],last=list[list.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
 $('importFile').onchange=async e=>{const file=e.target.files[0];e.target.value='';if(!file)return;if(combat)return toast('請先完成宗主挑戰，再匯入存檔。');try{if(file.size>250000)throw Error('large');const s=JSON.parse(await file.text());if(!validSave(s))throw Error('invalid');window.pendingImport=s;showModal('importConfirm',`<div class="kicker">RESTORE YOUR JOURNEY</div><h2 id="modalTitle">續上另一段仙緣？</h2><p>匯入 ${esc(s.name)} · ${esc(s.version===1?OLD_REALMS[s.realm]:levelName(s))} 的進度，將覆蓋目前角色。請確認已備份現有因果。</p><div class="modal-actions"><button class="btn ghost" data-action="close">取消</button><button class="btn primary" id="confirmImport">確認匯入</button></div>`);$('confirmImport').onclick=()=>{if(combat)return toast('請先完成宗主挑戰，再匯入存檔。');applySave(window.pendingImport);delete window.pendingImport;toast('修行因果已接續。')}}catch(err){toast('存檔格式不符或已損毀，請選擇本作匯出的 JSON。')}};
 document.addEventListener('input',e=>{if(e.target.id==='inventoryQuantity')updateInventoryQuote()});
 document.addEventListener('change',e=>{
@@ -1950,8 +1951,11 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/journey.js?v=5"></script>
 <script type="module" src="assets/engine/hunt.js?v=3"></script>
 <script type="module" src="assets/engine/home.js?v=3"></script>
-<script type="module" src="assets/engine/world.js?v=7"></script>
-<script type="module" src="assets/engine/field.js?v=4"></script>
+<script type="module" src="assets/engine/world.js?v=8"></script>
+<script type="module" src="assets/engine/field.js?v=5"></script>
+<script type="module" src="assets/engine/client.js?v=1"></script>
 </body></html>
+
+
 
 
