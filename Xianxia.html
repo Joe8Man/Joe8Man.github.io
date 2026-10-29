@@ -140,9 +140,9 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 </style><style>.qz-planner{margin-bottom:18px}.qz-planner-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}.qz-planner-fields label{font-size:12px;color:var(--muted)}.qz-planner-fields .input{margin-top:6px}.qz-bestiary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}.qz-monster-card{padding:13px;border:1px solid var(--line);border-radius:10px;background:radial-gradient(ellipse at 50% 25%,#54694a44,#101e19)}.qz-monster-art{height:145px;display:grid;place-items:center}.qz-monster-art img{max-width:100%;max-height:145px;object-fit:contain;width:auto;height:auto;filter:drop-shadow(0 5px 8px #0006)}.qz-monster-card h4{margin:8px 0 4px;color:var(--light)}.qz-monster-card p{font-size:12px;margin:5px 0}.qz-fight-log{height:130px;overflow:auto;padding:8px 0;font-size:12px}.qz-fight-log p{margin:5px 0}.qz-planner>.btn{margin-right:8px}@media(max-width:760px){.qz-bestiary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.qz-monster-card{padding:10px}.qz-monster-art,.qz-monster-art img{max-height:115px}.qz-planner-fields{grid-template-columns:1fr}.qz-planner .row{flex-wrap:wrap}.qz-monster-card p{font-size:11px}}</style><link rel="stylesheet" href="assets/online/arena.css?v=1">
 <link rel="stylesheet" href="assets/engine/battle-ui.css?v=1">
 <link rel="stylesheet" href="assets/engine/hunt.css?v=2">
-<link rel="stylesheet" href="assets/engine/world.css?v=1">
+<link rel="stylesheet" href="assets/engine/world.css?v=2">
 <script src="assets/engine/world-core.js?v=1"></script>
-<script src="assets/engine/field-core.js?v=1"></script>
+<script src="assets/engine/field-core.js?v=2"></script>
 </head>
 <body>
 <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"><defs>
@@ -1848,13 +1848,14 @@ let fieldSession=null;
 function fieldStop(reason='已收劍，收穫已保存。'){
  if(!fieldSession?.active)return;fieldSession.active=false;state.auto.active=false;state.auto.reason=reason;state.auto.fight=null;autoHistory(reason);save();renderHUD();
 }
-function fieldStart(){
+function fieldStart(mode='wild'){
+ if(!['wild','dungeon'].includes(mode))return {error:'未知戰場'};
  const reason=huntReason();if(reason)return {error:reason};window.xianxiaGame?.suspend();window.xianxiaHunt?.close();
  const a=state.auto={...autoDefaults(),active:true,mode:'hunt',map:state.location,reason:'自由除妖中'};
  const session=fieldSession={active:true,map:state.location,paid:new Set(),bosses:0};
  const valid=()=>session===fieldSession&&session.active&&state.location===session.map;
  const depth=qz().clears[qz().depth]>0?qz().depth:0;
- const config={name:state.name,map:state.location,mapName:MAPS[state.location].name,scene:WORLD_ART[state.location].scene,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},monsters:Object.entries(qzEnemies()).map(([id,m])=>({id,art:m.art})),stats:Object.fromEntries(Object.entries(qzEnemies()).map(([id,m])=>[id,{...qzEnemyStats(id,depth,false),armor:m.armor||0}])),hp:state.hp,maxHP:maxHP(),attack:Math.max(12,Math.round(power()*.14))*SOLO_STANCES[solo().stance].damage*(state.martial.mind==='swordmind'?1+.04*artLevel('swordmind'):1),leech:state.martial.mind==='bloodmind'?.03*artLevel('bloodmind'):0,defense:artLevel(state.martial.movement)*(state.martial.movement==='wildstep'?.07:.06),moves:state.martial.moves.filter(id=>artLevel(id)).slice(0,3).map(id=>({...ARTS[id],level:artLevel(id)})),
+ const config={mode,target:mode==='dungeon'?6:10,name:state.name,map:state.location,mapName:MAPS[state.location].name,scene:WORLD_ART[state.location].scene,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},monsters:Object.entries(qzEnemies()).map(([id,m])=>({id,art:m.art})),stats:Object.fromEntries(Object.entries(qzEnemies()).map(([id,m])=>[id,{...qzEnemyStats(id,depth,false),armor:m.armor||0}])),hp:state.hp,maxHP:maxHP(),attack:Math.max(12,Math.round(power()*.14))*SOLO_STANCES[solo().stance].damage*(state.martial.mind==='swordmind'?1+.04*artLevel('swordmind'):1),leech:state.martial.mind==='bloodmind'?.03*artLevel('bloodmind'):0,defense:artLevel(state.martial.movement)*(state.martial.movement==='wildstep'?.07:.06),moves:state.martial.moves.filter(id=>artLevel(id)).slice(0,3).map(id=>({...ARTS[id],level:artLevel(id)})),
  spend(){if(!valid()||state.steps<1)return false;state.steps--;save();return true;},
  hurt(amount){if(!valid())return state.hp;const harm=expeditionHarm(amount,1,{defense:0});state.hp=Math.max(1,state.hp-harm);return state.hp;},
  heal(amount){if(!valid())return state.hp;state.hp=Math.min(maxHP(),state.hp+amount);return state.hp;},
@@ -1864,7 +1865,9 @@ function fieldStart(){
   const xp=Math.round(expeditionXP(a.map,depth,mob.boss)*.85),money=Math.round(MAPS[a.map].reward*(mob.boss?1.8:.45));addXP(xp);state.stones+=money;a.xp+=xp;a.stones+=money;a.kills++;qzRecordKill(mob.id);let bonus='';
   if(Math.random()<.25){const k=['crystal','insight','fragment'][a.kills%3];state.materials[k]++;a.materials++;bonus=({crystal:'靈晶',insight:'感悟',fragment:'殘片'}[k])+' ×1';}
   if(Math.random()>.96){const id=`${a.map}-${Object.keys(SLOT_NAMES)[a.kills%4]}`;if(!state.ownedGear.includes(id)){state.ownedGear.push(id);a.gear++;bonus=GEAR[id].name;}else{state.materials.fragment++;a.materials++;bonus='殘片 ×1';}}
-  if(mob.boss){session.bosses++;bonus+=(bonus?' · ':'')+'野外首領擊破';}
+  if(mob.boss){session.bosses++;bonus+=(bonus?' · ':'')+(mode==='dungeon'?'秘境通關':'野外首領擊破');
+   if(mode==='dungeon'){const q=qz(),first=q.clears[depth]===0;q.clears[depth]++;state.journey.clears[a.map]++;state.materials.crystal+=first?3:1;state.materials.fragment+=first?2:1;const id=a.map?'region-'+a.map+'-weapon':'qz-wolffang';if(first&&!state.ownedGear.includes(id)){state.ownedGear.push(id);bonus+=' · '+GEAR[id].name;}window.XianxiaWorld.note(worldState(),'攻克'+MAPS[a.map].name+'秘境，取得突破歷練。');}
+  }
   autoHistory(`自由除妖：擊敗${qzEnemies()[mob.id].name}，修為 +${xp}、靈石 +${money}。`);save();return {xp,money,bonus};
  },stop:fieldStop};save();return config;
 }
@@ -1908,7 +1911,10 @@ function worldCommand(action,value){
  }else if(action==='continue'){showEncounter();return {};}
  else if(action==='cultivate'){routeTo('home');return {};}
  else if(action==='explore'){
-  if(!['wild','ruin'].includes(w.place))return {error:'先前往野外或遺跡。'};W.advance(w);W.note(w,'深入'+MAPS[state.location].name+'尋訪機緣。');explore(state.location);save();return {};
+  if(!['wild','ruin'].includes(w.place))return {error:'先前往野外或遺跡。'};
+  if(!state.artifact.unlocked){if(state.steps<1)return {error:'需要 1 精力。'};state.steps--;state.artifact.unlocked=true;state.journey.seen[state.location]|=1;message='拾得照玄殘劍，飛劍除妖與法寶溫養已開啟。';advance=1;}
+  else{const reason=autoStartReason();if(reason)return {error:reason};if(power()<routeRecommended(state.location,0))return {error:'秘境建議戰力 '+routeRecommended(state.location,0)+'，可先在野外歷練。'};W.advance(w);W.note(w,'進入'+MAPS[state.location].name+'秘境。');save();window.xianxiaField?.open('dungeon');return {};}
+
  }else if(action==='field'){
   if(w.place!=='wild')return {error:'先到野外，再開始除妖。'};const reason=autoStartReason();if(reason)return {error:reason};W.advance(w);W.note(w,'在'+MAPS[state.location].name+'展開除妖歷練。');save();window.xianxiaField?.open();return {};
  }else if(action==='service'){
@@ -1929,8 +1935,8 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/journey.js?v=5"></script>
 <script type="module" src="assets/engine/hunt.js?v=3"></script>
 <script type="module" src="assets/engine/home.js?v=3"></script>
-<script type="module" src="assets/engine/world.js?v=1"></script>
-<script type="module" src="assets/engine/field.js?v=1"></script>
+<script type="module" src="assets/engine/world.js?v=2"></script>
+<script type="module" src="assets/engine/field.js?v=2"></script>
 </body></html>
 
 

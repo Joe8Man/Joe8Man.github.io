@@ -2,7 +2,7 @@
 (function(root){'use strict';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 class FieldModel{
- constructor(config){this.cfg=config;this.random=config.random||Math.random;this.p={x:480,y:350,r:15};this.hp=config.hp;this.maxHP=config.maxHP;this.qi=100;this.time=0;this.mobs=[];this.shots=[];this.zones=[];this.events=[];this.cds={};this.kills=0;this.serial=0;this.spawnAt=.3;this.attackAt=.6;this.dashUntil=0;this.dashCD=0;this.wardUntil=0;this.summonUntil=0;this.summonAt=0;this.stopped=false;this.input={x:0,y:0};this.facing={x:1,y:0};this.nextBoss=10;this.bosses=0;this.waiting=false;}
+ constructor(config){this.cfg=config;this.random=config.random||Math.random;this.p={x:480,y:350,r:15};this.hp=config.hp;this.maxHP=config.maxHP;this.qi=100;this.time=0;this.mobs=[];this.shots=[];this.zones=[];this.events=[];this.cds={};this.kills=0;this.serial=0;this.spawnAt=.3;this.attackAt=.6;this.dashUntil=0;this.dashCD=0;this.wardUntil=0;this.summonUntil=0;this.summonAt=0;this.stopped=false;this.input={x:0,y:0};this.facing={x:1,y:0};this.nextBoss=config.target||10;this.bosses=0;this.waiting=false;}
  emit(kind,data={}){this.events.push({kind,...data});}
  drain(){return this.events.splice(0);}
  move(x,y){const l=Math.hypot(x,y);this.input={x:l>1?x/l:x,y:l>1?y/l:y};}
@@ -19,7 +19,7 @@ class FieldModel{
   const d=dist(m,this.p)||1;m.x=clamp(m.x+(m.x-this.p.x)/d*(m.boss?3:12),35,925);m.y=clamp(m.y+(m.y-this.p.y)/d*(m.boss?3:12),55,605);
   if(source.drain)this.heal(Math.min(actual,m.hp+actual)*source.drain);if(this.cfg.leech)this.heal(Math.min(actual,m.hp+actual)*this.cfg.leech);
   this.emit('hit',{key:m.key,x:m.x,y:m.y,damage:actual,critical,effect:source.effect||'sword'});
-  if(m.hp<=0){m.dead=true;this.kills++;if(m.boss)this.bosses++;const reward=this.cfg.reward(m);this.emit('kill',{mob:{...m},reward});}
+  if(m.hp<=0){m.dead=true;this.kills++;if(m.boss)this.bosses++;const reward=this.cfg.reward(m);this.emit('kill',{mob:{...m},reward});if(m.boss&&this.cfg.mode==='dungeon')this.stop('秘境已攻克，通關材料與首勝裝備已收入行囊。');}
  }
  hurt(amount){if(this.stopped||this.time<this.dashUntil||this.time<(this.invulnerableUntil||0))return;const damage=Math.max(1,Math.round(amount*(this.time<this.wardUntil?.45:1)*(1-Math.min(.65,this.cfg.defense||0))));this.hp=this.cfg.hurt(damage);this.invulnerableUntil=this.time+.25;this.emit('hurt',{damage});if(this.hp<this.maxHP*.2)this.stop('氣血不足，已安全撤回；收穫保留。');}
  heal(amount){if(amount<=0)return;const previous=this.hp;this.hp=this.cfg.heal(amount);if(this.hp>previous+1)this.emit('heal',{amount:this.hp-previous});}

@@ -9,4 +9,5 @@ m=fresh();ok(!!m.cast('mend').error,'full hp healing blocked');m.hurt(100);ok(!m
 m=fresh();m.spawn();target=m.mobs[0];target.x=490;target.y=350;target.speed=0;target.at=1e6;m.attackAt=1e6;m.damage(target,200);m.damage(target,200);ok(m.kills===1,'dead enemy cannot reward twice');m.stop();const time=m.time;tick(m,2);ok(m.time===time,'stopped simulation cannot advance');
 m=fresh();m.spawn();target=m.mobs[0];target.x=490;target.y=350;target.at=0;m.attackAt=1e6;tick(m,.05);ok(!!target.windup&&m.hp===1000,'attack telegraph precedes damage');m.move(-1,0);tick(m,1);ok(m.hp===1000,'moving out of telegraph avoids damage');
 m=fresh();m.kills=10;m.spawn();ok(m.mobs[0].boss&&m.nextBoss===20,'boss after ten kills');m=fresh();m.spawn();m.kills=10;ok(!m.spawn(),'boss waits for ordinary enemies to clear');
+m=fresh({mode:'dungeon',target:6});m.kills=6;m.spawn();ok(m.mobs[0].boss,'dungeon boss at six guards');m.damage(m.mobs[0],999);ok(m.stopped&&m.bosses===1,'dungeon exits after boss');
 console.log(count+' spatial combat, movement, collision, cooldown, dodge and boss checks passed');
