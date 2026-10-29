@@ -10,6 +10,7 @@ vm.runInContext(`{
  const legacy=el('dialog',{'aria-hidden':'true','data-phaser-legacy':''},[el('button',{text:'交談'})]);ok(entries(legacy).length===1,'hidden source dialog still supplies its canvas view model');
  const file=el('input',{type:'file'});ok(entries(file).length===0,'file picker stays with browser integration');
  const name=el('input',{value:'道友',placeholder:'仙名'});ok(entries(name)[0].type==='input','text editing remains an explicit input action');
+ const checkbox=el('input',{type:'checkbox','aria-label':'選取靈草'});checkbox.checked=false;checkbox.click=()=>checkbox.checked=!checkbox.checked;invoke(checkbox);ok(checkbox.checked,'bulk inventory checkbox keeps its native checked transaction');
  const summary=el('summary',{text:'進階設定'}),detail=el('details',{},[summary,el('p',{text:'選項'})]);ok(entries(detail).length===1,'collapsed details show only their toggle');detail.open=true;ok(entries(detail).length===2,'expanded details expose content');
  ok(clamp(-4,0,1)===0&&clamp(5,0,1)===1,'touch and camera bounds clamp');
 }`,context);
