@@ -35,5 +35,9 @@ function date(w){const year=Math.floor((w.day-1)/360)+1,month=Math.floor((w.day-
 function bond(w,id){return w.bonds[id]??={affinity:0,talk:0,gift:0,discuss:0,met:false};}
 function npcPlace(n,w){return ['town','wild','town','sect'][(Math.floor((w.day-1)/2)+n.seed)%4];}
 function relation(n){return n>=75?'知交':n>=40?'同道':n>=15?'相識':'初逢';}
-root.XianxiaWorld={regions,npcs,places,fresh,valid,normalize,note,advance,date,bond,npcPlace,relation};
+const sectNames=['九天劍宗','太乙仙院','天魔聖教','玄冰宮','萬獸山','丹霞谷'];regions.forEach((r,i)=>r.sect=sectNames[i]);
+const offsets={town:[0,0],wild:[-5,9],sect:[-7,-5],ruin:[8,0]};
+function point(map,place){const r=regions[map],o=offsets[place];return {x:r.x+o[0],y:r.y+o[1]};}
+function journeyDays(from,to){return Math.max(1,Math.ceil(Math.hypot(to.x-from.x,to.y-from.y)/12));}
+root.XianxiaWorld={point,journeyDays,regions,npcs,places,fresh,valid,normalize,note,advance,date,bond,npcPlace,relation};
 })(typeof window==='undefined'?globalThis:window);
