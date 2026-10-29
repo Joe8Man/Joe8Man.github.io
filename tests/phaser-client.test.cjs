@@ -15,3 +15,11 @@ vm.runInContext(`{
  ok(clamp(-4,0,1)===0&&clamp(5,0,1)===1,'touch and camera bounds clamp');
 }`,context);
 console.log(count+' Phaser client action, layout visibility and browser input checks passed');
+// Resource ticks and cooldowns patch retained controls; only structural changes rebuild.
+vm.runInContext(`{
+ const root={querySelector:s=>({classList:{contains:()=>s==='[data-field-overlay]'}}),querySelectorAll:()=>[{dataset:{fieldCast:'sword'}}]};
+ const map={key:'map'};const before=stableSignature(map,[],393,852);ok(before===stableSignature(map,[{text:'修為 +99'}],393,852),'passive cultivation cannot rebuild map controls');ok(before!==stableSignature(map,[],852,393),'orientation change rebuilds the layout');
+ const battle={key:'battle',root};const first=stableSignature(battle,[],393,852);ok(first===stableSignature(battle,[{text:'冷卻 1.2s',disabled:true}],393,852),'cooldown and resource ticks retain battle control identities');root.querySelector=s=>({classList:{contains:()=>false}});ok(first!==stableSignature(battle,[],393,852),'pause overlay still changes the presentation');
+ const mapChild={},mapContainer={list:[mapChild]},buttonChild={},buttonContainer={list:[buttonChild]},nextIcon={};mapLayer=mapContainer;mapCamera={id:2};scene={cameras:{main:{id:1}},children:{list:[mapContainer,buttonContainer]}};isolateCameras();ok(mapContainer.cameraFilter===1&&mapChild.cameraFilter===1,'world container and descendants are excluded from UI camera');ok(buttonContainer.cameraFilter===2&&buttonChild.cameraFilter===2,'control container and descendants are excluded from moving camera');buttonContainer.list.push(nextIcon);isolateCameras();ok(nextIcon.cameraFilter===2,'late loaded children also keep camera isolation');
+}`,context);
+console.log('Retained controls, orientation, pause and camera isolation checks passed');
