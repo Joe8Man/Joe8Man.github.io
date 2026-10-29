@@ -23,3 +23,13 @@ vm.runInContext(`{
  const mapChild={},mapContainer={list:[mapChild]},buttonChild={},buttonContainer={list:[buttonChild]},nextIcon={};mapLayer=mapContainer;mapCamera={id:2};scene={cameras:{main:{id:1}},children:{list:[mapContainer,buttonContainer]}};isolateCameras();ok(mapContainer.cameraFilter===1&&mapChild.cameraFilter===1,'world container and descendants are excluded from UI camera');ok(buttonContainer.cameraFilter===2&&buttonChild.cameraFilter===2,'control container and descendants are excluded from moving camera');buttonContainer.list.push(nextIcon);isolateCameras();ok(nextIcon.cameraFilter===2,'late loaded children also keep camera isolation');
 }`,context);
 console.log('Retained controls, orientation, pause and camera isolation checks passed');
+vm.runInContext(`{
+ const p=pageSlice(Array.from({length:18},(_,i)=>i),12,'bag-test');ok(p.items.length===12&&p.pages===2,'inventory uses twelve slots and preserves all items on two pages');panePages.set('bag-test',1);const next=pageSlice([0,1,2],12,'bag-test');ok(next.page===0&&next.items.length===3,'removing or filtering items clamps stale page indexes');
+ const south=stickVector(0,20);ok(south.y===20&&south.inputY>0&&south.inputX===0,'downward touch moves both the knob and the character downward');const diagonal=stickVector(100,100);ok(Math.abs(Math.hypot(diagonal.x,diagonal.y)-32)<1e-8&&Math.abs(Math.hypot(diagonal.inputX,diagonal.inputY)-1)<1e-8,'diagonal stick throw is circular and cannot accelerate movement');ok(stickVector(1,1).inputX===0&&stickVector(1,1).inputY===0,'small touches inside the dead zone do not drift');
+ const hiddenDetails=el('details',{},[el('article',{},[el('button',{text:'配置招式'})])]);ok(entries(hiddenDetails.childNodes[0]).length===1,'a selected card can show details from a closed source category');
+}`,context);
+console.log('Compact inventory pagination and circular joystick regression checks passed');
+vm.runInContext(`{
+ const calls=[],knob={setPosition(x,y){this.x=x;this.y=y;}},mark={setPosition(x,y){this.x=x;this.y=y;}},host={dataset:{}};window={xianxiaField:{move:(x,y)=>calls.push([x,y])}};document.getElementById=()=>host;stickVisual={x:85,y:300,knob,mark};stickOwner=7;updateStickPointer({x:85,y:325});ok(knob.y===325&&mark.y===325&&calls.at(-1)[1]>0,'touch feedback and movement use the same displacement');releaseStick();ok(stickOwner===null&&knob.y===300&&mark.y===300&&calls.at(-1).every(v=>v===0),'release recenters the knob and clears all movement');
+}`,context);
+console.log('Joystick displacement and release transaction checks passed');
