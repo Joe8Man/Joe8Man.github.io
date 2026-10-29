@@ -46,6 +46,14 @@ placeDialog.addEventListener('click',e=>{if(e.target===placeDialog||e.target.clo
 
 dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});dialog.addEventListener('close',()=>npc=null);
 const nav=document.getElementById('mainNav'),map=nav.querySelector('[data-route="map"]'),home=nav.querySelector('[data-route="home"]');nav.prepend(map);map.querySelector('span').textContent='山河';home.querySelector('span').textContent='修煉';const community=nav.querySelector('[data-route="community"]');community.dataset.route='sect';community.querySelector('span').textContent='宗門';community.querySelector('i').className='ri-ancient-pavilion-line';const more=nav.querySelector('.nav-more>div');const existingSect=more.querySelector('[data-route="sect"]');existingSect.dataset.route='community';existingSect.textContent='線上道友';
+// Keep navigation within reach without covering the world during travel.
+const navToggle=document.createElement('button');navToggle.className='map-nav-toggle';navToggle.type='button';navToggle.setAttribute('aria-controls','mainNav');navToggle.innerHTML='<i class="ri-menu-line" aria-hidden="true"></i><span>選單</span>';document.body.append(navToggle);
+function setMapNav(open){document.body.classList.toggle('map-nav-open',open);navToggle.setAttribute('aria-expanded',String(open));navToggle.setAttribute('aria-label',open?'收起導覽選單':'展開導覽選單');navToggle.querySelector('span').textContent=open?'收起':'選單';if(!open)nav.querySelector('details')?.removeAttribute('open');}
+function syncMapNav(){const active=window.xianxiaBridge.currentRoute()==='map';document.body.classList.toggle('on-world-map',active);setMapNav(false);}
+navToggle.addEventListener('click',()=>setMapNav(!document.body.classList.contains('map-nav-open')));
+document.addEventListener('click',e=>{if(!nav.contains(e.target)&&!navToggle.contains(e.target))setMapNav(false);else if(e.target.closest('[data-route],[data-action]'))setMapNav(false);});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('map-nav-open')){setMapNav(false);navToggle.focus();}});
+window.addEventListener('xianxia-route-change',syncMapNav);syncMapNav();
 window.addEventListener('xianxia-route-change',e=>{if(e.detail!=='map'){cancelWalk();placeDialog.close();}key='';render();});window.addEventListener('xianxia-character-ready',()=>{selected=null;key='';setTimeout(render,0);});setInterval(()=>{if(window.xianxiaBridge.currentRoute()==='map'&&!document.hidden)render();},500);render();
 window.xianxiaWorldUI={refresh(){key='';render();},getState:()=>({selected,tab})};
 
