@@ -1,0 +1,17 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('assets/engine/client.js','utf8').replace(/^import .*;\n/,'').split('\nstart().catch(')[0];let count=0;
+function el(tag='div',props={},children=[]){const e={nodeType:1,tagName:tag.toUpperCase(),classList:{contains:c=>(props.classes||[]).includes(c)},hidden:!!props.hidden,open:!!props.open,type:props.type||'',disabled:!!props.disabled,value:props.value||'',placeholder:props.placeholder||'',dataset:props.dataset||{},textContent:props.text||'',innerText:props.text||'',parentElement:null,childNodes:children,display:props.display||'block',getAttribute:k=>props[k]??null,matches(selector){return selector.split(',').some(s=>{s=s.trim();if(s==='input:not([type=file]):not([type=hidden])')return tag==='input'&&!['file','hidden'].includes(this.type);if(s==='[aria-hidden=true]')return props['aria-hidden']==='true';if(s.startsWith('.'))return (props.classes||[]).includes(s.slice(1));if(s.startsWith('['))return false;return tag===s;});},closest(s){for(let p=this;p;p=p.parentElement)if(p.matches(s))return p;return null;},querySelector(s){for(const c of children){if(c.nodeType!==1)continue;if(c.matches(s))return c;const n=c.querySelector(s);if(n)return n;}return null;}};children.forEach(c=>c.parentElement=e);return e;}
+const body=el('body');const context={document:{body,getElementById:()=>null},Map,Set,console,getComputedStyle:e=>({display:e.display}),ok:(v,m)=>{assert.ok(v,m);count++;},el};vm.createContext(context);vm.runInContext(source,context);
+vm.runInContext(`{
+ const action=el('button',{text:'服用回春丹'}),disabled=el('button',{text:'突破',disabled:true}),root=el('section',{},[action,disabled]);const rows=entries(root);ok(rows.length===2&&rows[0].el===action,'canvas actions retain the exact canonical target');ok(rows[1].disabled,'unmet gameplay conditions remain disabled');
+ const hidden=el('section',{classes:['hidden']},[el('button',{text:'不可見'})]);ok(entries(hidden).length===0,'hidden routes cannot leak actions');
+ const cssHidden=el('section',{display:'none'},[el('button',{text:'裝飾'})]);ok(entries(cssHidden).length===0,'CSS-hidden legacy blocks are not rendered');
+ const icon=el('span',{'aria-hidden':'true',text:'☰'});ok(entries(icon).length===0,'decorative glyphs do not become layout rows');
+ const legacy=el('dialog',{'aria-hidden':'true','data-phaser-legacy':''},[el('button',{text:'交談'})]);ok(entries(legacy).length===1,'hidden source dialog still supplies its canvas view model');
+ const file=el('input',{type:'file'});ok(entries(file).length===0,'file picker stays with browser integration');
+ const name=el('input',{value:'道友',placeholder:'仙名'});ok(entries(name)[0].type==='input','text editing remains an explicit input action');
+ const checkbox=el('input',{type:'checkbox','aria-label':'選取靈草'});checkbox.checked=false;checkbox.click=()=>checkbox.checked=!checkbox.checked;invoke(checkbox);ok(checkbox.checked,'bulk inventory checkbox keeps its native checked transaction');
+ const summary=el('summary',{text:'進階設定'}),detail=el('details',{},[summary,el('p',{text:'選項'})]);ok(entries(detail).length===1,'collapsed details show only their toggle');detail.open=true;ok(entries(detail).length===2,'expanded details expose content');
+ ok(clamp(-4,0,1)===0&&clamp(5,0,1)===1,'touch and camera bounds clamp');
+}`,context);
+console.log(count+' Phaser client action, layout visibility and browser input checks passed');
