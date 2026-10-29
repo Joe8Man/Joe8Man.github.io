@@ -1,4 +1,4 @@
-import {makeGame,makeRig,makeGroundShadow,floatText} from './runtime.js?v=5';
+import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=6';
 import {createBattleAtmosphere,techniqueStyle,playHuntEffect} from './battle-art.js?v=2';
 const host=document.getElementById('phaserHunt'),api=()=>window.xianxiaHuntBridge;
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -46,7 +46,7 @@ function event(scene,event){
  }
  if(event.kind==='hit'){
   playHuntEffect(scene,{actor,enemy,id:event.id,type:event.type,critical:event.critical});
-  if(event.damage>0&&enemy){const target=enemy;if(body)body.setTintFill(event.critical?0xffe4ab:0xf5eddb);else enemyActor?.flash(event.critical?0xffe4ab:0xf5eddb);scene.time.delayedCall(75,()=>{if(body?.active)body.clearTint();});if(!still()){scene.tweens.add({targets:target,x:target.x+(event.critical?26:10),duration:75,yoyo:true,ease:'Cubic.easeOut'});if(event.critical)scene.cameras.main.shake(90,.003);}floatText(scene,target.x,target.y-150,(event.critical?'暴擊 ':'')+'−'+event.damage,event.critical?'#ffe3a1':'#e8edcf');stopFrame(scene,event.critical);tone(event.critical?'critical':'hit');
+  if(event.damage>0&&enemy){const target=enemy;if(body)fillTint(body,event.critical?0xffe4ab:0xf5eddb);else enemyActor?.flash(event.critical?0xffe4ab:0xf5eddb);scene.time.delayedCall(75,()=>{if(body?.active)body.clearTint();});if(!still()){scene.tweens.add({targets:target,x:target.x+(event.critical?26:10),duration:75,yoyo:true,ease:'Cubic.easeOut'});if(event.critical)scene.cameras.main.shake(90,.003);}floatText(scene,target.x,target.y-150,(event.critical?'暴擊 ':'')+'−'+event.damage,event.critical?'#ffe3a1':'#e8edcf');stopFrame(scene,event.critical);tone(event.critical?'critical':'hit');
    combo=scene.time.now-lastHit<1900?combo+1:1;lastHit=scene.time.now;host.querySelector('[data-hunt-combo]').textContent=combo>1?combo+' 連擊':'';
   }
   if(event.healed>0)floatText(scene,actor.root.x,actor.root.y-160,'+'+Math.round(event.healed),'#b6ebbc');if(event.control)floatText(scene,enemy.x,170,'冰封','#bce8fa');return;

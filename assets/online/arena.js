@@ -1,4 +1,4 @@
-import {makeGame,makeRig,floatText,slash} from '../engine/runtime.js?v=5';
+import {makeGame,makeRig,floatText,slash} from '../engine/runtime.js?v=6';
 import {createBattleAtmosphere} from '../engine/battle-art.js?v=2';
 const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function validReplay(data){if(!data||!['win','loss','draw'].includes(data.result)||!Array.isArray(data.rounds)||data.rounds.length<1||data.rounds.length>12)return false;let a=100,b=100;return data.rounds.every((r,i)=>{if(r.round!==i+1||!Number.isInteger(r.attack)||!Number.isInteger(r.received)||r.attack<0||r.received<0||r.selfHP!==Math.max(0,a-r.received)||r.opponentHP!==Math.max(0,b-r.attack)||a<=0||b<=0)return false;a=r.selfHP;b=r.opponentHP;return true})&&((a===b?'draw':a>b?'win':'loss')===data.result);}
