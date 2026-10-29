@@ -8,6 +8,7 @@ class FieldModel{
  move(x,y){const l=Math.hypot(x,y);this.input={x:l>1?x/l:x,y:l>1?y/l:y};}
  target(range=Infinity){return this.mobs.filter(m=>!m.dead&&dist(m,this.p)<=range).sort((a,b)=>dist(a,this.p)-dist(b,this.p))[0];}
  spawn(){
+  if(this.cfg.opponent){if(this.spawnedOpponent||!this.cfg.spend())return false;this.spawnedOpponent=true;const o=this.cfg.opponent,m={id:'cultivator',key:++this.serial,x:740,y:320,r:24,max:o.max,hp:o.max,attack:o.attack,armor:0,speed:80,at:this.time+1.5,frozenUntil:0,slowUntil:0,boss:true,dead:false,hitUntil:0};this.mobs.push(m);this.emit('spawn',{mob:{...m}});return true;}
   const boss=this.kills>=this.nextBoss;if(boss&&this.mobs.length)return false;
   const id=boss?'wolfking':['wolf','bee','boar','serpent','ape'][this.serial%5],stats=this.cfg.stats[id];if(!stats||!this.cfg.spend())return false;
   const angle=this.random()*Math.PI*2,x=clamp(this.p.x+Math.cos(angle)*330,55,905),y=clamp(this.p.y+Math.sin(angle)*270,75,590);
@@ -19,7 +20,7 @@ class FieldModel{
   const d=dist(m,this.p)||1;m.x=clamp(m.x+(m.x-this.p.x)/d*(m.boss?3:12),35,925);m.y=clamp(m.y+(m.y-this.p.y)/d*(m.boss?3:12),55,605);
   if(source.drain)this.heal(Math.min(actual,m.hp+actual)*source.drain);if(this.cfg.leech)this.heal(Math.min(actual,m.hp+actual)*this.cfg.leech);
   this.emit('hit',{key:m.key,x:m.x,y:m.y,damage:actual,critical,effect:source.effect||'sword'});
-  if(m.hp<=0){m.dead=true;this.kills++;if(m.boss)this.bosses++;const reward=this.cfg.reward(m);this.emit('kill',{mob:{...m},reward});if(m.boss&&this.cfg.mode==='dungeon')this.stop('秘境已攻克，通關材料與首勝裝備已收入行囊。');}
+  if(m.hp<=0){m.dead=true;this.kills++;if(m.boss)this.bosses++;const reward=this.cfg.reward(m);this.emit('kill',{mob:{...m},reward});if(m.boss&&['dungeon','npc'].includes(this.cfg.mode))this.stop(this.cfg.mode==='npc'?'交鋒已結束，因果已記入行旅手記。':'秘境已攻克，通關材料與首勝裝備已收入行囊。');}
  }
  hurt(amount){if(this.stopped||this.time<this.dashUntil||this.time<(this.invulnerableUntil||0))return;const damage=Math.max(1,Math.round(amount*(this.time<this.wardUntil?.45:1)*(1-Math.min(.65,this.cfg.defense||0))));this.hp=this.cfg.hurt(damage);this.invulnerableUntil=this.time+.25;this.emit('hurt',{damage});if(this.hp<this.maxHP*.2)this.stop('氣血不足，已安全撤回；收穫保留。');}
  heal(amount){if(amount<=0)return;const previous=this.hp;this.hp=this.cfg.heal(amount);if(this.hp>previous+1)this.emit('heal',{amount:this.hp-previous});}
@@ -49,7 +50,7 @@ class FieldModel{
  tick(dt){
   if(this.stopped||!Number.isFinite(dt)||dt<=0)return;dt=Math.min(dt,.05);this.time+=dt;this.qi=Math.min(100,this.qi+dt*7);
   let input=this.input,speed=180;if(this.time<this.dashUntil){input=this.dashDirection;speed=680;}if(Math.hypot(input.x,input.y)>.1)this.facing={...input};this.p.x=clamp(this.p.x+input.x*speed*dt,30,930);this.p.y=clamp(this.p.y+input.y*speed*dt,55,605);
-  if(this.time>=this.spawnAt&&this.mobs.length<4){this.waiting=!this.spawn();this.spawnAt=this.time+(this.waiting?1:2.6);}
+  if(this.time>=this.spawnAt&&this.mobs.length<4&&!(this.cfg.opponent&&this.spawnedOpponent)){this.waiting=!this.spawn();this.spawnAt=this.time+(this.waiting?1:2.6);}
   const target=this.target(410);if(target&&this.time>=this.attackAt){this.attackAt=this.time+.78;this.projectile(this.p.x,this.p.y,Math.atan2(target.y-this.p.y,target.x-this.p.x),this.cfg.attack,{effect:'sword'});this.emit('attack',{x:target.x,y:target.y});}
   if(target&&this.time<this.summonUntil&&this.time>=this.summonAt){this.summonAt=this.time+.9;this.projectile(this.p.x+35,this.p.y-25,Math.atan2(target.y-this.p.y+25,target.x-this.p.x-35),this.cfg.attack*.6,{effect:'beast',speed:440});}
   if(this.time<(this.orbitUntil||0)&&this.time>=this.orbitAt){this.orbitAt=this.time+.55;this.zone(this.p.x,this.p.y,85,this.cfg.attack*.45,.1,{effect:'guard'});}

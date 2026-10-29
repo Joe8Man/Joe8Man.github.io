@@ -24,20 +24,23 @@ const npcs=[
  ['yun','雲星晚','female',5,'天闕星官','通透','滿天星辰，各有自己的歸途。','serpent'],
  ['ning','寧御風','male',5,'雲遊仙人','逍遙','仙途不只在高處，也在每一次相逢。','wolf']
 ].map(([id,name,gender,map,title,temper,line,enemy],i)=>({id,name,gender,map,title,temper,line,enemy,seed:i,outfit_id:`sect-${map}-robe-${i%3}`}));
-const fresh=()=>({version:1,day:1,turn:0,place:'town',region:0,visited:['0-town'],bonds:{},bounty:null,claimedDay:0,auctionDay:0,omens:{},journal:['初入九州，仙途自此展開。']});
+const fresh=()=>({version:1,day:1,turn:0,place:'town',region:0,visited:['0-town'],bonds:{},bounty:null,claimedDay:0,auctionDay:0,omens:{},feuds:[],journal:['初入九州，仙途自此展開。']});
 const integer=(v,max=1e8)=>Number.isSafeInteger(v)&&v>=0&&v<=max;
-function valid(w){return !!w&&w.version===1&&integer(w.day)&&w.day>=1&&integer(w.turn,3)&&integer(w.region,5)&&places.includes(w.place)&&Array.isArray(w.visited)&&w.visited.length<=24&&new Set(w.visited).size===w.visited.length&&w.visited.every(k=>/^[0-5]-(town|wild|sect|ruin)$/.test(k))&&w.bonds&&typeof w.bonds==='object'&&!Array.isArray(w.bonds)&&Object.keys(w.bonds).every(id=>npcs.some(n=>n.id===id)&&validBond(w.bonds[id]))&&integer(w.claimedDay)&&integer(w.auctionDay)&&w.omens&&typeof w.omens==='object'&&!Array.isArray(w.omens)&&Object.keys(w.omens).every(k=>/^[0-5]$/.test(k)&&integer(w.omens[k]))&&Array.isArray(w.journal)&&w.journal.length<=24&&w.journal.every(x=>typeof x==='string'&&x.length<=200)&&(!w.bounty||integer(w.bounty.map,5)&&integer(w.bounty.baseline)&&integer(w.bounty.target,20)&&w.bounty.target>=1&&integer(w.bounty.accepted)&&w.bounty.accepted>=1);}
-function validBond(b){return !!b&&integer(b.affinity,100)&&integer(b.talk)&&integer(b.gift)&&integer(b.discuss)&&typeof b.met==='boolean';}
-function normalize(w,map=0){const result=valid(w)?w:fresh();if(result.region!==map){result.region=map;result.place='wild';}return result;}
+function valid(w){return !!w&&(w.position===undefined||w.position&&Number.isFinite(w.position.x)&&w.position.x>=2&&w.position.x<=98&&Number.isFinite(w.position.y)&&w.position.y>=2&&w.position.y<=98)&&(w.feuds===undefined||Array.isArray(w.feuds)&&w.feuds.length<=64&&w.feuds.every(f=>f&&typeof f.id==='string'&&npcs.some(n=>n.id===f.victim)&&npcs.some(n=>n.id===f.avenger)&&integer(f.due)&&['kin','sect'].includes(f.kind)&&['pending','active','resolved'].includes(f.status)))&&w.version===1&&integer(w.day)&&w.day>=1&&integer(w.turn,3)&&integer(w.region,5)&&places.includes(w.place)&&Array.isArray(w.visited)&&w.visited.length<=24&&new Set(w.visited).size===w.visited.length&&w.visited.every(k=>/^[0-5]-(town|wild|sect|ruin)$/.test(k))&&w.bonds&&typeof w.bonds==='object'&&!Array.isArray(w.bonds)&&Object.keys(w.bonds).every(id=>npcs.some(n=>n.id===id)&&validBond(w.bonds[id]))&&integer(w.claimedDay)&&integer(w.auctionDay)&&w.omens&&typeof w.omens==='object'&&!Array.isArray(w.omens)&&Object.keys(w.omens).every(k=>/^[0-5]$/.test(k)&&integer(w.omens[k]))&&Array.isArray(w.journal)&&w.journal.length<=24&&w.journal.every(x=>typeof x==='string'&&x.length<=200)&&(!w.bounty||integer(w.bounty.map,5)&&integer(w.bounty.baseline)&&integer(w.bounty.target,20)&&w.bounty.target>=1&&integer(w.bounty.accepted)&&w.bounty.accepted>=1);}
+function validBond(b){return !!b&&integer(b.affinity,100)&&integer(b.talk)&&integer(b.gift)&&integer(b.discuss)&&typeof b.met==='boolean'&&(b.hate===undefined||integer(b.hate,100))&&(b.dead===undefined||typeof b.dead==='boolean');}
+function normalize(w,map=0){const result=valid(w)?w:fresh();if(result.region!==map){result.region=map;result.place='wild';}result.feuds??=[];return result;}
 function note(w,text){w.journal.unshift('第'+w.day+'日 · '+text);w.journal=w.journal.slice(0,24);}
 function advance(w,n=1){w.turn+=n;while(w.turn>=4){w.turn-=4;w.day++;}return w.day;}
 function date(w){const year=Math.floor((w.day-1)/360)+1,month=Math.floor((w.day-1)%360/30)+1,day=(w.day-1)%30+1;return `道曆 ${year} 年 ${month} 月 ${day} 日 · ${['清晨','午時','薄暮','夜深'][w.turn]}`;}
-function bond(w,id){return w.bonds[id]??={affinity:0,talk:0,gift:0,discuss:0,met:false};}
+function bond(w,id){return w.bonds[id]??={affinity:0,talk:0,gift:0,discuss:0,met:false,hate:0,dead:false};}
 function npcPlace(n,w){return ['town','wild','town','sect'][(Math.floor((w.day-1)/2)+n.seed)%4];}
+function hostility(w,id){const b=bond(w,id);return b.dead?'已故':(b.hate||0)>=60?'仇敵':(b.hate||0)>0?'不睦':relation(b.affinity);}
+function kill(w,id){const b=bond(w,id);if(b.dead)return false;b.dead=true;b.hate=100;const n=npcs.find(n=>n.id===id),kin=npcs.find(x=>x.map===n.map&&x.id!==id),friend=npcs[(n.seed+2)%npcs.length];for(const [kind,a,days] of [['sect',kin,2],['kin',friend,4]]){if(w.feuds.filter(f=>f.status!=='resolved').length>=32)break;w.feuds.push({id:id+'-'+kind+'-'+w.day,victim:id,avenger:a.id,kind,due:w.day+days,status:'pending'});}note(w,n.name+'身死，因果已結。');return true;}
+function dueFeud(w){return (w.feuds||[]).find(f=>f.status==='pending'&&f.due<=w.day);}
 function relation(n){return n>=75?'知交':n>=40?'同道':n>=15?'相識':'初逢';}
 const sectNames=['九天劍宗','太乙仙院','天魔聖教','玄冰宮','萬獸山','丹霞谷'];regions.forEach((r,i)=>r.sect=sectNames[i]);
 const offsets={town:[0,0],wild:[-5,9],sect:[-7,-5],ruin:[8,0]};
 function point(map,place){const r=regions[map],o=offsets[place];return {x:r.x+o[0],y:r.y+o[1]};}
 function journeyDays(from,to){return Math.max(1,Math.ceil(Math.hypot(to.x-from.x,to.y-from.y)/12));}
-root.XianxiaWorld={point,journeyDays,regions,npcs,places,fresh,valid,normalize,note,advance,date,bond,npcPlace,relation};
+root.XianxiaWorld={hostility,kill,dueFeud,point,journeyDays,regions,npcs,places,fresh,valid,normalize,note,advance,date,bond,npcPlace,relation};
 })(typeof window==='undefined'?globalThis:window);
