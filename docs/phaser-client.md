@@ -28,3 +28,13 @@
 全部 15 組 Node 測試通過，包含 12 項 Canvas 動作／可見性／輸入檢查、94 項 world 檢查、32 項 field 檢查、20 項帳號／遊客入口檢查及原戰鬥／經濟／宗門套件。
 
 瀏覽器驗證標題至創角、修煉／宗門／背包／角色／山河切換、仙緣錄數值、Phaser 地圖呈現、戰鬥場景與技能控制。手機直向／橫向另用隔離預覽頁測試，不包含在公開檔案中。OAuth 憑證及真實使用者雲端資料未代為操作。
+
+## 手機比例修正
+
+主介面由 Scale.RESIZE 改成明確的 Scale.NONE 尺寸同步，使用 visualViewport／window 的 CSS 像素寬高同步 renderer、canvas 顯示尺寸與鏡頭，監聽可視區 resize、視窗 resize 與 orientationchange。舊介面的 1100px 資料樹不再影響主畫布尺寸。
+
+戰鬥場景維持 960×660 的遊戲座標及等比例 FIT，橫直向切換同步 parentSize。樣式移除強制拉滿 canvas 的寬高，改以 max-width／max-height 限制並置中；移除 FIT 的 margin，避免和 flex 置中重複位移。直向保留等比例留邊，不裁掉戰鬥區。
+
+針對舊橫向控制列 display:contents 外層無盒子的情況，直接隱藏所有舊控制子元素，Phaser HUD 仍讀取原本狀態，不會同時顯示兩套技能或搖桿。
+
+瀏覽器實測同一 iframe 連續切換 393×852、852×393：主畫布 buffer 與顯示尺寸一致，兩軸比例誤差 0。直向戰鬥顯示 393×270.1875（960×660 等比例），Canvas margin 為 0；舊技能及搖桿的 visibility 均為 hidden。field 32、world 94、client 12 項檢查通過。
