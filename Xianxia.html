@@ -140,9 +140,9 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 </style><style>.qz-planner{margin-bottom:18px}.qz-planner-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}.qz-planner-fields label{font-size:12px;color:var(--muted)}.qz-planner-fields .input{margin-top:6px}.qz-bestiary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}.qz-monster-card{padding:13px;border:1px solid var(--line);border-radius:10px;background:radial-gradient(ellipse at 50% 25%,#54694a44,#101e19)}.qz-monster-art{height:145px;display:grid;place-items:center}.qz-monster-art img{max-width:100%;max-height:145px;object-fit:contain;width:auto;height:auto;filter:drop-shadow(0 5px 8px #0006)}.qz-monster-card h4{margin:8px 0 4px;color:var(--light)}.qz-monster-card p{font-size:12px;margin:5px 0}.qz-fight-log{height:130px;overflow:auto;padding:8px 0;font-size:12px}.qz-fight-log p{margin:5px 0}.qz-planner>.btn{margin-right:8px}@media(max-width:760px){.qz-bestiary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.qz-monster-card{padding:10px}.qz-monster-art,.qz-monster-art img{max-height:115px}.qz-planner-fields{grid-template-columns:1fr}.qz-planner .row{flex-wrap:wrap}.qz-monster-card p{font-size:11px}}</style><link rel="stylesheet" href="assets/online/arena.css?v=1">
 <link rel="stylesheet" href="assets/engine/battle-ui.css?v=1">
 <link rel="stylesheet" href="assets/engine/hunt.css?v=2">
-<link rel="stylesheet" href="assets/engine/world.css?v=7">
-<script src="assets/engine/world-core.js?v=4"></script>
-<script src="assets/engine/field-core.js?v=3"></script>
+<link rel="stylesheet" href="assets/engine/world.css?v=8">
+<script src="assets/engine/world-core.js?v=5"></script>
+<script src="assets/engine/field-core.js?v=4"></script>
 </head>
 <body>
 <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"><defs>
@@ -1845,8 +1845,8 @@ window.xianxiaHuntBridge={start:huntStart,view:huntView,tick:huntTick,command:hu
 
 window.xianxiaEngine={auto:()=>guide('guideAuto'),gather:engineGather,view:engineView,start:engineStart,interact:engineInteract,command:engineCommand,go:routeTo};
 let fieldSession=null;
-function fieldStop(reason='已收劍，收穫已保存。'){
- if(!fieldSession?.active)return;if(fieldSession.spec?.feud&&!fieldSession.outcome){const w=worldState(),f=w.feuds.find(f=>f.id===fieldSession.spec.feud);if(f&&f.status==='active'){f.status='pending';f.due=w.day+2;}}fieldSession.active=false;state.auto.active=false;state.auto.reason=reason;state.auto.fight=null;autoHistory(reason);save();renderHUD();
+function fieldStop(reason='已收劍，收穫已保存。',outcome){
+ if(!fieldSession?.active)return;if(outcome==='death'&&fieldSession.spec?.mode==='npc'&&state.hp<=0&&!fieldSession.outcome){fieldSession.outcome=true;window.XianxiaWorld.clearHatred(worldState());state.hp=Math.max(1,Math.round(maxHP()*.2));log(reason,'因果');}if(fieldSession.spec?.feud&&!fieldSession.outcome){const w=worldState(),f=w.feuds.find(f=>f.id===fieldSession.spec.feud);if(f&&f.status==='active'){f.status='pending';f.due=w.day+2;}}fieldSession.active=false;state.auto.active=false;state.auto.reason=reason;state.auto.fight=null;autoHistory(reason);save();renderHUD();
 }
 function fieldStart(mode='wild'){
  const spec=typeof mode==='object'?mode:null;mode=spec?.mode||mode;const npcFight=mode==='npc',W=window.XianxiaWorld,npc=npcFight?W.npcs.find(n=>n.id===spec?.npc):null;if(npcFight&&!npc)return {error:'道友不存在。'};
@@ -1859,9 +1859,9 @@ function fieldStart(mode='wild'){
  const depth=qz().clears[qz().depth]>0?qz().depth:0;
  const enemyName=npcFight?(W.bond(worldState(),npc.id).dead?W.regions[npc.map].sect+'執法弟子':npc.name):'';
  const enemyPower=npcFight?Math.round([280,850,3400,17500,52000,110000][npc.map]*(1+npc.seed%2*.18)*(spec.intent==='revenge'?1.25:1)):0;
- const config={mode,npcIntent:spec?.intent,opponent:npcFight?{name:spec.intent==='revenge'?enemyName+' · 尋仇':enemyName,appearance:{gender:npc.gender,outfit_id:npc.outfit_id},max:Math.round(enemyPower*.9),attack:Math.max(10,Math.round(enemyPower*.045))}:null,target:mode==='dungeon'?6:10,name:state.name,map:state.location,mapName:npcFight?(spec.intent==='revenge'?'仇家尋來 · ':'與道友交鋒 · ')+enemyName:MAPS[state.location].name,scene:WORLD_ART[state.location].scene,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},monsters:Object.entries(qzEnemies()).map(([id,m])=>({id,art:m.art})),stats:Object.fromEntries(Object.entries(qzEnemies()).map(([id,m])=>[id,{...qzEnemyStats(id,depth,false),armor:m.armor||0}])),hp:state.hp,maxHP:maxHP(),attack:Math.max(12,Math.round(power()*.14))*SOLO_STANCES[solo().stance].damage*(state.martial.mind==='swordmind'?1+.04*artLevel('swordmind'):1),leech:state.martial.mind==='bloodmind'?.03*artLevel('bloodmind'):0,defense:artLevel(state.martial.movement)*(state.martial.movement==='wildstep'?.07:.06),moves:state.martial.moves.filter(id=>artLevel(id)).slice(0,3).map(id=>({...ARTS[id],level:artLevel(id)})),
+ const config={mode,deathEndsFeud:npcFight,npcIntent:spec?.intent,opponent:npcFight?{name:spec.intent==='revenge'?enemyName+' · 尋仇':enemyName,appearance:{gender:npc.gender,outfit_id:npc.outfit_id},max:Math.round(enemyPower*.9),attack:Math.max(10,Math.round(enemyPower*.045))}:null,target:mode==='dungeon'?6:10,name:state.name,map:state.location,mapName:npcFight?(spec.intent==='revenge'?'仇家尋來 · ':'與道友交鋒 · ')+enemyName:MAPS[state.location].name,scene:WORLD_ART[state.location].scene,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},monsters:Object.entries(qzEnemies()).map(([id,m])=>({id,art:m.art})),stats:Object.fromEntries(Object.entries(qzEnemies()).map(([id,m])=>[id,{...qzEnemyStats(id,depth,false),armor:m.armor||0}])),hp:state.hp,maxHP:maxHP(),attack:Math.max(12,Math.round(power()*.14))*SOLO_STANCES[solo().stance].damage*(state.martial.mind==='swordmind'?1+.04*artLevel('swordmind'):1),leech:state.martial.mind==='bloodmind'?.03*artLevel('bloodmind'):0,defense:artLevel(state.martial.movement)*(state.martial.movement==='wildstep'?.07:.06),moves:state.martial.moves.filter(id=>artLevel(id)).slice(0,3).map(id=>({...ARTS[id],level:artLevel(id)})),
  spend(){if(npcFight)return valid();if(!valid()||state.steps<1)return false;state.steps--;save();return true;},
- hurt(amount){if(!valid())return state.hp;const harm=expeditionHarm(amount,1,{defense:0});state.hp=Math.max(1,state.hp-harm);return state.hp;},
+ hurt(amount){if(!valid())return state.hp;const harm=expeditionHarm(amount,1,{defense:0});state.hp=Math.max(npcFight?0:1,state.hp-harm);return state.hp;},
  heal(amount){if(!valid())return state.hp;state.hp=Math.min(maxHP(),state.hp+amount);return state.hp;},
  potion(){if(!valid()||state.items.heal<1)return false;state.items.heal--;save();return true;},
  reward(mob){
@@ -1910,7 +1910,7 @@ function worldCommand(action,value){
   const n=W.npcs.find(n=>n.id===value);if(!n||n.map!==state.location||W.npcPlace(n,w)!==w.place||(w.position&&Math.hypot(w.position.x-W.point(n.map,W.npcPlace(n,w)).x,w.position.y-W.point(n.map,W.npcPlace(n,w)).y)>8))return {error:'道友不在此處。'};const b=W.bond(w,n.id);if(b.dead)return {error:'此人已故。'};b.met=true;if(action==='insult'){b.hate=Math.min(100,(b.hate||0)+25);b.affinity=Math.max(0,b.affinity-15);W.note(w,'對'+n.name+'惡言相向，仇怨 '+b.hate+'。');save();return {message:n.name+((b.hate||0)>=60?'忍無可忍，拔劍相向！':'對你的言語心生不滿。'),battle:b.hate>=60?{mode:'npc',npc:n.id,intent:'grudge'}:null};}b.hate=100;save();return {battle:{mode:'npc',npc:n.id,intent:'kill'}};
  }else if(['talk','gift','discuss'].includes(action)){
   const n=W.npcs.find(n=>n.id===value);if(!n||n.map!==state.location||W.npcPlace(n,w)!==w.place||(w.position&&Math.hypot(w.position.x-W.point(n.map,W.npcPlace(n,w)).x,w.position.y-W.point(n.map,W.npcPlace(n,w)).y)>8))return {error:'這位道友目前不在此處。'};const b=W.bond(w,n.id);if(b.dead)return {error:'此人已故。'};if((b.hate||0)>=60)return {error:'對方已視你為仇敵。'};b.met=true;
-  if(action==='talk'){if(b.talk===w.day)return {error:'今日已交談，改日再敘。'};b.talk=w.day;b.affinity=Math.min(100,b.affinity+5);message=n.name+'：'+n.line;advance=1;}
+  if(action==='talk'){if(b.talk===w.day)return {error:'今日已交談，改日再敘。'};b.talk=w.day;b.affinity=Math.min(100,b.affinity+5);message=n.name+'：'+n.line;const gift=W.friendGift(w,n.id);if(gift){if(gift.kind==='ward')state.items.ward+=gift.count;else state.materials[gift.kind]+=gift.count;message+=' 贈你'+({ward:'護劫符',crystal:'靈晶',fragment:'法寶殘片',insight:'感悟'}[gift.kind])+' ×'+gift.count+'，聊表心意。';}advance=1;}
   if(action==='gift'){if(b.gift===w.day)return {error:'今日已贈禮。'};if(state.items.herb<1)return {error:'贈禮需要靈草 1。'};state.items.herb--;b.gift=w.day;b.affinity=Math.min(100,b.affinity+10);message=n.name+'收下靈草，與你的交情更近了。';advance=1;}
   if(action==='discuss'){if(b.affinity<15)return {error:'交情達相識（15）後可論道。'};if(b.discuss===w.day)return {error:'今日已論道。'};if(state.steps<1)return {error:'論道需 1 精力。'};state.steps--;b.discuss=w.day;state.materials.insight++;message='與'+n.name+'論道，獲得感悟 1。';advance=2;}
  }else if(action==='opportunity'){
@@ -1947,8 +1947,8 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/journey.js?v=5"></script>
 <script type="module" src="assets/engine/hunt.js?v=3"></script>
 <script type="module" src="assets/engine/home.js?v=3"></script>
-<script type="module" src="assets/engine/world.js?v=6"></script>
-<script type="module" src="assets/engine/field.js?v=3"></script>
+<script type="module" src="assets/engine/world.js?v=7"></script>
+<script type="module" src="assets/engine/field.js?v=4"></script>
 </body></html>
 
 
