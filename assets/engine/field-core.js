@@ -22,9 +22,9 @@ class FieldModel{
   this.emit('hit',{key:m.key,x:m.x,y:m.y,damage:actual,critical,effect:source.effect||'sword'});
   if(m.hp<=0){m.dead=true;this.kills++;if(m.boss)this.bosses++;const reward=this.cfg.reward(m);this.emit('kill',{mob:{...m},reward});if(m.boss&&['dungeon','npc'].includes(this.cfg.mode))this.stop(this.cfg.mode==='npc'?'交鋒已結束，因果已記入行旅手記。':'秘境已攻克，通關材料與首勝裝備已收入行囊。');}
  }
- hurt(amount){if(this.stopped||this.time<this.dashUntil||this.time<(this.invulnerableUntil||0))return;const damage=Math.max(1,Math.round(amount*(this.time<this.wardUntil?.45:1)*(1-Math.min(.65,this.cfg.defense||0))));this.hp=this.cfg.hurt(damage);this.invulnerableUntil=this.time+.25;this.emit('hurt',{damage});if(this.hp<this.maxHP*.2)this.stop('氣血不足，已安全撤回；收穫保留。');}
+ hurt(amount){if(this.stopped||this.time<this.dashUntil||this.time<(this.invulnerableUntil||0))return;const damage=Math.max(1,Math.round(amount*(this.time<this.wardUntil?.45:1)*(1-Math.min(.65,this.cfg.defense||0))));this.hp=this.cfg.hurt(damage);this.invulnerableUntil=this.time+.25;this.emit('hurt',{damage});if(this.cfg.deathEndsFeud){if(this.hp<=0)this.stop('遭仇家殺死，重傷甦醒；所有仇恨與尋仇已消除。','death');}else if(this.hp<this.maxHP*.2)this.stop('氣血不足，已安全撤回；收穫保留。');}
  heal(amount){if(amount<=0)return;const previous=this.hp;this.hp=this.cfg.heal(amount);if(this.hp>previous+1)this.emit('heal',{amount:this.hp-previous});}
- stop(reason='已收劍，收穫已保存。'){if(this.stopped)return;this.stopped=true;this.cfg.stop(reason);this.emit('stop',{reason});}
+ stop(reason='已收劍，收穫已保存。',outcome){if(this.stopped)return;this.stopped=true;this.cfg.stop(reason,outcome);this.emit('stop',{reason});}
  projectile(x,y,angle,damage,options={}){this.shots.push({key:++this.serial,x,y,vx:Math.cos(angle)*(options.speed||510),vy:Math.sin(angle)*(options.speed||510),damage,r:options.r||7,team:options.team||'hero',pierce:options.pierce||1,seen:new Set(),expires:this.time+(options.life||1.8),effect:options.effect||'sword',...options});}
  zone(x,y,r,damage,life=.2,options={}){this.zones.push({key:++this.serial,x,y,r,damage,expires:this.time+life,at:this.time,interval:options.interval||.5,...options});this.emit('zone',{x,y,r,life,effect:options.effect||'wind'});}
  cast(id){

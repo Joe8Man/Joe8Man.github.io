@@ -36,11 +36,14 @@ function bond(w,id){return w.bonds[id]??={affinity:0,talk:0,gift:0,discuss:0,met
 function npcPlace(n,w){return ['town','wild','town','sect'][(Math.floor((w.day-1)/2)+n.seed)%4];}
 function hostility(w,id){const b=bond(w,id);return b.dead?'已故':(b.hate||0)>=60?'仇敵':(b.hate||0)>0?'不睦':relation(b.affinity);}
 function kill(w,id){const b=bond(w,id);if(b.dead)return false;b.dead=true;b.hate=100;const n=npcs.find(n=>n.id===id),kin=npcs.find(x=>x.map===n.map&&x.id!==id),friend=npcs[(n.seed+2)%npcs.length];for(const [kind,a,days] of [['sect',kin,2],['kin',friend,4]]){if(w.feuds.filter(f=>f.status!=='resolved').length>=32)break;w.feuds.push({id:id+'-'+kind+'-'+w.day,victim:id,avenger:a.id,kind,due:w.day+days,status:'pending'});}note(w,n.name+'身死，因果已結。');return true;}
+function clearHatred(w){for(const b of Object.values(w.bonds))b.hate=0;for(const f of w.feuds||[])f.status='resolved';note(w,'遭仇家殺死，重傷甦醒；一死了恩仇，所有仇恨與追討已消除。');}
+function giftChance(affinity){return affinity>=90?40:affinity>=75?25:affinity>=40?10:0;}
+function friendGift(w,id){const n=npcs.find(n=>n.id===id),b=bond(w,id),chance=giftChance(b.affinity);if(!n||b.dead||(b.hate||0)>0||!chance)return null;let roll=Math.imul(w.day+1,2654435761)^Math.imul(n.seed+1,1597334677);roll^=roll>>>16;roll=Math.imul(roll,2246822507);roll^=roll>>>13;roll=Math.imul(roll,3266489909);roll=(roll^(roll>>>16))>>>0;if(roll%100>=chance)return null;const kind=b.affinity>=75&&roll%4===0?'ward':['crystal','fragment','insight'][roll%3];return {kind,count:kind==='ward'?1:b.affinity>=75?2:1};}
 function dueFeud(w){return (w.feuds||[]).find(f=>f.status==='pending'&&f.due<=w.day);}
 function relation(n){return n>=75?'知交':n>=40?'同道':n>=15?'相識':'初逢';}
 const sectNames=['九天劍宗','太乙仙院','天魔聖教','玄冰宮','萬獸山','丹霞谷'];regions.forEach((r,i)=>r.sect=sectNames[i]);
 const offsets={town:[0,0],wild:[-5,9],sect:[-7,-5],ruin:[8,0]};
 function point(map,place){const r=regions[map],o=offsets[place];return {x:r.x+o[0],y:r.y+o[1]};}
 function journeyDays(from,to){return Math.max(1,Math.ceil(Math.hypot(to.x-from.x,to.y-from.y)/12));}
-root.XianxiaWorld={hostility,kill,dueFeud,point,journeyDays,regions,npcs,places,fresh,valid,normalize,note,advance,date,bond,npcPlace,relation};
+root.XianxiaWorld={clearHatred,giftChance,friendGift,hostility,kill,dueFeud,point,journeyDays,regions,npcs,places,fresh,valid,normalize,note,advance,date,bond,npcPlace,relation};
 })(typeof window==='undefined'?globalThis:window);
