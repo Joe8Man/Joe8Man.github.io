@@ -1057,6 +1057,7 @@ function help(){
 function save(){
   if(!state)return false;
   try{
+    syncAchievements();
     const data=snapshot();
     localStorage.setItem(KEY,JSON.stringify(data));
     state.savedAt=data.savedAt;state.battle=data.battle;storageOK=true;
@@ -1088,6 +1089,7 @@ function validBattle(b){
 function validSave(s){
   try{
     if(!s||typeof s!=='object'||Array.isArray(s))return false;
+    if(s.achievements!==undefined&&!validAchievements(s.achievements))return false;
     if(s.world!==undefined&&window.XianxiaWorld&&!window.XianxiaWorld.valid(s.world))return false;
     if(s.solo!==undefined&&!validSolo(s.solo,s))return false;
     if(s.qingzhou!==undefined&&!validQz(s.qingzhou,s))return false;
@@ -1891,13 +1893,66 @@ window.xianxiaFieldBridge={start:fieldStart,stop:fieldStop,view:()=>state?{activ
 // The world layer stores only new world data; original progression remains canonical.
 function worldState(){if(!state)return null;state.world=window.XianxiaWorld.normalize(state.world,state.location);return state.world;}
 function worldKills(map=state.location){return Object.values(qz(map).kills).reduce((a,b)=>a+b,0);}
+const ACHIEVEMENTS=[
+ ['first','初試鋒芒','累計討伐妖物 1 隻','kills',1],['hunter','百妖斬','累計討伐妖物 100 隻','kills',100],['slayer','千妖伏誅','累計討伐妖物 1,000 隻','kills',1000],
+ ['traveler','山河過客','探訪 4 處地點','visited',4],['wanderer','行遍山海','探訪 12 處地點','visited',12],['world','九州行者','探訪全部 24 處地點','visited',24],
+ ['foundation','道基初成','達到築基境','realm',1],['nascent','元嬰真人','達到元嬰境','realm',3],
+ ['boss','秘境破陣者','完成秘境討伐 1 次','clears',1],['conqueror','十境蕩妖','累計完成秘境討伐 10 次','clears',10],
+ ['friends','山海知交','與 3 位道友的好友值達 40','friends',3],['artifact','本命相隨','本命法寶成長至第 5 階','artifact',5]
+];
+function achievementProgress(){return {kills:Array.from({length:6},(_,i)=>worldKills(i)).reduce((a,b)=>a+b,0),visited:state.world?.visited?.length||0,realm:state.realm,clears:state.journey.clears.reduce((a,b)=>a+b,0),friends:Object.values(state.world?.bonds||{}).filter(b=>!b.dead&&b.affinity>=40).length,artifact:state.artifact.unlocked?state.artifact.level:0};}
+function validAchievements(a){return !!a&&!Array.isArray(a)&&Array.isArray(a.unlocked)&&a.unlocked.length<=ACHIEVEMENTS.length&&new Set(a.unlocked).size===a.unlocked.length&&a.unlocked.every(id=>ACHIEVEMENTS.some(x=>x[0]===id))&&(a.equipped===null||a.unlocked.includes(a.equipped));}
+function syncAchievements(){
+ if(!state)return;state.achievements??={unlocked:[],equipped:null};const a=state.achievements,p=achievementProgress();
+ for(const [id,title,desc,key,target] of ACHIEVEMENTS)if(p[key]>=target&&!a.unlocked.includes(id))a.unlocked.push(id);
+ return a;
+}
+function achievementView(){const a=syncAchievements(),p=achievementProgress();return {equipped:a.equipped,title:ACHIEVEMENTS.find(x=>x[0]===a.equipped)?.[1]||'',items:ACHIEVEMENTS.map(([id,title,desc,key,target])=>({id,title,desc,progress:Math.min(target,p[key]),target,unlocked:a.unlocked.includes(id)}))};}
+function achievementGreeting(n,b){
+ const a=achievementView(),item=a.items.find(x=>x.id===a.equipped);if(!item?.unlocked)return n.line;
+ const title='「'+item.title+'」';
+ if((b.hate||0)>=60)return title+'的名聲我聽過，但你我之間的恩怨，不會因一個稱號就此揭過。';
+ if((b.hate||0)>0)return '如今你已被稱作'+title+'，可昔日的芥蒂，還得慢慢化解。';
+ const lines={
+ first:['原來是'+title+'。第一次除妖的劍鳴，你可還記得？','聽聞你已初試鋒芒，山野凶險，莫急著深入。'],
+ hunter:['百妖已伏於你劍下，'+title+'果然名不虛傳。','有'+title+'在此，附近百姓也能安穩些。'],
+ slayer:['千妖伏誅的傳聞已傳遍山海，今日終於見到你。','能斬千妖，更要守住道心。'+title+'，切記。'],
+ traveler:['山河過客，又走到了此地。沿途可有值得一聽的風物？','既已踏訪數處山河，不妨坐下，聊聊你的見聞。'],
+ wanderer:['聽聞你行遍山海，可曾找到最想停留的地方？','十二處風物盡入眼底，'+title+'，說些旅途故事吧。'],
+ world:['二十四處山河皆留過你的足跡，九州行者，令人神往。','待你再行九州，可否替我捎一縷故鄉的風？'],
+ foundation:['道基初成，仙途才剛展開。恭喜道友踏入築基。','根基穩固方能行遠，你這'+title+'當之無愧。'],
+ nascent:['元嬰真人親至，在下有禮了。願有緣討教修行心得。','元嬰已成，想必你已看見與從前不同的天地。'],
+ boss:['聽聞你破開秘境、擊退首領，可否說說那場交鋒？','秘境破陣者，下一次出行也莫忘帶足療傷丹藥。'],
+ conqueror:['十次秘境告捷，你對首領的破綻想必瞭然於心。','十境蕩妖的名聲已傳到此地，今日得見，幸會。'],
+ friends:['山海知交遍四方，能與你結緣，是一樁幸事。','你的好名聲是朋友們口口相傳的，'+title+'，坐下聊聊。'],
+ artifact:['你與本命法寶的氣息已愈發相合，難怪得名'+title+'。','劍有靈，人有情。本命相隨，這份緣法可要珍惜。']
+ };
+ const pool=lines[item.id]||[n.line],line=pool[((state.world?.day||1)+(n.seed||0))%pool.length];
+ return (b.affinity>=40?'老友，':b.affinity>=15?'道友，':'')+line;
+}
+function showAchievements(){const a=achievementView();showModal('achievements',`<span class="kicker">山海功名</span><h2 id="modalTitle">成就與稱號</h2><p>已解鎖 ${a.items.filter(x=>x.unlocked).length} / ${a.items.length} · 目前稱號：${a.title||'未佩戴'}</p><p>達成即永久解鎖，可自由更換或卸下。稱號顯示於大地圖姓名上方，不影響戰力。既有修行紀錄會自動計入。</p><button class="btn" data-w-action="title" data-w-value="" ${!a.equipped?'disabled':''}>卸下稱號</button><div class="achievement-list">${a.items.map(x=>`<article class="world-contract"><h3>${x.title}</h3><p>${x.desc} · ${x.progress} / ${x.target}</p><button class="btn ${x.unlocked?'primary':''}" data-w-action="title" data-w-value="${x.id}" ${!x.unlocked||a.equipped===x.id?'disabled':''}>${a.equipped===x.id?'佩戴中':x.unlocked?'佩戴 · '+x.title:'尚未達成'}</button></article>`).join('')}</div><button class="btn ghost" data-action="close">返回山河</button>`);}
+// Advisory only: fixed regional enemies, equipped build and current health; never gates travel.
+function regionReadiness(map){
+ const depth=qz(map).clears[qz(map).depth]>0?qz(map).depth:0;
+ const moves=state.martial.moves.filter(id=>artLevel(id)>0).slice(0,3);
+ const build=1+Math.min(.3,moves.reduce((s,id)=>s+artLevel(id)*.025,0))+Math.min(.12,artLevel(state.martial.mind)*.025)+(state.artifact.unlocked?Math.min(.15,state.artifact.level*.015):0);
+ const hpRatio=state.hp/maxHP(),defense=artLevel(state.martial.movement)*(state.martial.movement==='wildstep'?.07:.06);
+ const assess=boss=>{const enemy=qzEnemyStats(boss?'wolfking':'ape',depth,false,map),harm=Math.max(1,expeditionHarm(enemy.attack,boss?1:.68,{defense})),reference=encounterReference(map,depth,boss?'wolfking':'ape').power;
+  const offense=power()*build/Math.max(1,reference*(boss?1.35:1.05)),survival=maxHP()/harm/(boss?12:9),score=Math.min(offense,survival);
+  const tone=score<.75||hpRatio<.2?'danger':score<1.2||hpRatio<.6?'caution':'safe';
+  return {tone,label:tone==='safe'?'適合歷練':tone==='caution'?'挑戰較高':'實力不足',reference:Math.round(reference*(boss?1.35:1.05))};};
+ return {wild:assess(false),dungeon:assess(true),realm:REALMS[Math.max(REGION_REALM[map],qzDepths(map)[depth].realm)],depth:qzDepths(map)[depth].name,health:hpRatio<.6?'目前氣血偏低，建議先療傷。':'',note:'依戰力、最大氣血、配置招式、心法、身法與法寶估算；走位與搭配會影響結果。'};
+}
 function worldView(){
  if(!state)return null;const W=window.XianxiaWorld,w=worldState(),b=w.bounty;
- return {world:JSON.parse(JSON.stringify(w)),position:w.position||W.point(state.location,w.place),date:W.date(w),name:state.name,level:levelName(),hp:state.hp,maxHP:maxHP(),xp:state.xp,need:needXP(),stones:state.stones,steps:state.steps,power:power(),map:state.location,artifact:state.artifact.unlocked,sect:state.sect===null?null:{name:sect().name,rank:RANKS[state.rank]},regions:MAPS.map((m,i)=>({...W.regions[i],description:m.desc,reason:regionReason(i),clears:state.journey.clears[i]})),npcs:W.npcs.map(n=>({...n,place:W.npcPlace(n,w),bond:w.bonds[n.id]||{affinity:0,met:false},relation:W.hostility(w,n.id),dead:!!w.bonds[n.id]?.dead,sectName:W.regions[n.map].sect,combatPower:Math.round([280,850,3400,17500,52000,110000][n.map]*(1+n.seed%2*.18))})),bounty:b?{...b,progress:Math.min(b.target,Math.max(0,worldKills(b.map)-b.baseline)),reward:MAPS[b.map].reward*2}:null,auction:worldAuction(),locked:!!actionLock(),pending:!!state.journey.pending||!!combat,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},goal:state.realm===0&&!state.artifact.unlocked?'先在竹林尋得本命殘劍，再踏上除妖之路。':state.xp>=needXP()?'修為已滿，前往洞府查看提升與突破條件。':w.bounty?'前往懸賞所在地除妖，完成後回城交付。':'接取城鎮懸賞，打怪、收集資源，準備下一次突破。'};
+ return {world:JSON.parse(JSON.stringify(w)),position:w.position||W.point(state.location,w.place),date:W.date(w),achievements:achievementView(),name:state.name,level:levelName(),hp:state.hp,maxHP:maxHP(),xp:state.xp,need:needXP(),stones:state.stones,steps:state.steps,power:power(),map:state.location,artifact:state.artifact.unlocked,sect:state.sect===null?null:{name:sect().name,rank:RANKS[state.rank]},regions:MAPS.map((m,i)=>({...W.regions[i],description:m.desc,readiness:regionReadiness(i),reason:regionReason(i),clears:state.journey.clears[i]})),npcs:W.npcs.map(n=>({...n,greeting:achievementGreeting(n,w.bonds[n.id]||{}),place:W.npcPlace(n,w),bond:w.bonds[n.id]||{affinity:0,met:false},relation:W.hostility(w,n.id),dead:!!w.bonds[n.id]?.dead,sectName:W.regions[n.map].sect,combatPower:Math.round([280,850,3400,17500,52000,110000][n.map]*(1+n.seed%2*.18))})),bounty:b?{...b,progress:Math.min(b.target,Math.max(0,worldKills(b.map)-b.baseline)),reward:MAPS[b.map].reward*2}:null,auction:worldAuction(),locked:!!actionLock(),pending:!!state.journey.pending||!!combat,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},goal:state.realm===0&&!state.artifact.unlocked?'先在竹林尋得本命殘劍，再踏上除妖之路。':state.xp>=needXP()?'修為已滿，前往洞府查看提升與突破條件。':w.bounty?'前往懸賞所在地除妖，完成後回城交付。':'接取城鎮懸賞，打怪、收集資源，準備下一次突破。'};
 }
 function worldAuction(){const w=worldState();if(!w)return null;const slots=Object.keys(SLOT_NAMES),id=w.day%3===0?`${state.location}-rare`:`${state.location}-${slots[(w.day+state.location)%4]}`,g=GEAR[id];return g?{id,name:g.name,price:Math.ceil(g.price*.85),owned:state.ownedGear.includes(id),sold:w.auctionDay===w.day,desc:'每日輪換本地裝備，每三日可見珍品。一口價成交，收入背包。'}:null;}
 function worldCommand(action,value){
- if(!state)return {error:'請先建立角色。'};const W=window.XianxiaWorld,w=worldState(),locked=actionLock();
+ if(!state)return {error:'請先建立角色。'};
+ if(action==='achievements'){showAchievements();return {view:worldView()};}
+ if(action==='title'){const a=syncAchievements();if(value&&!a.unlocked.includes(value))return {error:'尚未解鎖此稱號。'};a.equipped=value||null;save();showAchievements();return {view:worldView(),message:value?'已更換稱號。':'已卸下稱號。'};}
+ const W=window.XianxiaWorld,w=worldState(),locked=actionLock();
  if(locked)return {error:locked};
  if(state.journey.pending&&!['continue','cultivate'].includes(action))return {error:'請先接續或撤退目前的探索事件。'};
  let message='',advance=0;
@@ -1921,7 +1976,7 @@ function worldCommand(action,value){
   const n=W.npcs.find(n=>n.id===value);if(!n||n.map!==state.location||W.npcPlace(n,w)!==w.place||(w.position&&Math.hypot(w.position.x-W.point(n.map,W.npcPlace(n,w)).x,w.position.y-W.point(n.map,W.npcPlace(n,w)).y)>8))return {error:'道友不在此處。'};const b=W.bond(w,n.id);if(b.dead)return {error:'此人已故。'};b.met=true;if(action==='insult'){b.hate=Math.min(100,(b.hate||0)+25);b.affinity=Math.max(0,b.affinity-15);W.note(w,'對'+n.name+'惡言相向，仇怨 '+b.hate+'。');save();return {message:n.name+((b.hate||0)>=60?'忍無可忍，拔劍相向！':'對你的言語心生不滿。'),battle:b.hate>=60?{mode:'npc',npc:n.id,intent:'grudge'}:null};}b.hate=100;save();return {battle:{mode:'npc',npc:n.id,intent:'kill'}};
  }else if(['talk','gift','discuss'].includes(action)){
   const n=W.npcs.find(n=>n.id===value);if(!n||n.map!==state.location||W.npcPlace(n,w)!==w.place||(w.position&&Math.hypot(w.position.x-W.point(n.map,W.npcPlace(n,w)).x,w.position.y-W.point(n.map,W.npcPlace(n,w)).y)>8))return {error:'這位道友目前不在此處。'};const b=W.bond(w,n.id);if(b.dead)return {error:'此人已故。'};if((b.hate||0)>=60)return {error:'對方已視你為仇敵。'};b.met=true;
-  if(action==='talk'){if(b.talk===w.day)return {error:'今日已交談，改日再敘。'};b.talk=w.day;b.affinity=Math.min(100,b.affinity+5);message=n.name+'：'+n.line;const gift=W.friendGift(w,n.id);if(gift){if(gift.kind==='ward')state.items.ward+=gift.count;else state.materials[gift.kind]+=gift.count;message+=' 贈你'+({ward:'護劫符',crystal:'靈晶',fragment:'法寶殘片',insight:'感悟'}[gift.kind])+' ×'+gift.count+'，聊表心意。';}advance=1;}
+  if(action==='talk'){if(b.talk===w.day)return {error:'今日已交談，改日再敘。'};b.talk=w.day;b.affinity=Math.min(100,b.affinity+5);message=n.name+'：'+achievementGreeting(n,b);const gift=W.friendGift(w,n.id);if(gift){if(gift.kind==='ward')state.items.ward+=gift.count;else state.materials[gift.kind]+=gift.count;message+=' 贈你'+({ward:'護劫符',crystal:'靈晶',fragment:'法寶殘片',insight:'感悟'}[gift.kind])+' ×'+gift.count+'，聊表心意。';}advance=1;}
   if(action==='gift'){if(b.gift===w.day)return {error:'今日已贈禮。'};if(state.items.herb<1)return {error:'贈禮需要靈草 1。'};state.items.herb--;b.gift=w.day;b.affinity=Math.min(100,b.affinity+10);message=n.name+'收下靈草，與你的交情更近了。';advance=1;}
   if(action==='discuss'){if(b.affinity<15)return {error:'交情達相識（15）後可論道。'};if(b.discuss===w.day)return {error:'今日已論道。'};if(state.steps<1)return {error:'論道需 1 精力。'};state.steps--;b.discuss=w.day;state.materials.insight++;message='與'+n.name+'論道，獲得感悟 1。';advance=2;}
  }else if(action==='opportunity'){
@@ -1958,10 +2013,11 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/journey.js?v=5"></script>
 <script type="module" src="assets/engine/hunt.js?v=3"></script>
 <script type="module" src="assets/engine/home.js?v=3"></script>
-<script type="module" src="assets/engine/world.js?v=10"></script>
+<script type="module" src="assets/engine/world.js?v=11"></script>
 <script type="module" src="assets/engine/field.js?v=7"></script>
-<script type="module" src="assets/engine/client.js?v=10"></script>
+<script type="module" src="assets/engine/client.js?v=11"></script>
 </body></html>
+
 
 
 
