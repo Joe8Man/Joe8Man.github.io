@@ -92,10 +92,25 @@ function renderWorkspace(v){const width=uiWidth(),height=uiHeight(),w=Math.min(9
   const controls=[...spar.querySelectorAll('button')].filter(el=>!el.hidden),bw=(w-(controls.length-1)*8)/Math.max(1,controls.length),y=Math.min(height-140,234+artH);controls.forEach((el,i)=>button(c,x+i*(bw+8),y,bw,48,el.textContent,()=>invoke(el),el.disabled));return true;
  }
 
+ if(v.root?.querySelector('[data-prologue]')){
+  const panel=v.root.querySelector('[data-prologue]'),art=panel.querySelector('.prologue-art'),copy=panel.querySelector('.prologue-copy');
+  const source=panel.style.getPropertyValue('--prologue-art').match(/url\(['"]?([^'")]+)/)?.[1],k=texture(source),c=scene.add.container();addUI(c);
+  const artHeight=Math.min(height*.48,360),artTop=78;
+  if(k){const image=scene.add.image(width/2,artTop+artHeight/2,k),sourceImage=image.texture.getSourceImage();image.setScale(Math.max(width/sourceImage.width,artHeight/sourceImage.height));c.add(image);scene.tweens.add({targets:image,scaleX:image.scaleX*1.07,scaleY:image.scaleY*1.07,duration:9500,ease:'Sine.easeInOut'});}
+  c.add(scene.add.rectangle(width/2,artTop+artHeight-20,width,120,0x12291f,.56));
+  const part=copy.querySelector('.kicker')?.textContent||'一念九州',title=plain(copy.querySelector('h2')),description=plain(copy.querySelector('p'));
+  const textTop=Math.max(artTop+artHeight+12,height*.53),font=width<500?17:20;
+  c.add(text(x,textTop,part,12,'#d2bd8b',w));c.add(text(x,textTop+30,title,width<500?28:36,'#f0deb1',w));
+  c.add(text(x,textTop+90,description,font,'#d8e4d6',w).setLineSpacing(11));
+  const actions=scene.add.container();addUI(actions);const next=copy.querySelector('[data-prologue-next]'),skip=copy.querySelector('[data-prologue-skip]');
+  const buttonY=height-136;button(actions,x,buttonY,Math.min(130,w*.34),44,'略過',()=>invoke(skip));button(actions,x+Math.min(140,w*.36),buttonY,w-Math.min(140,w*.36),44,plain(next),()=>invoke(next),false,true);
+  const progress=copy.querySelectorAll('.prologue-progress i');progress.forEach((dot,i)=>actions.add(scene.add.rectangle(width/2+(i-(progress.length-1)/2)*36,buttonY-18,25,3,dot.classList.contains('active')?0xe5c987:0x738a76)));
+  return true;
+ }
  const actions=root=>[...root.querySelectorAll('button')].filter(el=>shown(el));
  if(v.key==='menu'){
   const go=r=>{menu=false;bridge().go(r);stamp='';};
-  const items=[{title:'洞府修煉',subtitle:'修煉、道基與機緣',icon:'book',action:()=>go('home')},{title:'仙緣錄',subtitle:'道友、交情與恩怨',icon:'book',action:()=>{menu=false;document.querySelector('[data-w-roster]').click();}},{title:'坊市',subtitle:'購買靈物與古籍',icon:'book',action:()=>go('shop')},{title:'線上道友',subtitle:'玩家名帖與切磋',icon:'book',action:()=>go('community')},{title:'行旅手記',subtitle:'足跡與山河往事',icon:'book',action:()=>{menu=false;window.xianxiaWorldUI.journal();}},{title:'山河地圖',subtitle:'返回大地圖',icon:'mountain',action:()=>go('map')}];
+  const items=[{title:'返回大地圖',subtitle:'繼續山海行旅',icon:'mountain',action:()=>go('map')},{title:'洞府修煉',subtitle:'修煉、道基與機緣',icon:'book',action:()=>go('home')},{title:'仙緣錄',subtitle:'道友、交情與恩怨',icon:'book',action:()=>{menu=false;document.querySelector('[data-w-roster]').click();}},{title:'坊市',subtitle:'購買靈物與古籍',icon:'book',action:()=>go('shop')},{title:'線上道友',subtitle:'玩家名帖與切磋',icon:'book',action:()=>go('community')},{title:'行旅手記',subtitle:'足跡與山河往事',icon:'book',action:()=>{menu=false;window.xianxiaWorldUI.journal();}},{title:'山河地圖',subtitle:'返回大地圖',icon:'mountain',action:()=>go('map')}];
   grid(items,84,bottom,2,'menu:routes',118);return true;
  }
 
@@ -143,20 +158,25 @@ function current(){if(document.body.classList.contains('is-field'))return {root:
  if(!dom('creatorOverlay').classList.contains('hidden'))return {root:dom('creatorOverlay').querySelector('.creator-form'),key:'creator',title:'初入仙途'};
  for(const [id,title,close] of [['phaserHunt','歷練交鋒',()=>window.xianxiaHunt?.close()],['phaserJourney','秘境探索',()=>window.xianxiaGame?.suspend()]]){const root=dom(id);if(root&&root.querySelector('canvas')&&shown(root))return {root,key:id,title,close};}if(menu)return {root:dom('mainNav'),key:'menu',title:'行旅選單',close:()=>{menu=false;stamp='';}};const route=bridge().currentRoute();return {root:route==='map'?dom('wanderWorld').querySelector('.world-panel-content'):dom('route-'+route),key:route,title:({map:'九州山河',home:'洞府修煉',sect:'宗門',shop:'坊市',bag:'隨身背包',character:'角色與功法',community:'線上道友'})[route]};}
 function mirror(){if(!accessRoot)return;while(accessRoot.children.length>accessQueue.length)accessRoot.lastChild.remove();accessQueue.forEach((v,i)=>{let b=accessRoot.children[i];if(!b){b=document.createElement('button');accessRoot.append(b);}b.textContent=v.label;b.disabled=!!v.disabled;b.onclick=()=>{if(!v.disabled)v.action();queueMicrotask(rebuild);};});}
+function returnToWorld(v){
+ if(v.key.startsWith('modal:')&&v.root?.querySelector('[data-prologue]')){const skip=v.root.querySelector('[data-prologue-skip]');if(skip)invoke(skip);}
+ else if(v.close)v.close();
+ inspector=null;menu=false;bridge().go('map');stamp='';
+}
 function rebuild(){if(!scene||editing)return;const v=current(),rows=['map','battle'].includes(v.key)?[]:entries(v.root),sig=stableSignature(v,rows,uiWidth(),uiHeight());if(sig===stamp){refreshDynamic();return;}stamp=sig;releaseStick();stickVisual=null;dynamicMap=null;dynamicBattle=null;dom('phaser-client').dataset.uiBuilds=String(Number(dom('phaser-client').dataset.uiBuilds||0)+1);accessQueue=[];if(v.key!==screenKey){screenEpoch++;offset=0;screenKey=v.key;}ui.forEach(o=>o.destroy());ui=[];content.removeAll(true);const width=uiWidth(),height=uiHeight(),bodyWidth=Math.min(900,width-32),margin=(width-bodyWidth)/2,mainTop=76,mainBottom=height-88;
  if(v.key==='battle'){renderBattle();refreshDynamic();isolateCameras();mirror();return;}mapLayer.setVisible(v.key==='map');mapCamera.setVisible(v.key==='map');scene.cameras.main.setVisible(true);scene.cameras.main.ignore(mapLayer);if(v.key==='map'){mapViewport(height-76);renderMap();rows.length=0;}
  const header=scene.add.rectangle(0,0,width,66,0x142b24,.98).setOrigin(0).setDepth(1000);ui.push(header);const heading=text(margin,19,v.title,22);heading.setDepth(1001);ui.push(heading);
- if(v.close){const c=scene.add.container().setDepth(1002);button(c,width-90,10,74,44,'返回',v.close);ui.push(c);}else if(!['title','creator'].includes(v.key)){const c=scene.add.container().setDepth(1002);button(c,width-90,10,74,44,'⚙ 設定',()=>dom('settingsBtn').click());ui.push(c);}
+ if(v.close){const c=scene.add.container().setDepth(1002);button(c,width-94,10,78,44,'返回',v.close);ui.push(c);}else if(!['title','creator','map'].includes(v.key)){const c=scene.add.container().setDepth(1002);button(c,width-106,10,90,44,'返回地圖',()=>returnToWorld(v));ui.push(c);}else if(v.key==='map'){const c=scene.add.container().setDepth(1002);button(c,width-94,10,78,44,'⚙ 設定',()=>dom('settingsBtn').click());ui.push(c);}
  content.setPosition(0,mainTop-offset);mainMask.clear();mainMask.fillStyle(0xffffff);mainMask.fillRect(0,mainTop,width,mainBottom-mainTop);content.setMask(mainMask.createGeometryMask());let y=0;
  if(v.key==='title'){const bg=texture('assets/wander-v1/world.webp');if(bg){const image=scene.add.image(width/2,(mainBottom-mainTop)/2,bg).setDisplaySize(width,mainBottom-mainTop).setAlpha(.3);addUI(image);}addUI(text(width/2,12,'小影 Studio · 修仙行旅',14,'#a8bba4').setOrigin(.5,0));addUI(scene.add.rectangle(width/2,98,38,100,0x345442,.3).setStrokeStyle(1,0xb4a974,.8));addUI(text(width/2,54,'一\n念\n入\n道',15,'#dfcb93').setOrigin(.5,0));addUI(text(width/2,170,'一 念 九 州',Math.min(62,bodyWidth/5),'#e8d6a3').setOrigin(.5,0));addUI(text(width/2,252,'山海有盡，仙途無涯',18,'#bac8ae').setOrigin(.5,0));y=322;const c=scene.add.container();button(c,width/2-Math.min(300,bodyWidth)/2,y,Math.min(300,bodyWidth),58,'帳號登入',()=>dom('enterGameBtn').click(),dom('enterGameBtn').disabled,true);button(c,width/2-Math.min(300,bodyWidth)/2,y+74,Math.min(300,bodyWidth),58,'遊客遊玩',()=>dom('guestGameBtn').click());addUI(c);addUI(text(margin,y+153,'帳號可手動管理雲端存檔；遊客進度儲存在目前瀏覽器。',14,'#b6c4aa',bodyWidth));total=550;}
  else if(v.key!=='map'){renderWorkspace(v);total=0;}
 
  if(!['title','map'].includes(v.key)){offset=0;content.y=0;}else{offset=clamp(offset,0,Math.max(0,total-(mainBottom-mainTop)));content.y=mainTop-offset;}
  const bottom=scene.add.container().setDepth(1002);ui.push(bottom);
- if(!['title','creator'].includes(v.key)&&!v.close){
+ if(!['title','creator'].includes(v.key)&&!v.root?.querySelector('[data-prologue]')){
   bottom.add(scene.add.rectangle(0,height-70,width,70,0x142b24,.96).setOrigin(0));
   const navW=Math.min(900,width-24),navX=(width-navW)/2,gap=6,bw=(navW-gap*4)/5;
-  [['map','此地'],['character','角色'],['sect','宗門'],['bag','背包'],['menu','選單']].forEach(([r,label],i)=>button(bottom,navX+i*(bw+gap),height-60,bw,48,label,()=>{if(r==='menu'){menu=true;stamp='';return;}menu=false;bridge().go(r);if(r==='map'){dom('wanderWorld').querySelector('[data-w-tab=local]').click();window.xianxiaWorldUI.place(bridgeWorld().map+':'+bridgeWorld().world.place);}},false,r===v.key));
+  [['map','此地'],['character','角色'],['sect','宗門'],['bag','背包'],['menu','選單']].forEach(([r,label],i)=>button(bottom,navX+i*(bw+gap),height-60,bw,48,label,()=>{if(r==='map'){if(v.key==='map'){dom('wanderWorld').querySelector('[data-w-tab=local]').click();window.xianxiaWorldUI.place(bridgeWorld().map+':'+bridgeWorld().world.place);}else returnToWorld(v);return;}if(v.close)v.close();inspector=null;if(r==='menu'){menu=true;stamp='';return;}menu=false;bridge().go(r);stamp='';},false,r===v.key));
  }
  if(v.key==='map'){const stats=bridgeWorld(),resource=text(width<600?margin:margin+130,width<600?132:86,width<600?'第 '+stats.world.day+' 日 · 氣血 '+Math.round(stats.hp)+'/'+Math.round(stats.maxHP)+' · 靈石 '+stats.stones:stats.date+' · 氣血 '+Math.round(stats.hp)+'/'+Math.round(stats.maxHP)+' · 靈石 '+stats.stones,11,'#eee2bd',width<600?bodyWidth-12:Math.max(100,width-margin-250));resource.setBackgroundColor('#19372d').setPadding(6,4).setDepth(1002);ui.push(resource);dynamicMap={resources:resource,note:null};const toolbar=scene.add.container().setDepth(1002);ui.push(toolbar);button(toolbar,margin,80,54,44,'＋',()=>setMapZoom(mapZoom()+.15));button(toolbar,margin+62,80,54,44,'－',()=>setMapZoom(mapZoom()-.15));button(toolbar,width-100,80,84,44,'定位',()=>mapCamera.centerOn(hero.x,hero.y));}
 
