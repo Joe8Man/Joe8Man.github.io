@@ -95,11 +95,11 @@ function renderWorkspace(v){const width=uiWidth(),height=uiHeight(),w=Math.min(9
  if(v.root?.querySelector('[data-prologue]')){
   const panel=v.root.querySelector('[data-prologue]'),art=panel.querySelector('.prologue-art'),copy=panel.querySelector('.prologue-copy');
   const source=panel.style.getPropertyValue('--prologue-art').match(/url\(['"]?([^'")]+)/)?.[1],k=texture(source),c=scene.add.container();addUI(c);
-  const artHeight=Math.min(height*.48,360),artTop=78;
+  const artHeight=Math.min(height*.3,290),artTop=78;
   if(k){const image=scene.add.image(width/2,artTop+artHeight/2,k),sourceImage=image.texture.getSourceImage();image.setScale(Math.max(width/sourceImage.width,artHeight/sourceImage.height));c.add(image);scene.tweens.add({targets:image,scaleX:image.scaleX*1.07,scaleY:image.scaleY*1.07,duration:9500,ease:'Sine.easeInOut'});}
-  c.add(scene.add.rectangle(width/2,artTop+artHeight-20,width,120,0x12291f,.56));
+  c.add(scene.add.rectangle(width/2,(artTop+artHeight+height)/2,width,height-(artTop+artHeight),0x12291f,.99));
   const part=copy.querySelector('.kicker')?.textContent||'一念九州',title=plain(copy.querySelector('h2')),description=plain(copy.querySelector('p'));
-  const textTop=Math.max(artTop+artHeight+12,height*.53),font=width<500?17:20;
+  const textTop=Math.max(artTop+artHeight+16,height*.46),font=width<500?17:20;
   c.add(text(x,textTop,part,12,'#d2bd8b',w));c.add(text(x,textTop+30,title,width<500?28:36,'#f0deb1',w));
   c.add(text(x,textTop+90,description,font,'#d8e4d6',w).setLineSpacing(11));
   const actions=scene.add.container();addUI(actions);const next=copy.querySelector('[data-prologue-next]'),skip=copy.querySelector('[data-prologue-skip]');
