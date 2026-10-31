@@ -1951,7 +1951,7 @@ function worldAuction(){const w=worldState();if(!w)return null;const slots=Objec
 function worldCommand(action,value){
  if(!state)return {error:'請先建立角色。'};
  if(action==='achievements'){showAchievements();return {view:worldView()};}
- if(action==='title'){const a=syncAchievements();if(value&&!a.unlocked.includes(value))return {error:'尚未解鎖此稱號。'};a.equipped=value||null;save();showAchievements();return {view:worldView(),message:value?'已更換稱號。':'已卸下稱號。'};}
+ if(action==='title'||action==='wearTitle'){const a=syncAchievements();if(value&&!a.unlocked.includes(value))return {error:'尚未解鎖此稱號。'};a.equipped=value||null;save();if(action==='title')showAchievements();return {view:worldView(),message:value?'已更換稱號。':'已卸下稱號。'};}
  const W=window.XianxiaWorld,w=worldState(),locked=actionLock();
  if(locked)return {error:locked};
  if(state.journey.pending&&!['continue','cultivate'].includes(action))return {error:'請先接續或撤退目前的探索事件。'};
@@ -2013,10 +2013,11 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/journey.js?v=5"></script>
 <script type="module" src="assets/engine/hunt.js?v=3"></script>
 <script type="module" src="assets/engine/home.js?v=3"></script>
-<script type="module" src="assets/engine/world.js?v=11"></script>
+<script type="module" src="assets/engine/world.js?v=12"></script>
 <script type="module" src="assets/engine/field.js?v=7"></script>
-<script type="module" src="assets/engine/client.js?v=11"></script>
+<script type="module" src="assets/engine/client.js?v=12"></script>
 </body></html>
+
 
 
 
