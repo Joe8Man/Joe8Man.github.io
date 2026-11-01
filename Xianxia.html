@@ -143,7 +143,7 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 </style><style>.qz-planner{margin-bottom:18px}.qz-planner-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}.qz-planner-fields label{font-size:12px;color:var(--muted)}.qz-planner-fields .input{margin-top:6px}.qz-bestiary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}.qz-monster-card{padding:13px;border:1px solid var(--line);border-radius:10px;background:radial-gradient(ellipse at 50% 25%,#54694a44,#101e19)}.qz-monster-art{height:145px;display:grid;place-items:center}.qz-monster-art img{max-width:100%;max-height:145px;object-fit:contain;width:auto;height:auto;filter:drop-shadow(0 5px 8px #0006)}.qz-monster-card h4{margin:8px 0 4px;color:var(--light)}.qz-monster-card p{font-size:12px;margin:5px 0}.qz-fight-log{height:130px;overflow:auto;padding:8px 0;font-size:12px}.qz-fight-log p{margin:5px 0}.qz-planner>.btn{margin-right:8px}@media(max-width:760px){.qz-bestiary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.qz-monster-card{padding:10px}.qz-monster-art,.qz-monster-art img{max-height:115px}.qz-planner-fields{grid-template-columns:1fr}.qz-planner .row{flex-wrap:wrap}.qz-monster-card p{font-size:11px}}</style><link rel="stylesheet" href="assets/online/arena.css?v=1">
 <link rel="stylesheet" href="assets/engine/battle-ui.css?v=1">
 <link rel="stylesheet" href="assets/engine/hunt.css?v=2">
-<link rel="stylesheet" href="assets/engine/world.css?v=12">
+<link rel="stylesheet" href="assets/engine/world.css?v=13">
 <script src="assets/engine/boss-core.js?v=1"></script>
 <script src="assets/engine/world-core.js?v=6"></script>
 <script src="assets/engine/field-core.js?v=8"></script>
@@ -2031,7 +2031,7 @@ function worldView(){
  if(!state)return null;const W=window.XianxiaWorld,w=worldState(),b=w.bounty;
  return {patrol:{active:!!state.auto.active&&state.auto.mode!=='hunt'},bosses:worldBossViews(),world:JSON.parse(JSON.stringify(w)),position:w.position||W.point(state.location,w.place),date:W.date(w),achievements:achievementView(),name:state.name,level:levelName(),hp:state.hp,maxHP:maxHP(),xp:state.xp,need:needXP(),stones:state.stones,steps:state.steps,power:power(),map:state.location,artifact:state.artifact.unlocked,sect:state.sect===null?null:{name:sect().name,rank:RANKS[state.rank]},regions:MAPS.map((m,i)=>({...W.regions[i],description:m.desc,readiness:regionReadiness(i),reason:regionReason(i),clears:state.journey.clears[i]})),npcs:W.npcs.map(n=>({...n,greeting:achievementGreeting(n,w.bonds[n.id]||{}),place:W.npcPlace(n,w),bond:w.bonds[n.id]||{affinity:0,met:false},relation:W.hostility(w,n.id),dead:!!w.bonds[n.id]?.dead,sectName:W.regions[n.map].sect,combatPower:Math.round([280,850,3400,17500,52000,110000][n.map]*(1+n.seed%2*.18))})),bounty:b?{...b,progress:Math.min(b.target,Math.max(0,worldKills(b.map)-b.baseline)),reward:MAPS[b.map].reward*2}:null,auction:worldAuction(),locked:!!actionLock(),pending:!!state.journey.pending||!!combat,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},goal:state.realm===0&&!state.artifact.unlocked?'先在竹林尋得本命殘劍，再踏上除妖之路。':state.xp>=needXP()?'修為已滿，前往洞府查看提升與突破條件。':w.bounty?'前往懸賞所在地除妖，完成後回城交付。':'接取城鎮懸賞，打怪、收集資源，準備下一次突破。'};
 }
-function worldAuction(){const w=worldState();if(!w)return null;const slots=Object.keys(SLOT_NAMES),id=w.day%3===0?`${state.location}-rare`:`${state.location}-${slots[(w.day+state.location)%4]}`,g=GEAR[id];return g?{id,name:g.name,price:Math.ceil(g.price*.85),owned:state.ownedGear.includes(id),sold:w.auctionDay===w.day,desc:'每日輪換本地裝備，每三日可見珍品。一口價成交，收入背包。'}:null;}
+function worldAuction(){const w=worldState();if(!w)return null;const slots=Object.keys(SLOT_NAMES),id=w.day%3===0?`${state.location}-rare`:`${state.location}-${slots[(w.day+state.location)%4]}`,g=GEAR[id];return g?{id,name:g.name,price:Math.ceil(g.price*.85),owned:state.ownedGear.includes(id),sold:w.auctionDay===w.day,desc:'每日輪換本地裝備，每三日可見珍品。逐輪競價，最後出價才扣除靈石；成交後裝備進入背包。'}:null;}
 function worldCommand(action,value){
  if(!state)return {error:'請先建立角色。'};
  if(action==='achievements'){showAchievements();return {view:worldView()};}
@@ -2098,7 +2098,7 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/journey.js?v=5"></script>
 <script type="module" src="assets/engine/hunt.js?v=4"></script>
 <script type="module" src="assets/engine/home.js?v=3"></script>
-<script type="module" src="assets/engine/world.js?v=17"></script>
+<script type="module" src="assets/engine/world.js?v=18"></script>
 <script type="module" src="assets/engine/field.js?v=11"></script>
 <script type="module" src="assets/engine/client.js?v=23"></script>
 </body></html>
