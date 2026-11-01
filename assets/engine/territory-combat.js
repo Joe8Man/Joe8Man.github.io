@@ -10,7 +10,7 @@ class TerritoryModel extends root.XianxiaFieldModel{
  }
  tick(dt){if(this.stopped)return;super.tick(dt);if(this.stopped)return;dt=Math.max(0,Math.min(.05,dt));
  if(this.phase==='hold'){const inside=Math.hypot(this.p.x-480,this.p.y-330)<=95,contested=this.mobs.some(m=>!m.dead&&Math.hypot(m.x-480,m.y-330)<=95);this.controlling=inside&&!contested;if(this.controlling)this.hold+=dt;else if(!this.territory.defense)this.hold=0;this.territory.progress(this.hold);
-  if(!this.territory.defense&&this.hold>=300&&this.territory.win())this.stop('已站穩五分鐘，取得採集資格！請至宗門安排駐守弟子。');
+  if(!this.territory.defense&&this.hold>=this.territory.required&&this.territory.win())this.stop('已站穩三分鐘，取得採集資格！請至宗門安排駐守弟子。');
  }
  if(this.time>=this.territoryCheckAt){this.territoryCheckAt=this.time+.25;const result=this.territory.check();if(result==='win')this.stop('反攻已結束，你成功守住資源地。');else if(result==='ended')this.stop('本次反攻已結算，請查看資源地戰報。');}
  }

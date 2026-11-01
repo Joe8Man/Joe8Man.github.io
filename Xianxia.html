@@ -149,9 +149,9 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 <link rel="stylesheet" href="assets/engine/world.css?v=13">
 <script src="assets/engine/boss-core.js?v=1"></script>
 <script src="assets/engine/world-core.js?v=6"></script>
-<script src="assets/engine/territory-core.js?v=1"></script>
+<script src="assets/engine/territory-core.js?v=2"></script>
 <script src="assets/engine/field-core.js?v=9"></script>
-<script src="assets/engine/territory-combat.js?v=1"></script>
+<script src="assets/engine/territory-combat.js?v=2"></script>
 <script src="assets/engine/audio.js?v=3"></script>
 <link rel="stylesheet" href="assets/engine/client.css?v=3">
 </head>
@@ -1109,7 +1109,7 @@ function help(){
  ${section('入門引導與淬鍊','<p>大地圖點「指引」或選單的「仙途指引」，可依實際角色進度查看尋劍、除妖、穿戴、淬鍊、功法、根基與破境目標。舊角色也會自動判定完成條件，無需重建角色。</p><p>選單、角色裝備頁或背包的裝備詳情可進入玄火煉器坊；點擊爐前裝備切換要升階的武器、法衣、護符或靈戒。未持有的本地普通裝備可打造，所有已持有裝備（包含異地與世界妖王珍寶）可在熔爐淬鍊，消耗裝備所屬地區的妖材。淬鍊一階需對應妖材 2、靈晶 1，以及本地靈石費用，必定成功。首勝專屬裝備必須先討伐取得。秘境入口可選外圍、深處與險地，各自記錄首次通關；破境指定的深處試煉不需要先擊敗六大世界妖王。</p>')}
  ${section('六大世界妖王','<p>大地圖六處禁地各有一位世界妖王。點選妖王可先閱覽來歷、參考戰力、攻勢與必得珍寶；按下確認才進入，消耗 3 精力。妖王有三個戰鬥階段，氣血低於 60% 與 25% 時強化攻勢，並非普通秘境首領。氣血低於兩成會安全撤回，撤退不觸發重生。</p><p>勝利必得該妖王專屬傳世裝備與大量靈晶、法寶殘片、感悟，裝備放入背包後可穿戴。已收藏同件珍寶時，額外轉為靈晶 20 與殘片 12。每隻妖王從擊敗當下起，經現實一小時重生；關閉、重開、跨遊戲日或切換地區不會重置倒數。此討伐進度與倒數隨目前角色存檔保存，雲端存檔需依既有方式同步。</p>')}
  ${section('八 · 背包、販賣與療傷','<p>點背包格子查看用途、穿戴、使用、販賣或丟棄。販賣收入為標準價的一半並向下取整，不隨購買折扣或所在地改變；可選數量或全部處理。已穿戴裝備需先卸下；已認主法寶、已煉化修習與感悟不能販賣或丟棄。丟棄不會獲得靈石，確認前請檢查數量。</p><p>回春丹回復 60% 最大氣血；聚氣丹補充 20 秒基礎吐納修為，上限當層需求 3%，不受靈陣加成。靈草補充 10 秒基礎吐納修為、上限當層需求 1.5%，另獲 25 靈石。探索頁可原地調息，花費 30 靈石回復 35% 最大氣血。</p>')}
- ${section('資源地 · 搶奪與駐守','<p>加入宗門後可爭奪六處資源地。先擊破防禦大陣與鎮守修士，再於中央圓圈連續站穩五分鐘；高手入圈或自己離圈會重置計時。受傷不會重置，死亡或收劍則本次爭奪失敗，重新整理亦需重新攻佔。</p><p>各地固定增加 0.04／0.08／0.16／0.32／0.64／1.28 修為每秒，以及 30／45／65／90／125／170 靈石每小時。六地全佔共 +2.52 修為／秒、525 靈石／小時。修為持續累積，靈石每小時結算；離線按時間順序補算，失守立即停止後續加成。</p><p>首次佔領六小時後反攻，之後每六小時一次；提前十五分鐘在遊戲內預警，反攻持續五分鐘。十二名弟子可在宗門「駐守」頁分派，每地最多三名；貢獻可強化弟子與大陣。反攻開始後不能調動駐軍或強化大陣。玩家可進入支援，在剩餘時段至少九成時間控制中央且存活至結束，否則由原駐軍自動判定勝敗。暫停或切到背景不會延後反攻期限。</p><p>通知限遊戲開啟時顯示，關閉後下次登入補報；無背景推播。這是單人世界的系統修士爭奪，領地資料隨角色存檔保存。叛離或更換宗門會撤回駐軍並放棄領地；弟子強化階數保留。</p>')}
+ ${section('資源地 · 搶奪與駐守','<p>加入宗門後可爭奪六處資源地。先擊破防禦大陣與鎮守修士，再於中央圓圈連續站穩三分鐘；高手入圈或自己離圈會重置計時。受傷不會重置，死亡或收劍則本次爭奪失敗，重新整理亦需重新攻佔。</p><p>各地固定增加 0.06／0.12／0.24／0.48／0.96／1.92 修為每秒，以及 45／70／100／135／190／255 靈石每小時。六地全佔共 +3.78 修為／秒、795 靈石／小時。修為持續累積，靈石每小時結算；離線按時間順序補算，失守立即停止後續加成。</p><p>首次佔領六小時後反攻，之後每六小時一次；提前十五分鐘在遊戲內預警，反攻持續五分鐘。十二名弟子可在宗門「駐守」頁分派，每地最多三名；貢獻可強化弟子與大陣。反攻開始後不能調動駐軍或強化大陣。玩家可進入支援，在剩餘時段至少九成時間控制中央且存活至結束，否則由原駐軍自動判定勝敗。暫停或切到背景不會延後反攻期限。</p><p>通知限遊戲開啟時顯示，關閉後下次登入補報；無背景推播。這是單人世界的系統修士爭奪，領地資料隨角色存檔保存。叛離或更換宗門會撤回駐軍並放棄領地；弟子強化階數保留。</p>')}
  ${section('九 · 存檔、離線與常見問題','<p>標題頁可選擇帳號登入或遊客遊玩，再創角或接續本機存檔。本作以單人養成為主，傳音角色皆為 NPC。九州的「2D 探索」可用 WASD、方向鍵、點地面或觸控方向鍵移動，走近光圈後按 E 或互動；秘境遭遇戰自動普攻，功法、護體與服丹由你操作；野外另可自由移動與閃避。「設定 → 帳號與雲端存檔」可登入管理雲端，線上道友頁可公開名帖與非同步同階切磋；道友名帖來自真實玩家。每 5 秒自動儲存至目前瀏覽器；請於右上齒輪「設定 → 存檔與備份」定期匯出備份。換裝置或瀏覽器後可匯入備份，或登入後手動下載雲端存檔。雲端不會自動覆寫本機角色；清除網站資料前請備份。匯入與重新輪迴前請先備份。</p><p>離線最多補算兩小時基礎吐納，不含聚靈陣，也不會繼續自動戰鬥或功法參悟。頁面需連線載入，尚未提供離線重新開啟功能。</p><h4>按鈕不能按？</h4><p>先看按鈕旁的原因：可能是資源、階級、境界、戰力或氣血不足，也可能仍在戰鬥、委託進行中，或有探索事件待處理。查看頂部狀態，先完成事件或停止歷練，再更換裝備與功法。</p>')}
  <div class="modal-actions"><button class="btn" data-action="close">返回修行</button></div>`);
  $('guideSearch').addEventListener('input',e=>filterGuide(e.target.value));
@@ -1994,10 +1994,10 @@ function territoryReason(id,defense=false){if(!state)return '請先建立角色�
 function territoryViews(){const T=window.XianxiaTerritories,t=territoryState();if(!t)return [];return T.catalog.map(s=>{const r=t.sites[s.id];return {...s,owned:!!r?.owned,attack:r?.attack||0,nextRaid:r?.nextRaid||0,nextPay:r?.nextPay||0,ward:r?.ward||0,strength:T.strength(t,s.id),enemy:T.force(s,r||{cycle:0}),guards:t.disciples.filter(d=>d.site===s.id).map(d=>d.id),reason:territoryReason(s.id,!!r?.attack)};});}
 function territoryStart(spec){territoryUpdate();const id=spec.site,defense=!!spec.defense,reason=territoryReason(id,defense);if(reason)return {error:reason};const T=window.XianxiaTerritories,t=territoryState(),site=T.catalog.find(s=>s.id===id),r=t.sites[id];
  const beforeSteps=state.steps;state.steps+=4;const base=fieldStart('wild');state.steps=beforeSteps;if(base.error)return base;if(!defense)state.steps-=3;state.location=site.map;worldState().region=site.map;worldState().place='wild';worldState().position={x:site.x,y:site.y};state.journey.seen[site.map]|=1;fieldSession.map=site.map;fieldSession.spec={mode:'territory',site:id};state.auto.map=site.map;
- const now=Date.now(),required=defense?Math.max(.1,(r.attack+T.DURATION-now)/1000):300,session=territorySession={id,active:true,defense,hold:0,required,deadline:defense?r.attack+T.DURATION:0,won:false};
+ const now=Date.now(),required=defense?Math.max(.1,(r.attack+T.DURATION-now)/1000):T.CAPTURE,session=territorySession={id,active:true,defense,hold:0,required,deadline:defense?r.attack+T.DURATION:0,won:false};
  const valid=()=>session===territorySession&&session.active&&fieldSession?.active&&state.sect!==null;
  const force=T.force(site,r||{cycle:0});
- Object.assign(base,{mode:'territory',map:site.map,mapName:site.name+' · '+(defense?'支援防守':'資源爭奪'),deathEndsFeud:true,opponent:{name:'鎮守修士',appearance:{gender:site.map%2?'female':'male',outfit_id:null}},territory:{id,defense,required,deadline:session.deadline,force,progress(hold){if(valid())session.hold=hold;},check(){territoryUpdate();return session.won?'win':!valid()?'ended':'';},win(){if(!valid()||defense||session.hold<300)return false;territoryUpdate();const got=T.capture(t,id,Date.now());if(!got)return false;session.won=true;session.active=false;T.note(t,Date.now(),site.name+'已佔領，請安排弟子駐守。');toast('取得'+site.name+'採集資格，請到宗門派駐弟子。');save();return true;}},
+ Object.assign(base,{mode:'territory',map:site.map,mapName:site.name+' · '+(defense?'支援防守':'資源爭奪'),deathEndsFeud:true,opponent:{name:'鎮守修士',appearance:{gender:site.map%2?'female':'male',outfit_id:null}},territory:{id,defense,required,deadline:session.deadline,force,progress(hold){if(valid())session.hold=hold;},check(){territoryUpdate();return session.won?'win':!valid()?'ended':'';},win(){if(!valid()||defense||session.hold<required)return false;territoryUpdate();const got=T.capture(t,id,Date.now());if(!got)return false;session.won=true;session.active=false;T.note(t,Date.now(),site.name+'已佔領，請安排弟子駐守。');toast('取得'+site.name+'採集資格，請到宗門派駐弟子。');save();return true;}},
  hp:state.hp,maxHP:maxHP(),hurt(n){if(!valid())return state.hp;state.hp=Math.max(0,state.hp-expeditionHarm(n,1,{defense:0}));return state.hp;},
  stats:{...base.stats,cultivator:{max:force*2.6,attack:force*.055}},reward(){return null;},spend:valid,
  stop(reason,outcome){session.active=false;if(state.hp<=0){state.hp=Math.max(1,Math.round(maxHP()*.2));log('資源戰重傷退回，未取得新的佔領資格。','領地');}fieldStop(reason,outcome);territoryUpdate();save();}});
@@ -2145,8 +2145,8 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/home.js?v=3"></script>
 <script type="module" src="assets/engine/world.js?v=18"></script>
 <script type="module" src="assets/engine/field.js?v=14"></script>
-<script type="module" src="assets/engine/territory.js?v=1"></script>
-<script type="module" src="assets/engine/client.js?v=26"></script>
+<script type="module" src="assets/engine/territory.js?v=2"></script>
+<script type="module" src="assets/engine/client.js?v=27"></script>
 </body></html>
 
 

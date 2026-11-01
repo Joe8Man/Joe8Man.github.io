@@ -1,0 +1,37 @@
+{
+  "method": "built-in image_gen",
+  "style": "Use case: stylized-concept. Asset type: landscape resource location illustration for a Chinese xianxia RPG card. Create one finished beautiful 16:9 landscape painting.",
+  "assets": [
+    {
+      "id": "bamboo",
+      "brief": "A tranquil emerald bamboo valley spirit rice terrace, luminous jade rice ears, a clear winding stream, small ancient wooden waterwheel and a tasteful stone cultivation shrine.",
+      "file": "bamboo.webp"
+    },
+    {
+      "id": "marsh",
+      "brief": "A misty wetland medicinal herb garden, turquoise shallow pools with pink lotus flowers, orderly beds of glowing medicinal blossoms, a curved timber boardwalk and small distant traditional pavilion.",
+      "file": "marsh.webp"
+    },
+    {
+      "id": "reef",
+      "brief": "An ancient submerged crystal mine at a sea abyss, enormous luminous cobalt and aquamarine crystal clusters growing among weathered Chinese stone arches, soft sunlight shafts through clear blue seawater, tiny fish.",
+      "file": "reef.webp"
+    },
+    {
+      "id": "snow",
+      "brief": "A sacred geothermal spirit pool amid snowy mountains, milky turquoise spring water with curling steam, frosted pines, white jade rocks, a small distant Chinese snow-covered shrine.",
+      "file": "snow.webp"
+    },
+    {
+      "id": "shade",
+      "brief": "A secluded violet twilight mountain ravine herb garden, rare luminous purple and gold medicinal plants in a mossy stone terrace, old gnarled roots and a gentle thin waterfall, serene mysterious atmosphere.",
+      "file": "shade.webp"
+    },
+    {
+      "id": "sky",
+      "brief": "A magnificent floating mountain spirit vein high above an endless golden cloud sea, luminous amber quartz embedded in a floating jade rock island, cascading waterfalls disappearing into clouds, distant elegant Chinese celestial pavilions.",
+      "file": "sky.webp"
+    }
+  ],
+  "constraints": "Polished hand-painted Chinese fantasy game environment, delicate brush texture, richly detailed natural materials, soft atmospheric depth, jewel-like controlled colors, luminous focal point at center. Strongly readable when reduced to a small mobile card. Full bleed scene, no frame, no interface, no lettering, no text, no numbers, no watermark, no characters. Horizontal composition."
+}
