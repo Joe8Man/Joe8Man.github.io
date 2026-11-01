@@ -141,9 +141,10 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 </style><style>.qz-planner{margin-bottom:18px}.qz-planner-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}.qz-planner-fields label{font-size:12px;color:var(--muted)}.qz-planner-fields .input{margin-top:6px}.qz-bestiary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}.qz-monster-card{padding:13px;border:1px solid var(--line);border-radius:10px;background:radial-gradient(ellipse at 50% 25%,#54694a44,#101e19)}.qz-monster-art{height:145px;display:grid;place-items:center}.qz-monster-art img{max-width:100%;max-height:145px;object-fit:contain;width:auto;height:auto;filter:drop-shadow(0 5px 8px #0006)}.qz-monster-card h4{margin:8px 0 4px;color:var(--light)}.qz-monster-card p{font-size:12px;margin:5px 0}.qz-fight-log{height:130px;overflow:auto;padding:8px 0;font-size:12px}.qz-fight-log p{margin:5px 0}.qz-planner>.btn{margin-right:8px}@media(max-width:760px){.qz-bestiary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.qz-monster-card{padding:10px}.qz-monster-art,.qz-monster-art img{max-height:115px}.qz-planner-fields{grid-template-columns:1fr}.qz-planner .row{flex-wrap:wrap}.qz-monster-card p{font-size:11px}}</style><link rel="stylesheet" href="assets/online/arena.css?v=1">
 <link rel="stylesheet" href="assets/engine/battle-ui.css?v=1">
 <link rel="stylesheet" href="assets/engine/hunt.css?v=2">
-<link rel="stylesheet" href="assets/engine/world.css?v=9">
-<script src="assets/engine/world-core.js?v=5"></script>
-<script src="assets/engine/field-core.js?v=5"></script>
+<link rel="stylesheet" href="assets/engine/world.css?v=10">
+<script src="assets/engine/boss-core.js?v=1"></script>
+<script src="assets/engine/world-core.js?v=6"></script>
+<script src="assets/engine/field-core.js?v=6"></script>
 <link rel="stylesheet" href="assets/engine/client.css?v=2">
 </head>
 <style>
@@ -713,6 +714,10 @@ const GEAR=Object.fromEntries(REGIONS.flatMap((r,i)=>Object.keys(SLOT_NAMES).map
 Object.assign(GEAR,{'qz-wolffang':{id:'qz-wolffang',name:'竹王牙刃',slot:'weapon',region:0,rare:true,questOnly:true,price:2600,power:90,hp:20,rate:0,spirit:0,luck:0},'qz-jadecharm':{id:'qz-jadecharm',name:'竹心劍印',slot:'charm',region:0,rare:true,questOnly:true,price:3200,power:25,hp:70,rate:.08,spirit:4,luck:0}});
 for(const [map,r] of Object.entries(REGION_EXPEDITIONS)){const t=Number(map)+1;for(const kind of ['weapon','charm']){const id='region-'+map+'-'+kind;GEAR[id]={id,name:kind==='weapon'?r.weap:r.charm,slot:kind,region:Number(map),rare:true,questOnly:true,price:2600*t,power:(kind==='weapon'?90:25)*t,hp:(kind==='weapon'?20:70)*t,rate:kind==='charm'?.08:0,spirit:kind==='charm'?4*t:0,luck:0}}}
 
+
+// Legendary trophies are boss-only drops; existing equipment/forge/save rules apply.
+for(const b of window.XianxiaBosses?.catalog||[]){const t=b.map+1;GEAR[b.gear]={id:b.gear,name:b.relic,slot:b.slot,region:b.map,rare:true,questOnly:true,worldBoss:true,price:24000*t,power:(b.slot==='weapon'?360:100)*t,hp:(b.slot==='robe'?420:160)*t,rate:.12,spirit:10*t,luck:4*t};}
+
 function equipmentDefaults(){return {location:0,ownedGear:[],equipment:{weapon:null,robe:null,charm:null,ring:null},market:{seed:rand(1,1000000000),epochs:[-1,-1,-1,-1,-1,-1],specialLeft:[3,3,3,3,3,3],rareBought:[false,false,false,false,false,false]},nextEventAt:Date.now()+rand(120,240)*1000}}
 function gearBonus(equipment=state.equipment){const out={power:0,hp:0,rate:0,spirit:0,luck:0};for(const id of Object.values(equipment)){const g=GEAR[id];if(g)for(const k of Object.keys(out))out[k]+=g[k]*(1+(state.solo?.forge?.[id]||0)*.1)}return out}
 function gearDescription(g){const lv=state?.solo?.forge?.[g.id]||0;if(lv){g={...g};for(const k of ['power','hp','rate','spirit','luck'])g[k]*=1+lv*.1}return [g.power?`基礎戰力 +${g.power}`:'',g.hp?`基礎氣血 +${g.hp}`:'',g.rate?`修煉 +${Math.round(g.rate*100)}%`:'',g.spirit?`神識 +${g.spirit}`:'',g.luck?`福緣 +${g.luck}`:''].filter(Boolean).join(' · ')}
@@ -1073,6 +1078,7 @@ function help(){
  ${section('山海行旅 · 新版入口',`<p>進入遊戲先抵達山河主畫面。六區各有城鎮、野外、山門與遺跡，共二十四個地點；點地標查看，按啟程才移動。跨區需符合原境界與戰力門檻。當地移動每次消耗一精力，推進一刻；跨區推進兩刻。每日四刻，每月三十日。此日期僅隨行動推進，與現實日期、被動吐納時間分開，不會帶來壽元死亡懲罰。</p><p>城鎮可買賣、客棧療傷、揭懸賞或參加每日一物的商會拍品。客棧花三十靈石回復六成最大氣血；懸賞需接取後在指定地區實際討伐五隻妖物，回原城鎮交付，報酬為地區基礎靈石兩倍與感悟一，每遊戲日一次。遺跡殘碑每地每日可花一精力調查，獲靈草、感悟或殘片之一。</p><p>十二位固定 NPC 各有姓名、性格與行程，會在自己的地區移動。相同地點可交談（交情加五）、贈靈草一（加十）；交情十五可花一精力論道換感悟一。每位道友每日各一次。這些角色是單人世界 NPC；線上道友仍從更多選單進入。</p><p>野外選「入山除妖」開啟自由戰場。電腦 WASD 或方向鍵、手機拖曳搖桿移動；普攻飛劍自動鎖定射程內敵人。點技能或按一至三施放已配置功法；空白鍵閃避、R 服丹、P 暫停。技能有真氣與秒數冷卻，閃避有短暫無敵；怪物攻擊帶地面預警，走出範圍即可躲過。每隻怪生成時消耗一精力，最多四隻同場；每討伐十隻後清場迎戰一隻野外首領。野外首領不取代秘境首次通關。擊殺才給修為、靈石與掉落，未擊殺怪物離開不結算，精力不退還。氣血不足兩成自動撤回，背景與切換頁面暫停。重整不補算戰鬥。</p><p>原有境界、宗門、裝備、功法、製作、秘境分支與存檔繼續沿用。新世界日期、道友交情與懸賞一起存入本機與匯出檔案。</p>`)}
  ${section('青州專章 · 分支旅程、妖物與戰鬥',`<p>先在青州竹林取得照玄殘劍，再於歷練場景上方選擇討伐妖獸、尋訪功法、採集靈材或調查劍鳴。每趟分岔路、妖獸、劍廬與狼王四段，目標影響通關額外獎勵。</p><p>竹林外圍普通妖物可供初始角色練習；首領仍建議戰力 600。古竹深處門檻 800、建議 850；劍廬險地需築基與戰力 2,500、建議 2,600。外圍與深處每段 1 步，險地每段 2 步；戰鬥不另扣步數。循血追蹤會遇到較強山魈，新手可先救助採藥人。手動與自動對同種同深度妖物共用攻防，兩種模式預設低血自動服丹，每場最多三顆，可各自關閉。敵人依路線固定強度，不追隨角色戰力提升。</p><p>救人花費 60 靈石，取得兩點線索並減少本趟直接傷害 15%；追蹤消耗 8% 氣血、取得一點線索，會遭遇山魈；繞行不給線索。調查劍鳴目標開場多一點線索；找到隱藏入口後，會永久記下劍廬位置，日後開場再多一點線索。劍廬參悟花感悟 2，成功取得道藏殘頁與線索，失敗損失 18% 氣血；破石消耗 12% 氣血換殘劍碎片。兩點線索可進隱藏洞府挑戰劍廬傀儡，首次勝利必得「竹心劍印」。</p><p>妖物各有獨立圖像與打法：靈狼追擊、妖蜂呼伴、山豬重甲衝撞、毒蟒施毒、山魈伏擊、傀儡劍盾、竹海狼王低血狂暴與蓄力重擊。圖鑑會顯示特性、討伐次數與各自掉落，材料可於百藝修行打造與淬鍊裝備，不能交易。</p><p>秘境與宗門戰鬥採自動普攻、手動施放已配置招式；野外自由除妖另有移動與命中判定。可按「架勢護體」抵擋下一次直接攻擊、冷卻三回合；每場最多服三顆回春丹。控制能阻止出招，毒傷可穿透傀儡劍盾。背景與離線不補算戰鬥。離開畫面後暫停交鋒，可從探索事件入口返回。</p><p>中途撤退保留已得收穫，不退精力；戰鬥中撤退另損失 15% 最大氣血。戰敗回營地、氣血回復至 20%，不降境界、不清背包。路線與戰鬥可存檔接續，但已結算的怪物與劍碑不能重複領獎。</p><p>各深度首次擊敗狼王，基礎材料加倍；首次狼王勝利必得「竹王牙刃」。尋訪功法額外獲道藏殘頁 2，採集目標額外得殘片與感悟，討伐目標額外得靈石與狼王靈核，調查目標記錄劍鳴線索並獲殘頁。這些為道藏殘頁的新取得渠道。</p><p>自動歷練會遇到不同普通妖物，但不代做分支選擇、不打狼王、不開隱藏洞府；未手動通關的深度，自動巡邏仍留在外圍。舊存檔可接續；其他五區現已擴充分支旅程，見下方五區專章。</p>`)}
  ${section('七 · 資源用途與養成',`${table(['資源','主要來源','用途'],[row(['靈石','宗門俸祿、委託、歷練、販賣','坊市、聚靈陣、參悟、淬劍']),row(['貢獻','宗門任務堂委託','職位晉升、神功、傳承、法衣']),row(['靈晶','秘境、採集、援助、地方商店','跨境與重塑道基']),row(['感悟','古陣、靈植、秘境、自動採集','煉體、養神、天道築基']),row(['殘劍碎片','古陣、秘境、自動採集','溫養本命法寶'])])}<p>本命法寶不占武器欄位。溫養每次需殘片 2 及依階級增加的靈石，達二十階可重鑄仙劍。煉體與養神每次消耗感悟 2、各上限二十階：煉體每階根骨 +2；養神每階神識 +2、悟性 +1。</p><p>裝備分武器、法衣、護符與靈戒，穿戴前可比較屬性。衣閣宗門服飾另行選擇外觀。聚靈陣花費 120 靈石，60 秒吐納速率 ×2；離線補算不含此加速。</p>`)}
+ ${section('六大世界妖王','<p>大地圖六處禁地各有一位世界妖王。點選妖王可先閱覽來歷、參考戰力、攻勢與必得珍寶；按下確認才進入，消耗 3 精力。妖王有三個戰鬥階段，氣血低於 60% 與 25% 時強化攻勢，並非普通秘境首領。氣血低於兩成會安全撤回，撤退不觸發重生。</p><p>勝利必得該妖王專屬傳世裝備與大量靈晶、法寶殘片、感悟，裝備放入背包後可穿戴。已收藏同件珍寶時，額外轉為靈晶 20 與殘片 12。每隻妖王從擊敗當下起，經現實一小時重生；關閉、重開、跨遊戲日或切換地區不會重置倒數。此討伐進度與倒數隨目前角色存檔保存，雲端存檔需依既有方式同步。</p>')}
  ${section('八 · 背包、販賣與療傷','<p>點背包格子查看用途、穿戴、使用、販賣或丟棄。販賣收入為標準價的一半並向下取整，不隨購買折扣或所在地改變；可選數量或全部處理。已穿戴裝備需先卸下；已認主法寶、已煉化修習與感悟不能販賣或丟棄。丟棄不會獲得靈石，確認前請檢查數量。</p><p>回春丹回復 60% 最大氣血；聚氣丹補充 20 秒基礎吐納修為，上限當層需求 3%，不受靈陣加成。靈草補充 10 秒基礎吐納修為、上限當層需求 1.5%，另獲 25 靈石。探索頁可原地調息，花費 30 靈石回復 35% 最大氣血。</p>')}
  ${section('九 · 存檔、離線與常見問題','<p>標題頁可選擇帳號登入或遊客遊玩，再創角或接續本機存檔。本作以單人養成為主，傳音角色皆為 NPC。九州的「2D 探索」可用 WASD、方向鍵、點地面或觸控方向鍵移動，走近光圈後按 E 或互動；秘境遭遇戰自動普攻，功法、護體與服丹由你操作；野外另可自由移動與閃避。「設定 → 帳號與雲端存檔」可登入管理雲端，線上道友頁可公開名帖與非同步同階切磋；道友名帖來自真實玩家。每 5 秒自動儲存至目前瀏覽器；請於右上齒輪「設定 → 存檔與備份」定期匯出備份。換裝置或瀏覽器後可匯入備份，或登入後手動下載雲端存檔。雲端不會自動覆寫本機角色；清除網站資料前請備份。匯入與重新輪迴前請先備份。</p><p>離線最多補算兩小時基礎吐納，不含聚靈陣，也不會繼續自動戰鬥或功法參悟。頁面需連線載入，尚未提供離線重新開啟功能。</p><h4>按鈕不能按？</h4><p>先看按鈕旁的原因：可能是資源、階級、境界、戰力或氣血不足，也可能仍在戰鬥、委託進行中，或有探索事件待處理。查看頂部狀態，先完成事件或停止歷練，再更換裝備與功法。</p>')}
  <div class="modal-actions"><button class="btn" data-action="close">返回修行</button></div>`);
@@ -1594,7 +1600,7 @@ function inventoryEntry(key){
  if(typeof key!=='string')return null;
  const [type,id,...extra]=key.split(':');if(extra.length)return null;
  if(type==='gear'&&Object.hasOwn(GEAR,id)&&state.ownedGear.includes(id)){
-  const g=GEAR[id];return {key,type,id,name:g.name,count:1,base:g.price,price:Math.floor(g.price/2),icon:g.slot,rare:g.rare,equipped:state.equipment[g.slot]===id,desc:gearDescription(g),label:SLOT_NAMES[g.slot]};
+  const g=GEAR[id];return {key,type,id,name:g.name,count:1,base:g.price,price:Math.floor(g.price/2),icon:g.slot,rare:g.rare,equipped:state.equipment[g.slot]===id,desc:gearDescription(g),label:g.worldBoss?'傳世珍寶 · '+SLOT_NAMES[g.slot]:SLOT_NAMES[g.slot]};
  }
  if(type==='item'&&Object.hasOwn(ITEMS,id)&&state.items[id]>0){
   const v=ITEMS[id],base=id==='herb'?50:v.price;return {key,type,id,name:v.name,count:state.items[id],base,price:Math.floor(base/2),icon:id==='sword'?'weapon':id,protected:id==='sword',desc:v.desc,label:id==='sword'?'已煉化修習':'丹藥／靈物'};
@@ -1615,7 +1621,7 @@ function renderBag(){
 function openInventory(key){
  inventoryTransaction=null;const v=inventoryEntry(key);if(!v){closeModal();renderAll();return toast('此物品已不在背包。')}
  const block=inventoryBlock(v),usable=v.type==='item'&&!['ward','sword'].includes(v.id),equipLock=actionLock();
- showModal('inventory',`<div class="inventory-detail-head"><span class="inventory-large">${v.type==='manual'?manualArt(v.id):inventoryIcon(v.icon,v.rare,v.type==='gear'?v.id:null)}</span><div><span class="tag">${v.label}${v.rare?' · 稀有':''}${v.equipped?' · 已穿戴':''}</span><h2 id="modalTitle">${v.name}</h2><p class="note">持有 ${fmt(v.count)}</p></div></div><p>${v.desc}</p>${v.type==='gear'&&!v.equipped?gearComparison(GEAR[v.id]):''}${v.protected?'<p class="gold">此項目不可販賣或丟棄。</p>':`<p class="note">${v.type==='gear'||v.type==='item'&&v.id!=='herb'?'標準購買價':'設定標準價'} ${fmt(v.base)} 靈石 · 售價 <strong class="gold">${fmt(v.price)} 靈石／件</strong>（半價，向下取整）</p>`}${!v.protected?`<label class="inventory-quantity" for="inventoryQuantity">處理數量<span class="quantity-controls"><button class="btn ghost" data-bag-quantity="minus" aria-label="減少數量">−</button><input class="input" id="inventoryQuantity" type="number" min="1" max="${v.count}" step="1" inputmode="numeric" value="1"><button class="btn ghost" data-bag-quantity="plus" aria-label="增加數量">＋</button><button class="btn ghost" data-bag-quantity="all">全部</button></span></label><p class="note" id="inventoryQuote" aria-live="polite"></p>`:''}<div class="modal-actions">${usable?`<button class="btn primary" data-bag-use="${v.key}" ${combat&&v.id!=='heal'?'disabled':''}>${ITEMS[v.id].action}一份</button>`:''}${v.type==='item'&&v.id==='ward'?'<p class="note">護劫符在跨境失敗時自動消耗，不需手動使用。</p>':''}${v.type==='gear'?`<button class="btn primary" ${v.equipped?`data-bag-unequip="${v.key}"`:`data-bag-equip="${v.key}"`} ${equipLock?'disabled':''}>${v.equipped?'卸下裝備':'穿戴裝備'}</button>`:''}${v.type==='artifact'?'<button class="btn" data-open-artifact>前往餵養</button>':''}${v.protected?'':`<button class="btn" data-inventory-sell="${v.key}" ${block?'disabled':''}>販賣</button><button class="btn red ghost" data-inventory-discard="${v.key}" ${block?'disabled':''}>丟棄</button>`}<button class="btn ghost" data-action="close">關閉</button></div>${block&&!v.protected?`<p class="button-reason">${block}</p>`:''}<input type="hidden" id="inventoryKey" value="${v.key}">`);
+ showModal('inventory',`<div class="inventory-detail-head"><span class="inventory-large">${v.type==='manual'?manualArt(v.id):inventoryIcon(v.icon,v.rare,v.type==='gear'?v.id:null)}</span><div><span class="tag">${v.label}${v.rare?' · 稀有':''}${v.equipped?' · 已穿戴':''}</span><h2 id="modalTitle">${v.name}</h2><p class="note">持有 ${fmt(v.count)}</p></div></div><p>${v.desc}</p>${v.type==='gear'&&!v.equipped?gearComparison(GEAR[v.id]):''}${v.protected?'<p class="gold">此項目不可販賣或丟棄。</p>':`<p class="note">${v.type==='gear'||v.type==='item'&&v.id!=='herb'?'標準購買價':'設定標準價'} ${fmt(v.base)} 靈石 · 售價 <strong class="gold">${fmt(v.price)} 靈石／件</strong>（半價，向下取整）</p>`}${!v.protected?`<label class="inventory-quantity" for="inventoryQuantity">處理數量<span class="quantity-controls"><button class="btn ghost" data-bag-quantity="minus" aria-label="減少數量">−</button><input class="input" id="inventoryQuantity" aria-label="處理數量（件）" type="number" min="1" max="${v.count}" step="1" inputmode="numeric" value="1"><button class="btn ghost" data-bag-quantity="plus" aria-label="增加數量">＋</button><button class="btn ghost" data-bag-quantity="all">全部</button></span></label><p class="note" id="inventoryQuote" aria-live="polite"></p>`:''}<div class="modal-actions">${usable?`<button class="btn primary" data-bag-use="${v.key}" ${combat&&v.id!=='heal'?'disabled':''}>${ITEMS[v.id].action}一份</button>`:''}${v.type==='item'&&v.id==='ward'?'<p class="note">護劫符在跨境失敗時自動消耗，不需手動使用。</p>':''}${v.type==='gear'?`<button class="btn primary" ${v.equipped?`data-bag-unequip="${v.key}"`:`data-bag-equip="${v.key}"`} ${equipLock?'disabled':''}>${v.equipped?'卸下裝備':'穿戴裝備'}</button>`:''}${v.type==='artifact'?'<button class="btn" data-open-artifact>前往餵養</button>':''}${v.protected?'':`<button class="btn" data-inventory-sell="${v.key}" ${block?'disabled':''}>販賣</button><button class="btn red ghost" data-inventory-discard="${v.key}" ${block?'disabled':''}>丟棄</button>`}<button class="btn ghost" data-action="close">關閉</button></div>${block&&!v.protected?`<p class="button-reason">${block}</p>`:''}<input type="hidden" id="inventoryKey" value="${v.key}">`);
  updateInventoryQuote();
 }
 function updateInventoryQuote(){
@@ -1888,22 +1894,34 @@ function fieldStop(reason='已收劍，收穫已保存。',outcome){
 }
 function fieldStart(mode='wild'){
  const spec=typeof mode==='object'?mode:null;mode=spec?.mode||mode;const npcFight=mode==='npc',W=window.XianxiaWorld,npc=npcFight?W.npcs.find(n=>n.id===spec?.npc):null;if(npcFight&&!npc)return {error:'道友不存在。'};
- if(!['wild','dungeon','npc'].includes(mode))return {error:'未知戰場'};
+ if(!['wild','dungeon','npc','worldboss'].includes(mode))return {error:'未知戰場'};
  if(spec?.feud&&!worldState().feuds.some(f=>f.id===spec.feud&&f.status==='pending'))return {error:'此仇怨已結算。'};
- const reason=npcFight?(actionLock()||state.journey.pending&&'先完成目前事件'||state.hp<maxHP()*.2&&'請先療傷'):huntReason();if(reason)return {error:reason};window.xianxiaGame?.suspend();window.xianxiaHunt?.close();
- const a=state.auto={...autoDefaults(),active:true,mode:'hunt',map:state.location,reason:'自由除妖中'};
+ const worldBoss=mode==='worldboss'?(window.XianxiaBosses?.catalog.find(b=>b.id===spec?.boss)):null;if(mode==='worldboss'){const blocked=worldBossReason(worldBoss);if(blocked)return {error:blocked};}
+ const reason=worldBoss?worldBossReason(worldBoss):npcFight?(actionLock()||state.journey.pending&&'先完成目前事件'||state.hp<maxHP()*.2&&'請先療傷'):huntReason();if(reason)return {error:reason};window.xianxiaGame?.suspend();window.xianxiaHunt?.close();
+ if(worldBoss){const w=worldState();state.steps-=3;state.location=worldBoss.map;w.region=worldBoss.map;w.place='wild';w.position={x:worldBoss.x,y:worldBoss.y};state.journey.seen[worldBoss.map]|=1;const place=worldBoss.map+'-wild';if(!w.visited.includes(place))w.visited.push(place);W.advance(w,1);W.note(w,'踏入'+worldBoss.lair+'，挑戰'+worldBoss.name+'。');}
+ const a=state.auto={...autoDefaults(),active:true,mode:'hunt',map:state.location,reason:worldBoss?'世界妖王討伐中':'自由除妖中'};
  const session=fieldSession={active:true,map:state.location,paid:new Set(),bosses:0,spec,outcome:false};if(spec?.feud){const f=worldState().feuds.find(f=>f.id===spec.feud);if(!f||f.status!=='pending'){fieldStop();return {error:'此仇怨已結算。'};}f.status='active';}
  const valid=()=>session===fieldSession&&session.active&&state.location===session.map;
  const depth=qz().clears[qz().depth]>0?qz().depth:0;
  const enemyName=npcFight?(W.bond(worldState(),npc.id).dead?W.regions[npc.map].sect+'執法弟子':npc.name):'';
  const enemyPower=npcFight?Math.round([280,850,3400,17500,52000,110000][npc.map]*(1+npc.seed%2*.18)*(spec.intent==='revenge'?1.25:1)):0;
  const config={mode,mind:{id:state.martial.mind,level:artLevel(state.martial.mind),sect:ARTS[state.martial.mind]?.sect},movement:{id:state.martial.movement,level:artLevel(state.martial.movement)},artifactLevel:state.artifact.unlocked?state.artifact.level:0,deathEndsFeud:npcFight,npcIntent:spec?.intent,opponent:npcFight?{name:spec.intent==='revenge'?enemyName+' · 尋仇':enemyName,appearance:{gender:npc.gender,outfit_id:npc.outfit_id},max:Math.round(enemyPower*.9),attack:Math.max(10,Math.round(enemyPower*.045))}:null,target:mode==='dungeon'?6:10,name:state.name,map:state.location,mapName:npcFight?(spec.intent==='revenge'?'仇家尋來 · ':'與道友交鋒 · ')+enemyName:MAPS[state.location].name,scene:WORLD_ART[state.location].scene,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},monsters:Object.entries(qzEnemies()).map(([id,m])=>({id,art:m.art})),stats:Object.fromEntries(Object.entries(qzEnemies()).map(([id,m])=>[id,{...qzEnemyStats(id,depth,false),armor:m.armor||0}])),hp:state.hp,maxHP:maxHP(),attack:Math.max(12,Math.round(power()*.14))*SOLO_STANCES[solo().stance].damage*(state.martial.mind==='swordmind'?1+.04*artLevel('swordmind'):1),leech:state.martial.mind==='bloodmind'?.03*artLevel('bloodmind'):0,defense:artLevel(state.martial.movement)*(state.martial.movement==='wildstep'?.07:.06),moves:state.martial.moves.filter(id=>artLevel(id)).slice(0,3).map(id=>({...ARTS[id],level:artLevel(id)})),
- spend(){if(npcFight)return valid();if(!valid()||state.steps<1)return false;state.steps--;save();return true;},
+ spend(){if(npcFight||worldBoss)return valid();if(!valid()||state.steps<1)return false;state.steps--;save();return true;},
  hurt(amount){if(!valid())return state.hp;const harm=expeditionHarm(amount,1,{defense:0});state.hp=Math.max(npcFight?0:1,state.hp-harm);return state.hp;},
  heal(amount){if(!valid())return state.hp;state.hp=Math.min(maxHP(),state.hp+amount);return state.hp;},
  potion(){if(!valid()||state.items.heal<1)return false;state.items.heal--;save();return true;},
  reward(mob){
   if(!valid()||session.paid.has(mob.key))return null;session.paid.add(mob.key);if(npcFight){session.outcome=true;const w=worldState(),bond=W.bond(w,npc.id);if(spec.intent==='kill'){W.kill(w,npc.id);W.note(w,'擊殺'+npc.name+'，其同門與親友將可能尋仇。');}else if(spec.intent==='revenge'){const feud=w.feuds.find(f=>f.id===spec.feud);if(feud)feud.status='resolved';W.note(w,'擊退'+enemyName+'的尋仇，這次追討已結束。');}else{bond.hate=Math.max(60,bond.hate||0);W.note(w,'擊敗'+npc.name+'，對方負傷退去。');}save();return {xp:0,money:0,bonus:spec.intent==='kill'?npc.name+'身死，血仇已結':spec.intent==='revenge'?'擊退尋仇者':'對方敗退，仇怨仍在'};}
+  if(worldBoss){
+   if(session.outcome||mob.id!=='worldboss'||!mob.boss)return null;
+   const w=worldState(),previous=w.bosses[worldBoss.id];if(window.XianxiaBosses.remaining(previous)>0)return null;
+   session.outcome=true;w.bosses[worldBoss.id]={kills:(previous?.kills||0)+1,readyAt:Date.now()+window.XianxiaBosses.cooldown};
+   const xp=Math.round(expeditionXP(a.map,2,true)*4),money=worldBoss.money;addXP(xp);state.stones+=money;a.xp+=xp;a.stones+=money;a.kills++;
+   state.materials.crystal+=worldBoss.crystal;state.materials.fragment+=worldBoss.fragment;state.materials.insight+=worldBoss.insight;
+   const owned=state.ownedGear.includes(worldBoss.gear);if(!owned){state.ownedGear.push(worldBoss.gear);a.gear++;}else{state.materials.crystal+=20;state.materials.fragment+=12;}
+   const bonus=(owned?'已收藏珍寶，轉化靈晶 ×20、法寶殘片 ×12':'傳世珍寶「'+worldBoss.relic+'」')+' · 靈晶 ×'+worldBoss.crystal+' · 殘片 ×'+worldBoss.fragment+' · 感悟 ×'+worldBoss.insight;
+   W.note(w,'討伐'+worldBoss.name+'成功，'+(owned?'珍寶轉化為靈材':'獲得'+worldBoss.relic)+'；現實一小時後重生。');autoHistory(worldBoss.name+'討伐成功：'+bonus);save();return {xp,money,bonus};
+  }
   const xp=Math.round(expeditionXP(a.map,depth,mob.boss)*(mob.boss?.85:.85/3)),money=Math.round(MAPS[a.map].reward*(mob.boss?1.8:.15));addXP(xp);state.stones+=money;a.xp+=xp;a.stones+=money;a.kills++;qzRecordKill(mob.id);let bonus='';
   if(Math.random()<(mob.boss?.25:.25/3)){const k=['crystal','insight','fragment'][a.kills%3];state.materials[k]++;a.materials++;bonus=({crystal:'靈晶',insight:'感悟',fragment:'殘片'}[k])+' ×1';}
   if(Math.random()>(mob.boss?.96:1-.04/3)){const id=`${a.map}-${Object.keys(SLOT_NAMES)[a.kills%4]}`;if(!state.ownedGear.includes(id)){state.ownedGear.push(id);a.gear++;bonus=GEAR[id].name;}else{state.materials.fragment++;a.materials++;bonus='殘片 ×1';}}
@@ -1911,12 +1929,20 @@ function fieldStart(mode='wild'){
    if(mode==='dungeon'){const q=qz(),first=q.clears[depth]===0;q.clears[depth]++;state.journey.clears[a.map]++;state.materials.crystal+=first?3:1;state.materials.fragment+=first?2:1;const id=a.map?'region-'+a.map+'-weapon':'qz-wolffang';if(first&&!state.ownedGear.includes(id)){state.ownedGear.push(id);bonus+=' · '+GEAR[id].name;}window.XianxiaWorld.note(worldState(),'攻克'+MAPS[a.map].name+'秘境，取得突破歷練。');}
   }
   autoHistory(`自由除妖：擊敗${qzEnemies()[mob.id].name}，修為 +${xp}、靈石 +${money}。`);save();return {xp,money,bonus};
- },stop:fieldStop};save();return config;
+ },stop:fieldStop};if(worldBoss){config.worldBoss={...worldBoss};config.mapName=worldBoss.lair+' · '+worldBoss.name;config.monsters=[{id:'worldboss',art:worldBoss.art}];config.stats={worldboss:{max:worldBoss.hp,attack:worldBoss.attack,armor:worldBoss.armor}};}save();return config;
 }
 window.xianxiaFieldBridge={start:fieldStart,stop:fieldStop,view:()=>state?{active:!!fieldSession?.active,hp:state.hp,maxHP:maxHP(),steps:state.steps,heal:state.items.heal,kills:state.auto.kills,xp:state.auto.xp,stones:state.auto.stones,reason:state.auto.reason}:null};
 
 // The world layer stores only new world data; original progression remains canonical.
 function worldState(){if(!state)return null;state.world=window.XianxiaWorld.normalize(state.world,state.location);return state.world;}
+function worldBossReason(b){
+ if(!state)return '請先建立角色。';if(!b)return '妖王不存在。';
+ const lock=actionLock();if(lock)return lock;if(state.journey.pending||qz()?.run)return '請先完成或撤退目前探索。';
+ const region=regionReason(b.map);if(region)return region;if(!state.artifact.unlocked)return '請先尋得本命殘劍。';
+ if(window.XianxiaBosses.remaining(worldState().bosses[b.id])>0)return '妖王尚在重生，請等候倒數結束。';
+ if(state.steps<3)return '進入討伐需要 3 精力。';if(state.hp<maxHP()*.2)return '氣血不足，請先療傷。';return '';
+}
+function worldBossViews(){const w=worldState();return (window.XianxiaBosses?.catalog||[]).map(b=>{const record=w.bosses[b.id],remaining=window.XianxiaBosses.remaining(record);return {...b,kills:record?.kills||0,readyAt:record?.readyAt||0,remaining,countdown:window.XianxiaBosses.countdown(remaining),reason:worldBossReason(b),owned:state.ownedGear.includes(b.gear),gearDescription:gearDescription(GEAR[b.gear])};});}
 function worldKills(map=state.location){return Object.values(qz(map).kills).reduce((a,b)=>a+b,0);}
 const ACHIEVEMENTS=[
  ['first','初試鋒芒','累計討伐妖物 1 隻','kills',1],['hunter','百妖斬','累計討伐妖物 100 隻','kills',100],['slayer','千妖伏誅','累計討伐妖物 1,000 隻','kills',1000],
@@ -1970,7 +1996,7 @@ function regionReadiness(map){
 }
 function worldView(){
  if(!state)return null;const W=window.XianxiaWorld,w=worldState(),b=w.bounty;
- return {world:JSON.parse(JSON.stringify(w)),position:w.position||W.point(state.location,w.place),date:W.date(w),achievements:achievementView(),name:state.name,level:levelName(),hp:state.hp,maxHP:maxHP(),xp:state.xp,need:needXP(),stones:state.stones,steps:state.steps,power:power(),map:state.location,artifact:state.artifact.unlocked,sect:state.sect===null?null:{name:sect().name,rank:RANKS[state.rank]},regions:MAPS.map((m,i)=>({...W.regions[i],description:m.desc,readiness:regionReadiness(i),reason:regionReason(i),clears:state.journey.clears[i]})),npcs:W.npcs.map(n=>({...n,greeting:achievementGreeting(n,w.bonds[n.id]||{}),place:W.npcPlace(n,w),bond:w.bonds[n.id]||{affinity:0,met:false},relation:W.hostility(w,n.id),dead:!!w.bonds[n.id]?.dead,sectName:W.regions[n.map].sect,combatPower:Math.round([280,850,3400,17500,52000,110000][n.map]*(1+n.seed%2*.18))})),bounty:b?{...b,progress:Math.min(b.target,Math.max(0,worldKills(b.map)-b.baseline)),reward:MAPS[b.map].reward*2}:null,auction:worldAuction(),locked:!!actionLock(),pending:!!state.journey.pending||!!combat,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},goal:state.realm===0&&!state.artifact.unlocked?'先在竹林尋得本命殘劍，再踏上除妖之路。':state.xp>=needXP()?'修為已滿，前往洞府查看提升與突破條件。':w.bounty?'前往懸賞所在地除妖，完成後回城交付。':'接取城鎮懸賞，打怪、收集資源，準備下一次突破。'};
+ return {bosses:worldBossViews(),world:JSON.parse(JSON.stringify(w)),position:w.position||W.point(state.location,w.place),date:W.date(w),achievements:achievementView(),name:state.name,level:levelName(),hp:state.hp,maxHP:maxHP(),xp:state.xp,need:needXP(),stones:state.stones,steps:state.steps,power:power(),map:state.location,artifact:state.artifact.unlocked,sect:state.sect===null?null:{name:sect().name,rank:RANKS[state.rank]},regions:MAPS.map((m,i)=>({...W.regions[i],description:m.desc,readiness:regionReadiness(i),reason:regionReason(i),clears:state.journey.clears[i]})),npcs:W.npcs.map(n=>({...n,greeting:achievementGreeting(n,w.bonds[n.id]||{}),place:W.npcPlace(n,w),bond:w.bonds[n.id]||{affinity:0,met:false},relation:W.hostility(w,n.id),dead:!!w.bonds[n.id]?.dead,sectName:W.regions[n.map].sect,combatPower:Math.round([280,850,3400,17500,52000,110000][n.map]*(1+n.seed%2*.18))})),bounty:b?{...b,progress:Math.min(b.target,Math.max(0,worldKills(b.map)-b.baseline)),reward:MAPS[b.map].reward*2}:null,auction:worldAuction(),locked:!!actionLock(),pending:!!state.journey.pending||!!combat,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},goal:state.realm===0&&!state.artifact.unlocked?'先在竹林尋得本命殘劍，再踏上除妖之路。':state.xp>=needXP()?'修為已滿，前往洞府查看提升與突破條件。':w.bounty?'前往懸賞所在地除妖，完成後回城交付。':'接取城鎮懸賞，打怪、收集資源，準備下一次突破。'};
 }
 function worldAuction(){const w=worldState();if(!w)return null;const slots=Object.keys(SLOT_NAMES),id=w.day%3===0?`${state.location}-rare`:`${state.location}-${slots[(w.day+state.location)%4]}`,g=GEAR[id];return g?{id,name:g.name,price:Math.ceil(g.price*.85),owned:state.ownedGear.includes(id),sold:w.auctionDay===w.day,desc:'每日輪換本地裝備，每三日可見珍品。一口價成交，收入背包。'}:null;}
 function worldCommand(action,value){
@@ -1981,6 +2007,7 @@ function worldCommand(action,value){
  if(locked)return {error:locked};
  if(state.journey.pending&&!['continue','cultivate'].includes(action))return {error:'請先接續或撤退目前的探索事件。'};
  let message='',advance=0;
+ if(action==='worldboss'){const b=window.XianxiaBosses?.catalog.find(b=>b.id===value),reason=worldBossReason(b);if(reason)return {error:reason};return {battle:{mode:'worldboss',boss:b.id}};}
  if(action==='walkGround'){
   let p;try{p=JSON.parse(value)}catch{return {error:'位置無效'}};if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)||p.x<2||p.x>98||p.y<2||p.y>98)return {error:'位置無效'};const map=W.regions.map((r,i)=>({i,d:Math.hypot(r.x-p.x,r.y-p.y)})).sort((a,b)=>a.d-b.d)[0].i,reason=regionReason(map);if(reason)return {error:reason};if(state.steps<1)return {error:'行走需要 1 精力。'};const days=W.journeyDays(w.position||W.point(state.location,w.place),p);state.steps--;state.location=map;state.journey.seen[map]|=1;w.region=map;w.place='wild';w.position={x:p.x,y:p.y};advance=days*4;message='跋涉 '+days+' 日，來到'+MAPS[map].name+'野外。';
  }else if(action==='walk'){
@@ -2038,9 +2065,9 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/journey.js?v=5"></script>
 <script type="module" src="assets/engine/hunt.js?v=3"></script>
 <script type="module" src="assets/engine/home.js?v=3"></script>
-<script type="module" src="assets/engine/world.js?v=12"></script>
-<script type="module" src="assets/engine/field.js?v=7"></script>
-<script type="module" src="assets/engine/client.js?v=15"></script>
+<script type="module" src="assets/engine/world.js?v=13"></script>
+<script type="module" src="assets/engine/field.js?v=8"></script>
+<script type="module" src="assets/engine/client.js?v=17"></script>
 </body></html>
 
 
