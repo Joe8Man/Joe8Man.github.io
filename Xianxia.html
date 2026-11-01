@@ -143,7 +143,7 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 </style><style>.qz-planner{margin-bottom:18px}.qz-planner-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}.qz-planner-fields label{font-size:12px;color:var(--muted)}.qz-planner-fields .input{margin-top:6px}.qz-bestiary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}.qz-monster-card{padding:13px;border:1px solid var(--line);border-radius:10px;background:radial-gradient(ellipse at 50% 25%,#54694a44,#101e19)}.qz-monster-art{height:145px;display:grid;place-items:center}.qz-monster-art img{max-width:100%;max-height:145px;object-fit:contain;width:auto;height:auto;filter:drop-shadow(0 5px 8px #0006)}.qz-monster-card h4{margin:8px 0 4px;color:var(--light)}.qz-monster-card p{font-size:12px;margin:5px 0}.qz-fight-log{height:130px;overflow:auto;padding:8px 0;font-size:12px}.qz-fight-log p{margin:5px 0}.qz-planner>.btn{margin-right:8px}@media(max-width:760px){.qz-bestiary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.qz-monster-card{padding:10px}.qz-monster-art,.qz-monster-art img{max-height:115px}.qz-planner-fields{grid-template-columns:1fr}.qz-planner .row{flex-wrap:wrap}.qz-monster-card p{font-size:11px}}</style><link rel="stylesheet" href="assets/online/arena.css?v=1">
 <link rel="stylesheet" href="assets/engine/battle-ui.css?v=1">
 <link rel="stylesheet" href="assets/engine/hunt.css?v=2">
-<link rel="stylesheet" href="assets/engine/world.css?v=10">
+<link rel="stylesheet" href="assets/engine/world.css?v=11">
 <script src="assets/engine/boss-core.js?v=1"></script>
 <script src="assets/engine/world-core.js?v=6"></script>
 <script src="assets/engine/field-core.js?v=8"></script>
@@ -1289,7 +1289,7 @@ function autoUnlocked(i=state.location){return state.artifact.unlocked&&(i===0||
 function autoStartReason(){return combat?'請先完成宗主戰鬥':state.journey.pending?'先處理或撤退眼前的探索事件':!state.artifact.unlocked?'先在青州竹林手動探索，尋得照玄殘劍':!autoUnlocked()?'先在此地完成一次手動探索':!travelReady(state.location)?'目前境界或戰力不足以在此地歷練':state.hp<maxHP()*.25?'氣血低於 25%，先療傷':''}
 function autoHistory(text){const a=state.auto;a.history.push(text);a.history=a.history.slice(-8)}
 function beginAuto(){
-  if(window.xianxiaHunt){window.xianxiaHunt.open();return;}if(state.auto.active)return;
+  if(state.auto.active)return;
   const reason=autoStartReason();if(reason)return toast(reason);
   const config={goal:state.auto.goal,policy:state.auto.policy,healAt:state.auto.healAt,useHeal:state.auto.useHeal};
   state.auto={...autoDefaults(),...config,active:true,map:state.location,reason:'正在尋找妖獸'};
@@ -1345,6 +1345,7 @@ function autoTick(dt){
   expeditionFeedback('−'+fmt(harm),'harm');
   if(state.hp<maxHP()*.20&&(!a.useHeal||state.items.heal<1))stopAuto('丹藥不足或已關閉自動服丹，氣血過低，已撤回營地');
 }
+window.xianxiaPatrolBridge={view(){if(!state)return null;const a=state.auto,f=a.fight,map=a.active?a.map:state.location;return {active:a.active,map,mapName:MAPS[map].name,place:worldState().place,scene:WORLD_ART[map].scene,gender:state.gender||'male',name:state.name,hp:state.hp,maxHP:maxHP(),steps:state.steps,heal:state.items.heal,goal:a.goal,policy:a.policy,healAt:a.healAt,useHeal:a.useHeal,reason:a.reason,blocked:a.active?'':worldState().place!=='wild'?'先前往野外，再開始巡行。':autoStartReason(),kills:a.kills,xp:a.xp,stones:a.stones,materials:a.materials,gear:a.gear,clock:a.clock,fight:f?{name:qzEnemies(map)[f.qzId]?.name||'妖獸',art:qzEnemies(map)[f.qzId]?.art||WORLD_ART[map].enemy,hp:f.hp,max:f.max,elite:f.elite,round:f.round}:null,history:a.history.slice(-4)};},start(){if(worldState().place!=='wild')return '先前往野外，再開始巡行。';const reason=autoStartReason();if(reason)return reason;beginAuto();return '';},stop(){stopAuto('已收劍返回，收穫已保存。');},set(key,value){if(state.auto.active)return false;const a=state.auto;if(key==='goal'&&['xp','materials','gear'].includes(value))a.goal=value;else if(key==='policy'&&['safe','bold'].includes(value))a.policy=value;else if(key==='healAt'&&[.35,.5,.65].includes(Number(value)))a.healAt=Number(value);else if(key==='useHeal')a.useHeal=!!value;else return false;save();return true;}};
 let autoViewKey='';
 const EXPEDITION_THEMES=[['#193e38','#102820','#bdd6a3','竹海晨光'],['#243e43','#142b32','#b4d8d5','煙波迷霧'],['#203d54','#102433','#a8d4dd','滄海龍宮'],['#3d5260','#1e303b','#d5e4e6','崑崙飛雪'],['#38304b','#20182c','#c7b1df','古域魂燈'],['#454255','#262334','#e4d4b1','雲海仙庭']];
 const QINGZHOU_ART='assets/qingzhou-v1/';
@@ -2026,7 +2027,7 @@ function regionReadiness(map){
 }
 function worldView(){
  if(!state)return null;const W=window.XianxiaWorld,w=worldState(),b=w.bounty;
- return {bosses:worldBossViews(),world:JSON.parse(JSON.stringify(w)),position:w.position||W.point(state.location,w.place),date:W.date(w),achievements:achievementView(),name:state.name,level:levelName(),hp:state.hp,maxHP:maxHP(),xp:state.xp,need:needXP(),stones:state.stones,steps:state.steps,power:power(),map:state.location,artifact:state.artifact.unlocked,sect:state.sect===null?null:{name:sect().name,rank:RANKS[state.rank]},regions:MAPS.map((m,i)=>({...W.regions[i],description:m.desc,readiness:regionReadiness(i),reason:regionReason(i),clears:state.journey.clears[i]})),npcs:W.npcs.map(n=>({...n,greeting:achievementGreeting(n,w.bonds[n.id]||{}),place:W.npcPlace(n,w),bond:w.bonds[n.id]||{affinity:0,met:false},relation:W.hostility(w,n.id),dead:!!w.bonds[n.id]?.dead,sectName:W.regions[n.map].sect,combatPower:Math.round([280,850,3400,17500,52000,110000][n.map]*(1+n.seed%2*.18))})),bounty:b?{...b,progress:Math.min(b.target,Math.max(0,worldKills(b.map)-b.baseline)),reward:MAPS[b.map].reward*2}:null,auction:worldAuction(),locked:!!actionLock(),pending:!!state.journey.pending||!!combat,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},goal:state.realm===0&&!state.artifact.unlocked?'先在竹林尋得本命殘劍，再踏上除妖之路。':state.xp>=needXP()?'修為已滿，前往洞府查看提升與突破條件。':w.bounty?'前往懸賞所在地除妖，完成後回城交付。':'接取城鎮懸賞，打怪、收集資源，準備下一次突破。'};
+ return {patrol:{active:!!state.auto.active&&state.auto.mode!=='hunt'},bosses:worldBossViews(),world:JSON.parse(JSON.stringify(w)),position:w.position||W.point(state.location,w.place),date:W.date(w),achievements:achievementView(),name:state.name,level:levelName(),hp:state.hp,maxHP:maxHP(),xp:state.xp,need:needXP(),stones:state.stones,steps:state.steps,power:power(),map:state.location,artifact:state.artifact.unlocked,sect:state.sect===null?null:{name:sect().name,rank:RANKS[state.rank]},regions:MAPS.map((m,i)=>({...W.regions[i],description:m.desc,readiness:regionReadiness(i),reason:regionReason(i),clears:state.journey.clears[i]})),npcs:W.npcs.map(n=>({...n,greeting:achievementGreeting(n,w.bonds[n.id]||{}),place:W.npcPlace(n,w),bond:w.bonds[n.id]||{affinity:0,met:false},relation:W.hostility(w,n.id),dead:!!w.bonds[n.id]?.dead,sectName:W.regions[n.map].sect,combatPower:Math.round([280,850,3400,17500,52000,110000][n.map]*(1+n.seed%2*.18))})),bounty:b?{...b,progress:Math.min(b.target,Math.max(0,worldKills(b.map)-b.baseline)),reward:MAPS[b.map].reward*2}:null,auction:worldAuction(),locked:!!actionLock(),pending:!!state.journey.pending||!!combat,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},goal:state.realm===0&&!state.artifact.unlocked?'先在竹林尋得本命殘劍，再踏上除妖之路。':state.xp>=needXP()?'修為已滿，前往洞府查看提升與突破條件。':w.bounty?'前往懸賞所在地除妖，完成後回城交付。':'接取城鎮懸賞，打怪、收集資源，準備下一次突破。'};
 }
 function worldAuction(){const w=worldState();if(!w)return null;const slots=Object.keys(SLOT_NAMES),id=w.day%3===0?`${state.location}-rare`:`${state.location}-${slots[(w.day+state.location)%4]}`,g=GEAR[id];return g?{id,name:g.name,price:Math.ceil(g.price*.85),owned:state.ownedGear.includes(id),sold:w.auctionDay===w.day,desc:'每日輪換本地裝備，每三日可見珍品。一口價成交，收入背包。'}:null;}
 function worldCommand(action,value){
@@ -2095,9 +2096,9 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/journey.js?v=5"></script>
 <script type="module" src="assets/engine/hunt.js?v=3"></script>
 <script type="module" src="assets/engine/home.js?v=3"></script>
-<script type="module" src="assets/engine/world.js?v=15"></script>
+<script type="module" src="assets/engine/world.js?v=16"></script>
 <script type="module" src="assets/engine/field.js?v=9"></script>
-<script type="module" src="assets/engine/client.js?v=20"></script>
+<script type="module" src="assets/engine/client.js?v=21"></script>
 </body></html>
 
 
