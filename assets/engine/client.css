@@ -16,3 +16,6 @@
 .phaser-client-active.is-field #phaserField .field-report,.phaser-client-active.is-field #phaserField .field-help{visibility:hidden!important;pointer-events:none!important}
 /* Flex centering replaces Phaser FIT's CSS margins; combining both offsets the arena twice. */
 .phaser-client-active.is-field #phaserField .field-canvas canvas{margin:0!important;align-self:center}
+
+/* Keep the battle canvas in the top level stacking context on mobile. */
+.phaser-client-active.is-field> #phaserField{z-index:11999!important;display:block!important}.phaser-client-active.is-field #phaser-client{z-index:12000!important;background:transparent!important}
