@@ -136,6 +136,19 @@ function renderWorkspace(v){const width=uiWidth(),height=uiHeight(),w=Math.min(9
  if(v.root.id==='worldBossDialog'&&renderBossBrief(v))return true;
  if(v.root.id==='patrolDialog')return renderPatrol(v);
  if(v.root?.querySelector('.forge-station')&&renderForge(v))return true;
+ if(v.key==='creator'){
+  const c=scene.add.container();addUI(c);const form=v.root,stats=[...form.querySelectorAll('.creator-stat')],fate=plain(form.querySelector('#rollAptitude')),summary=plain(form.querySelector('#rollAptitudeDesc'));
+  c.add(scene.add.rectangle(x,82,w,94,0x254236,.95).setOrigin(0).setStrokeStyle(2,0xc7ae75,.85));
+  c.add(text(x+16,92,'六維命格 · '+plain(form.querySelector('#rollTotal')),12,'#b8cbb3',w-28));
+  c.add(text(x+16,112,fate,24,'#f2d797',w-28));
+  c.add(text(x+16,146,summary,12,'#d4ddc5',w-28));
+  const half=(w-10)/2;stats.forEach((el,i)=>{const gx=x+i%2*(half+10),gy=194+Math.floor(i/2)*78,n=Number(el.querySelector('b')?.textContent.match(/\d+/)?.[0]||0),label=plain(el.querySelector('.creator-stat-head span')),highlight=el.classList.contains('creator-stat-best');c.add(scene.add.rectangle(gx,gy,half,68,highlight?0x514b30:0x213d32,.97).setOrigin(0).setStrokeStyle(1,highlight?0xdbbd7c:0x688573,.8));c.add(text(gx+10,gy+7,label,12,highlight?'#f5dc9d':'#c9d9c2',half-48));c.add(text(gx+half-43,gy+6,String(n),20,'#f1d798',37));c.add(scene.add.rectangle(gx+10,gy+48,half-20,5,0x0d201a).setOrigin(0));c.add(scene.add.rectangle(gx+10,gy+48,(half-20)*Math.min(n/20,1),5,highlight?0xeacb83:0x84bba0).setOrigin(0));});
+  const by=438,third=(w-10)/2;c.add(text(x,by,'先天靈根 · '+plain(form.querySelector('#rollRoot')),15,'#e9d49c',w));c.add(text(x,by+31,'百世體質 · '+plain(form.querySelector('#rollBody')),15,'#e9d49c',w));
+  const name=form.querySelector('#nameInput');button(c,x,by+73,w,42,'仙名 · '+(name.value||'請輸入名字'),()=>edit(name));
+  const genders=[...form.querySelectorAll('[data-create-gender]')];genders.forEach((el,i)=>button(c,x+i*(third+10),by+125,third,42,plain(el).slice(0,2),()=>invoke(el),false,el.getAttribute('aria-pressed')==='true'));
+  button(c,x,by+181,third,48,'逆天改命',()=>invoke(form.querySelector('#rerollBtn')));button(c,x+third+10,by+181,third,48,'踏入仙途',()=>invoke(form.querySelector('#startBtn')),false,true);
+  return true;
+ }
  const spar=v.root.querySelector('#onlineBattle[data-active]');if(spar){
   const c=scene.add.container();addUI(c);const canvas=spar.querySelector('canvas'),status=spar.querySelector('[data-commentary]')?.textContent||spar.querySelector('[role=status]')?.textContent||'雙方登台，準備交手。';
   c.add(text(x,80,'道友切磋 · '+(spar.querySelector('[data-round]')?.textContent||'準備中'),19,'#ead6a2',w));
