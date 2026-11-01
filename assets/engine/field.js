@@ -5,6 +5,7 @@ let runtime=null,model=null,hero=null,active=false,paused=false,opening=false,ep
 const palette={sword:0x82c9ca,ice:0xafd8ee,thunder:0xe6db9e,poison:0x8aab5f,blood:0xc77884,beast:0xc6d58c,enemy:0xb9693d,guard:0xd4cc91,wind:0xcce1be,claw:0xe4d4a1};
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const compact=value=>new Intl.NumberFormat('zh-TW',{notation:'compact',maximumFractionDigits:1}).format(value);
+function status(message){const target=host.querySelector('[data-field-status]');if(target)target.textContent=message;}
 const sound=()=>window.XianxiaAudio?.enabled('effects')??true;
 function unlock(){window.XianxiaAudio?.unlock();}
 function tone(hit=false){window.XianxiaAudio?.cue(hit?'hit':'swing');}
