@@ -1,4 +1,4 @@
-import {loadPhaser} from './runtime.js?v=6';
+import {loadPhaser} from './runtime.js?v=7';
 // Native canvas presentation. The existing simulation and action validators stay authoritative.
 // Phaser 4 uses physical game dimensions; keep layout and gestures in CSS pixels.
 let display={width:1,height:1,ratio:1};
@@ -291,6 +291,7 @@ async function start(){window.addEventListener('xianxia-guide-tab',e=>{paneTabs.
  document.addEventListener('visibilitychange',()=>{if(document.hidden){game.loop.sleep();releaseStick();}else{game.loop.wake();stamp='';}});window.xianxiaPhaserClient={get ready(){return ready;},refresh(){if(!['map','battle'].includes(screenKey))stamp='';},destroy(){releaseStick();window.removeEventListener('blur',releaseStick);game.canvas.removeEventListener('pointercancel',releaseStick);window.removeEventListener('resize',syncViewport);window.removeEventListener('orientationchange',syncViewport);window.visualViewport?.removeEventListener('resize',syncViewport);cancelAnimationFrame(viewportFrame);clearInterval(refreshTimer);for(const node of document.querySelectorAll('[data-phaser-legacy]')){node.removeAttribute('aria-hidden');node.removeAttribute('data-phaser-legacy');}HTMLDialogElement.prototype.showModal=originalModal;game.destroy(true);host.remove();document.body.classList.remove('phaser-client-active');}};
 }
 start().catch(error=>{console.error(error);document.body.classList.remove('phaser-client-active');dom('phaser-client')?.remove();});
+
 
 
 

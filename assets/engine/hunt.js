@@ -1,5 +1,6 @@
-import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=6';
-import {createBattleAtmosphere,techniqueStyle,playHuntEffect} from './battle-art.js?v=2';
+import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=7';
+import {createBattleAtmosphere,techniqueStyle,playHuntEffect} from './battle-art.js?v=3';
+import {makeMobArt,updateMobArt} from './combat-assets.js?v=1';
 const host=document.getElementById('phaserHunt'),api=()=>window.xianxiaHuntBridge;
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let runtime=null,actor=null,enemy=null,body=null,enemyBreath=null,opening=false,active=false,paused=false,epoch=0,hudAt=0,combo=0,lastHit=0,hitStop=false,currentContext='patrol',enemyActor=null,enemyPrepared=null;
@@ -23,7 +24,7 @@ function hud(v){
 function stopFrame(scene,critical){if(still()||hitStop)return;hitStop=true;scene.tweens.timeScale=0;scene.time.delayedCall(critical?65:38,()=>{scene.tweens.timeScale=1;hitStop=false;});}
 function spawn(scene,event){
  enemyBreath?.stop();if(enemyActor){enemyActor.destroy();enemyActor=null;}else enemy?.destroy(true);const v=api().view();
- if(enemyPrepared){enemyActor=makeRig(scene,enemyPrepared,still()?735:950,425,1.05,true);enemy=enemyActor.root.setDepth(10);body=null;}else{body=scene.add.image(0,0,'hunt-'+event.id).setOrigin(.5,1).setDisplaySize(event.id==='bee'?165:225,event.id==='bee'?165:215);
+ if(enemyPrepared){enemyActor=makeRig(scene,enemyPrepared,still()?735:950,425,1.05,true);enemy=enemyActor.root.setDepth(10);body=null;}else{body=makeMobArt(scene,v,{id:event.id},230)||scene.add.image(0,0,'hunt-'+event.id).setOrigin(.5,1).setDisplaySize(event.id==='bee'?165:225,event.id==='bee'?165:215);
  enemy=scene.add.container(still()?735:950,425,[makeGroundShadow(scene,0,0,140,20),body]).setDepth(10);}
  if(!still()){scene.tweens.add({targets:enemy,x:735,duration:320,ease:'Cubic.easeOut'});if(body)enemyBreath=scene.tweens.add({targets:body,scaleX:body.scaleX*1.012,scaleY:body.scaleY*1.025,duration:1100,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});actor.setWalk(true);scene.tweens.add({targets:actor.root,x:460,duration:350,ease:'Sine.easeOut',onComplete:()=>actor.setWalk(false)});}
  message(v.fight?.name+'出現 · 自動交鋒');
@@ -47,7 +48,7 @@ function event(scene,event){
   }
   if(event.healed>0)floatText(scene,actor.root.x,actor.root.y-160,'+'+Math.round(event.healed),'#b6ebbc');if(event.control)floatText(scene,enemy.x,170,'冰封','#bce8fa');return;
  }
- if(event.kind==='hurt'){actor.flash();if(!still())scene.tweens.add({targets:actor.root,x:actor.root.x-12,duration:70,yoyo:true});floatText(scene,actor.root.x,actor.root.y-160,'−'+event.damage,'#e7aa99');return;}
+ if(event.kind==='hurt'){if(body?.combatArt){updateMobArt(body,{windup:true},0);scene.time.delayedCall(280,()=>{if(body?.active)updateMobArt(body,{},0);});}actor.flash();if(!still())scene.tweens.add({targets:actor.root,x:actor.root.x-12,duration:70,yoyo:true});floatText(scene,actor.root.x,actor.root.y-160,'−'+event.damage,'#e7aa99');return;}
  if(event.kind==='kill'){loot(scene,event);return;}
  if(event.kind==='heal'||event.kind==='guard'){actor.perform(event.kind,{interrupt:true});playHuntEffect(scene,{actor,enemy,id:event.kind});if(event.healed)floatText(scene,actor.root.x,220,'+'+Math.round(event.healed),'#b6ebbc');return;}
  if(event.kind==='finished'){scene.time.delayedCall(650,()=>api().flush?.());return;}if(event.kind==='stop')message(event.reason);
@@ -62,7 +63,7 @@ async function open(context='patrol'){
  // Match the existing route without reopening either exploration scene.
  window.xianxiaBridge.go('map');window.XianxiaAudio?.scene('battle');
  try{
- const built=await makeGame(host.querySelector('[data-hunt-canvas]'),{label:started.mapName+'即時戰鬥，自動普攻與手動技能',preload(){this.load.image('hunt-background',started.scene);for(const m of started.monsters)this.load.image('hunt-'+m.id,m.art);this.load.image('monster-wolf','assets/qingzhou-v1/wolf.webp');},create(rigs){if(ticket!==epoch||!active)return;this.add.image(480,270,'hunt-background').setDisplaySize(960,540);createBattleAtmosphere(this,started.map);enemyPrepared=rigs[1]||null;actor=makeRig(this,rigs[0],300,440,1.05);actor.root.setDepth(10);this.add.text(480,38,started.mapName,{fontFamily:'serif',fontSize:'18px',color:'#d9dfc1',stroke:'#102722',strokeThickness:3}).setOrigin(.5).setDepth(30);},update(_time,dt){if(!active||paused||ticket!==epoch)return;if(document.hidden){pause();return;}if(!document.querySelector('#modalOverlay.hidden')){if(api().view()?.active)pause();return;}if(hitStop)return;api().tick(Math.min(dt/1000,.1));for(const e of api().drain())event(this,e);hudAt+=dt;if(hudAt>=90){hudAt=0;hud(api().view());}}},{rigs:[started.appearance,...(started.opponent?[started.opponent]:[])]});
+ const built=await makeGame(host.querySelector('[data-hunt-canvas]'),{label:started.mapName+'即時戰鬥，自動普攻與手動技能',combatArt:started,preload(){this.load.image('hunt-background',started.scene);for(const m of started.monsters)this.load.image('hunt-'+m.id,m.art);this.load.image('monster-wolf','assets/qingzhou-v1/wolf.webp');},create(rigs){if(ticket!==epoch||!active)return;this.add.image(480,270,'hunt-background').setDisplaySize(960,540);createBattleAtmosphere(this,started.map);enemyPrepared=rigs[1]||null;actor=makeRig(this,rigs[0],300,440,1.05);actor.root.setDepth(10);this.add.text(480,38,started.mapName,{fontFamily:'serif',fontSize:'18px',color:'#d9dfc1',stroke:'#102722',strokeThickness:3}).setOrigin(.5).setDepth(30);},update(_time,dt){if(!active||paused||ticket!==epoch)return;if(document.hidden){pause();return;}if(!document.querySelector('#modalOverlay.hidden')){if(api().view()?.active)pause();return;}if(hitStop)return;api().tick(Math.min(dt/1000,.1));for(const e of api().drain())event(this,e);hudAt+=dt;if(hudAt>=90){hudAt=0;hud(api().view());}}},{rigs:[started.appearance,...(started.opponent?[started.opponent]:[])]});
  if(ticket!==epoch||!active){built.destroy();return;}runtime=built;if(paused)runtime.pause();host.style.scrollMarginTop=(Math.ceil(document.getElementById('playerDock')?.getBoundingClientRect().height||0)+12)+'px';host.scrollIntoView({block:'start',behavior:'smooth'});
  }catch(error){if(ticket!==epoch)return;api().stop('場景載入失敗，刷怪已停止');active=false;message('場景載入失敗，請收劍離開後再試。');console.error('hunt scene failed',error);}finally{if(ticket===epoch)opening=false;}
 }
@@ -78,3 +79,4 @@ host.addEventListener('click',async e=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});window.addEventListener('blur',pause);
 window.xianxiaHunt={open,close,pause,resume,get active(){return active;},getState:()=>({active,paused,opening,combo,sceneReady:!!runtime})};
+

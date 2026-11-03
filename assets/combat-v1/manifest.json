@@ -1,0 +1,161 @@
+{
+  "version": "20261103",
+  "sheets": [
+    {
+      "name": "hero-male",
+      "file": "hero-male.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 412976
+    },
+    {
+      "name": "hero-female",
+      "file": "hero-female.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 488032
+    },
+    {
+      "name": "human-enemies",
+      "file": "human-enemies.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 403834
+    },
+    {
+      "name": "effects-sword-arcane-ice",
+      "file": "effects-sword-arcane-ice.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 462174
+    },
+    {
+      "name": "effects-blood-beast-pill",
+      "file": "effects-blood-beast-pill.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 545496
+    },
+    {
+      "name": "monsters-qingzhou",
+      "file": "monsters-qingzhou.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 530848
+    },
+    {
+      "name": "monsters-marsh",
+      "file": "monsters-marsh.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 577358
+    },
+    {
+      "name": "monsters-sea",
+      "file": "monsters-sea.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 530464
+    },
+    {
+      "name": "monsters-snow",
+      "file": "monsters-snow.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 568492
+    },
+    {
+      "name": "monsters-nether",
+      "file": "monsters-nether.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 507984
+    },
+    {
+      "name": "monsters-heaven",
+      "file": "monsters-heaven.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 589140
+    },
+    {
+      "name": "bosses-verdant-marsh-abyss",
+      "file": "bosses-verdant-marsh-abyss.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 536314
+    },
+    {
+      "name": "bosses-frost-nether-heaven",
+      "file": "bosses-frost-nether-heaven.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 554324
+    }
+  ]
+}

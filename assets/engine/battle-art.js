@@ -1,3 +1,4 @@
+import {combatEffect} from './combat-assets.js?v=1';
 // Painted light, restrained atmosphere and a separate visual language for each art.
 // Presentation is independent from combat calculations.
 const PALETTES={jade:[0xaee9d1,0xf2ffe9],gold:[0xe1b974,0xfff2c9],ice:[0x78c9ed,0xe8fbff],violet:[0xb49be9,0xf1e8ff],venom:[0x9dbb68,0xe1f2a0],blood:[0xc95c75,0xffd4b6],water:[0x6fcec9,0xddfff0]};
@@ -28,7 +29,7 @@ function shards(scene,x,y,color,frozen=false){for(let i=0;i<(frozen?8:5);i++){co
 function leafBurst(scene,x,y,color,count=12){for(let i=0;i<count;i++){const g=graphic(scene);g.fillStyle(color,.65);g.fillEllipse(0,0,4,13);g.setPosition(x+(i%4)*12,y-i*8).setRotation(i*.7);fade(scene,g,750+i*18,{x:x-100+i*21,y:y+45+i%3*14,rotation:i*.7+2});}}
 function shield(scene,x,y,color,stone=false){const g=graphic(scene);if(stone){for(let i=0;i<5;i++){const a=-Math.PI+i*Math.PI/4,px=Math.cos(a)*75,py=Math.sin(a)*90;g.fillStyle(color,.2);g.fillTriangle(px-10,py+12,px,py-19,px+15,py+9);path(g,[[px-10,py+12],[px,py-19],[px+15,py+9]],color,1.4,.8);}}else{const points=Array.from({length:7},(_,i)=>[Math.cos(i*Math.PI/3-Math.PI/2)*76,Math.sin(i*Math.PI/3-Math.PI/2)*105]);g.fillStyle(color,.06);g.fillPoints(points,true);path(g,points,color,2,.7);g.lineStyle(1,color,.2);g.strokeEllipse(0,0,130,184);for(let i=0;i<6;i++)path(g,[[0,0],points[i]],color,1,.15);}g.setPosition(x,y).setScale(.6);scene.tweens.add({targets:g,scaleX:1,scaleY:1,duration:230,ease:'Cubic.easeOut'});fade(scene,g,900,{delay:200});rune(scene,x,y+117,color);glow(scene,x,y,color,200,.35,1000);}
 function healing(scene,x,y,color,blossom=false){rune(scene,x,y+123,color);for(let i=0;i<3;i++)scene.time.delayedCall(i*120,()=>ring(scene,x,y+100-i*30,color,55-i*8,15));for(let i=0;i<14;i++){const node=scene.add.circle(x+Math.sin(i*2.4)*48,y+120,blossom?2.8:1.6,color,.75).setDepth(23);fade(scene,node,850+i%3*100,{y:y-70-i%4*12,x:node.x+Math.cos(i)*20,delay:i*25});}glow(scene,x,y+20,color,210,.4,1000);}
-function techniqueEffect(scene,style,x,y,hero){const [color,light]=style.colors;const delay=(ms,fn)=>scene.time.delayedCall(ms,fn);
+function techniqueEffect(scene,style,x,y,hero){combatEffect(scene,style.family,style.self?hero.x:x,style.self?hero.y-110:y,{size:style.self?240:220,duration:600,depth:24});const [color,light]=style.colors;const delay=(ms,fn)=>scene.time.delayedCall(ms,fn);
  switch(style.family){
  case 'slash':crescent(scene,x,y,color,-.6,72);sparks(scene,x,y,light,8,55);break;
  case 'sword':crescent(scene,x,y,color,-.8,114);delay(90,()=>crescent(scene,x-30,y-8,color,-.8,80));sparks(scene,x,y,light);break;
@@ -84,3 +85,4 @@ export function playHuntEffect(scene,{actor,enemy,id='normal',type,phase='impact
  if(phase==='impact'&&critical){glow(scene,x,y,0xffdc93,170,.6,280);sparks(scene,x,y,0xffe5a6,18,110);}
  return style;
 }
+
