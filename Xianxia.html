@@ -1946,7 +1946,7 @@ function fieldStart(mode='wild'){
  state.steps-=entryCost;
  if(worldBoss){const w=worldState();state.steps-=3;state.location=worldBoss.map;w.region=worldBoss.map;w.place='wild';w.position={x:worldBoss.x,y:worldBoss.y};state.journey.seen[worldBoss.map]|=1;const place=worldBoss.map+'-wild';if(!w.visited.includes(place))w.visited.push(place);W.advance(w,1);W.note(w,'踏入'+worldBoss.lair+'，挑戰'+worldBoss.name+'。');}
  const a=state.auto={...autoDefaults(),active:true,mode:'hunt',map:state.location,reason:worldBoss?'世界妖王討伐中':'自由除妖中'};
- const session=fieldSession={active:true,map:state.location,paid:new Set(),bosses:0,spec,outcome:false};if(spec?.feud){const f=worldState().feuds.find(f=>f.id===spec.feud);if(!f||f.status!=='pending'){fieldStop();return {error:'此仇怨已結算。'};}f.status='active';}
+ const session=fieldSession={active:true,map:state.location,paid:new Set(),bosses:0,spec,outcome:false,materials:{...state.materials},gear:new Set(state.ownedGear)};if(spec?.feud){const f=worldState().feuds.find(f=>f.id===spec.feud);if(!f||f.status!=='pending'){fieldStop();return {error:'此仇怨已結算。'};}f.status='active';}
  const valid=()=>session===fieldSession&&session.active&&state.location===session.map;
  const depth=mode==='dungeon'?(spec?.depth??qz().depth):qz().clears[qz().depth]>0?qz().depth:0;if(mode==='dungeon')qz().depth=depth;
  const enemyName=npcFight?(W.bond(worldState(),npc.id).dead?W.regions[npc.map].sect+'執法弟子':npc.name):'';
@@ -1977,7 +1977,8 @@ function fieldStart(mode='wild'){
   autoHistory(`自由除妖：擊敗${qzEnemies()[mob.id].name}，修為 +${xp}、靈石 +${money}。`);save();return {xp,money,bonus};
  },stop:fieldStop};if(worldBoss){config.worldBoss={...worldBoss};config.mapName=worldBoss.lair+' · '+worldBoss.name;config.monsters=[{id:'worldboss',art:worldBoss.art}];config.stats={worldboss:{max:worldBoss.hp,attack:worldBoss.attack,armor:worldBoss.armor}};}save();return config;
 }
-window.xianxiaFieldBridge={start:fieldStart,stop:fieldStop,view:()=>state?{active:!!fieldSession?.active,hp:state.hp,maxHP:maxHP(),steps:state.steps,heal:state.items.heal,kills:state.auto.kills,xp:state.auto.xp,stones:state.auto.stones,reason:state.auto.reason}:null};
+function fieldLoot(){if(!fieldSession)return [];const names={crystal:'靈晶',fragment:'法寶殘片',insight:'感悟'};return [...Object.entries(names).flatMap(([key,name])=>{const count=(state.materials[key]||0)-(fieldSession.materials[key]||0);return count>0?[name+' ×'+count]:[];}),...state.ownedGear.filter(id=>!fieldSession.gear.has(id)).map(id=>GEAR[id]?.name||id)];}
+window.xianxiaFieldBridge={start:fieldStart,stop:fieldStop,view:()=>state?{active:!!fieldSession?.active,hp:state.hp,maxHP:maxHP(),steps:state.steps,heal:state.items.heal,kills:state.auto.kills,xp:state.auto.xp,stones:state.auto.stones,loot:fieldLoot(),reason:state.auto.reason}:null};
 
 // Resource war state lives in the character snapshot and follows cloud/export saves.
 let territorySession=null;
@@ -2145,9 +2146,9 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/hunt.js?v=7"></script>
 <script type="module" src="assets/engine/home.js?v=6"></script>
 <script type="module" src="assets/engine/world.js?v=18"></script>
-<script type="module" src="assets/engine/field.js?v=18"></script>
+<script type="module" src="assets/engine/field.js?v=19"></script>
 <script type="module" src="assets/engine/territory.js?v=2"></script>
-<script type="module" src="assets/engine/client.js?v=38"></script>
+<script type="module" src="assets/engine/client.js?v=39"></script>
 </body></html>
 
 
