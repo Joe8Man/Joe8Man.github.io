@@ -148,7 +148,7 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 <link rel="stylesheet" href="assets/engine/hunt.css?v=2">
 <link rel="stylesheet" href="assets/engine/world.css?v=13">
 <style id="paper-doll-full-body">.paper-doll{grid-template-columns:minmax(0,1fr) minmax(175px,230px) minmax(0,1fr);grid-template-rows:minmax(190px,1fr) minmax(190px,1fr);gap:14px}.paper-doll .doll-figure{grid-column:2;grid-row:1/3;align-self:stretch;opacity:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:390px;padding:12px 6px 10px;border:1px solid #bba77566;border-radius:12px;background:radial-gradient(ellipse at 50% 65%,#476e6070,transparent 75%),linear-gradient(#203830,#10251f);overflow:hidden}.doll-portrait{width:100%;height:350px;display:flex;align-items:end;justify-content:center}.doll-figure .character-illustration{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 10px #0009)}.doll-outfit-label{font-size:12px;color:#f2dfaa;text-align:center;line-height:1.3;margin-top:6px}.paper-doll .gear-slot{min-height:145px}@media(max-width:760px){.paper-doll{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto auto;gap:9px}.paper-doll .doll-figure{grid-column:1/3;grid-row:1;min-height:330px}.doll-portrait{max-width:240px;height:285px}.gear-slot[data-slot="weapon"]{grid-column:1;grid-row:2}.gear-slot[data-slot="robe"]{grid-column:2;grid-row:2}.gear-slot[data-slot="charm"]{grid-column:1;grid-row:3}.gear-slot[data-slot="ring"]{grid-column:2;grid-row:3}}</style>
-<script src="assets/engine/boss-core.js?v=1"></script>
+<script src="assets/engine/boss-core.js?v=2"></script>
 <script src="assets/engine/world-core.js?v=6"></script>
 <script src="assets/engine/territory-core.js?v=4"></script>
 <script src="assets/engine/field-core.js?v=9"></script>
@@ -780,7 +780,7 @@ function costumeLayers(gender,outfit,pose=0){
 }
 
 function costumeSVG(gender,outfit,pose=0,css='character-illustration',portrait=false){
- const cell=robeCell(gender,outfit,pose),[x,y,w,h]=cell,view=portrait?[x+w*.22,y,w*.56,h*.42]:cell;
+ const cell=robeCell(gender,outfit,pose),[x,y,w,h]=cell,view=portrait?[x+w*.03,y,w*.94,h*.72]:cell;
  return `<svg class="${css}" viewBox="${view.join(' ')}" role="img" data-outfit="${outfit.id}" data-costume-pose="${pose}" aria-label="${gender==='female'?'女修':'男修'} · ${outfit.name} · ${pose===4?'靜坐吐納':ROBE_CUTS[outfit.rank]}" preserveAspectRatio="xMidYMax meet" style="overflow:hidden">${costumeLayers(gender,outfit,pose)}</svg>`;
 }
 function heroLayers(gender=chosenGender(),outfit=currentOutfit()){return outfit?costumeLayers(gender,outfit):`<image href="${heroAsset(gender)}" width="1536" height="1024"/>`}
@@ -2148,7 +2148,7 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/world.js?v=18"></script>
 <script type="module" src="assets/engine/field.js?v=19"></script>
 <script type="module" src="assets/engine/territory.js?v=2"></script>
-<script type="module" src="assets/engine/client.js?v=41"></script>
+<script type="module" src="assets/engine/client.js?v=42"></script>
 </body></html>
 
 
