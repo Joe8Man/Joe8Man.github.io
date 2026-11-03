@@ -18,11 +18,11 @@ function capture(t,id,now){const site=catalog.find(s=>s.id===id);if(!site||t.sec
 function note(t,at,text){t.history.unshift({at,text});t.history.length=Math.min(40,t.history.length);}
 function settle(t,now){now=Math.max(t.at,now);let xp=0,gold=0;const notices=[];let lost=0,won=0;
  for(const site of catalog){const s=t.sites[site.id];if(!s?.owned)continue;let cursor=t.at;
-  while(s.owned&&cursor<=now){const end=s.attack?s.attack+DURATION:Infinity,warning=s.warned===s.nextRaid?Infinity:s.nextRaid-WARNING,event=Math.max(cursor,Math.min(s.nextPay,s.attack?Infinity:s.nextRaid,end,warning));
+  while(s.owned&&cursor<=now){const end=s.attack?s.attack+DURATION:Infinity,warning=s.attack||s.warned===s.nextRaid?Infinity:s.nextRaid-WARNING,event=Math.max(cursor,Math.min(s.nextPay,s.attack?Infinity:s.nextRaid,end,warning));
    const until=Math.min(now,event),seconds=Math.max(0,until-cursor)/1000;xp+=site.xp*seconds;cursor=until;if(event>now)break;
    if(warning<=cursor&&!s.attack&&s.warned!==s.nextRaid){s.warned=s.nextRaid;notices.push(site.name+'將於 15 分鐘內遭反攻，請檢查駐守。');}
    if(!s.attack&&s.nextRaid<=cursor){s.attack=s.nextRaid;notices.push(site.name+'正在被攻擊！五分鐘內可入場支援。');note(t,s.attack,site.name+'遭高手反攻。');}
-   if(s.attack&&s.attack+DURATION<=cursor){const held=strength(t,site.id)>=force(site,s);if(held){won++;note(t,cursor,site.name+'由駐守弟子與大陣守住。');s.cycle++;s.nextRaid=s.attack+RAID;s.attack=0;}else{s.owned=false;lost++;for(const d of t.disciples)if(d.site===site.id)d.site=null;note(t,cursor,site.name+'失守，後續收益停止。');notices.push(site.name+'已被奪回，駐守弟子撤回宗門。');}}
+   if(s.attack&&s.attack+DURATION<=cursor){const held=strength(t,site.id)>=force(site,s);if(held){won++;note(t,cursor,site.name+'由駐守弟子與大陣守住。');s.cycle++;s.nextRaid=s.attack+RAID;s.attack=0;}else{s.owned=false;s.attack=0;lost++;for(const d of t.disciples)if(d.site===site.id)d.site=null;note(t,cursor,site.name+'失守，後續收益停止。');notices.push(site.name+'已被奪回，駐守弟子撤回宗門。');}}
    if(s.owned&&s.nextPay<=cursor){s.bank+=site.gold;const pay=Math.floor(s.bank);s.bank-=pay;gold+=pay;s.nextPay+=HOUR;}
    if(cursor>=now)break;
   }
