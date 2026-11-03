@@ -147,7 +147,7 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 <link rel="stylesheet" href="assets/engine/battle-ui.css?v=1">
 <link rel="stylesheet" href="assets/engine/hunt.css?v=2">
 <link rel="stylesheet" href="assets/engine/world.css?v=13">
-<style id="paper-doll-full-body">.paper-doll{grid-template-columns:minmax(0,1fr) minmax(175px,230px) minmax(0,1fr);grid-template-rows:minmax(190px,1fr) minmax(190px,1fr);gap:14px}.paper-doll .doll-figure{grid-column:2;grid-row:1/3;align-self:stretch;opacity:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:390px;padding:12px 6px 10px;border:1px solid #bba77566;border-radius:12px;background:radial-gradient(ellipse at 50% 65%,#476e6070,transparent 75%),linear-gradient(#203830,#10251f);overflow:hidden}.doll-portrait{width:100%;height:350px;display:flex;align-items:end;justify-content:center}.doll-figure .character-illustration{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 10px #0009)}.doll-outfit-label{font-size:12px;color:#f2dfaa;text-align:center;line-height:1.3;margin-top:6px}.paper-doll .gear-slot{min-height:145px}@media(max-width:760px){.paper-doll{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto auto;gap:9px}.paper-doll .doll-figure{grid-column:1/3;grid-row:1;min-height:330px}.doll-portrait{max-width:240px;height:285px}.gear-slot[data-slot="weapon"]{grid-column:1;grid-row:2}.gear-slot[data-slot="robe"]{grid-column:2;grid-row:2}.gear-slot[data-slot="charm"]{grid-column:1;grid-row:3}.gear-slot[data-slot="ring"]{grid-column:2;grid-row:3}}</style>
+<style id="paper-doll-full-body">.paper-doll{grid-template-columns:minmax(0,1fr) minmax(175px,230px) minmax(0,1fr);grid-template-rows:minmax(190px,1fr) minmax(190px,1fr);gap:14px}.paper-doll .doll-figure{grid-column:2;grid-row:1/3;align-self:stretch;opacity:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:390px;padding:12px 6px 10px;border:1px solid #bba77566;border-radius:12px;background:radial-gradient(ellipse at 50% 65%,#476e6070,transparent 75%),linear-gradient(#203830,#10251f);overflow:hidden}.doll-portrait{width:100%;height:350px;display:flex;align-items:end;justify-content:center}.doll-figure .character-illustration{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 10px #0009)}.doll-outfit-label{font-size:12px;color:#f2dfaa;text-align:center;line-height:1.3;margin-top:6px}.paper-doll .gear-slot{min-height:145px}.paper-doll [data-slot="mount"]{grid-column:1/-1;min-height:100px}@media(max-width:760px){.paper-doll{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto auto;gap:9px}.paper-doll .doll-figure{grid-column:1/3;grid-row:1;min-height:330px}.doll-portrait{max-width:240px;height:285px}.gear-slot[data-slot="weapon"]{grid-column:1;grid-row:2}.gear-slot[data-slot="robe"]{grid-column:2;grid-row:2}.gear-slot[data-slot="charm"]{grid-column:1;grid-row:3}.gear-slot[data-slot="ring"]{grid-column:2;grid-row:3}}</style>
 <script src="assets/engine/boss-core.js?v=3"></script>
 <script src="assets/engine/world-core.js?v=6"></script>
 <script src="assets/engine/territory-core.js?v=4"></script>
@@ -396,6 +396,8 @@ function migrateSave(raw){
     s.logs=s.logs.slice(-100);
   }
   if(s.version===2){s.auto=autoDefaults();s.version=3}
+  if(!validMounts(s.mounts))s.mounts={owned:[],equipped:null};
+  if(s.mounts.equipped&&mountReason(MOUNTS[s.mounts.equipped],s))s.mounts.equipped=null;
   s.gender=s.gender==='female'?'female':'male';
   if(!s.wardrobe)s.wardrobe=wardrobeDefaults();
   if(!s.martial)s.martial=martialDefaults();
@@ -504,6 +506,31 @@ const REGIONS=[
 ];
 const ENCOUNTERS=['靈植奇遇','妖獸攔路','古陣遺跡','旅人求援','殘劍機緣','秘境首領'];
 const REGION_REALM=[0,0,1,2,3,4];
+const MOUNTS=Object.fromEntries([
+ ['bamboo-deer','竹靈鹿'],['mist-heron','霧澤靈鷺'],['tide-drake','碧潮海蛟'],['frost-fox','霜尾狐'],['ash-horse','幽燼戰駒'],['cloud-crane','踏雲仙鶴'],
+ ['verdant-qilin','青麟鎮岳獸'],['swamp-drake','九首澤蛟'],['sea-dragon','歸墟海龍'],['ice-phoenix','絕音冰凰'],['nether-qilin','冥甲麒麟'],['celestial-tortoise','星穹玄武']
+].map(([id,name],i)=>[id,{id,name,map:i%6,boss:i>=6,price:[800,1800,4800,12000,30000,70000][i%6]*(i>=6?5:1)}]));
+const MOUNT_IDS=Object.keys(MOUNTS);
+function mountState(s=state){return s.mounts??={owned:[],equipped:null};}
+function validMounts(m){
+ return !!m&&Array.isArray(m.owned)&&m.owned.length<=MOUNT_IDS.length&&new Set(m.owned).size===m.owned.length&&m.owned.every(id=>typeof id==='string'&&Object.hasOwn(MOUNTS,id))&&(m.equipped===null||m.owned.includes(m.equipped));
+}
+function mountReason(m,s=state){
+ const realm=m.boss?6:REGION_REALM[m.map];
+ return s.realm<realm?'需 '+REALMS[realm]+'境以上':'';
+}
+function mountDescription(m){return `${m.boss?'世界妖王掉落':'產地 '+MAPS[m.map].name} · ${REALMS[m.boss?6:REGION_REALM[m.map]]}境可騎乘。僅在九州山河大地圖顯示。`;}
+function rollMount(map,elite,boss=false,roll=Math.random()){
+ const id=MOUNT_IDS[map+(boss?6:0)],m=mountState();
+ if(!id||m.owned.includes(id)||roll>=(boss?.15:elite?.06:.012))return '';
+ m.owned.push(id);
+ const message='獲得坐騎「'+MOUNTS[id].name+'」';
+ log(message,'坐騎');return message;
+}
+function mountSlot(lock){
+ const m=MOUNTS[mountState().equipped];
+ return `<div class="gear-slot ${m?'equipped':''}" data-slot="mount"><span class="gear-slot-art">${m?inventoryIcon('mount:'+m.id):''}</span><span class="tiny muted">坐騎</span><strong>${m?.name||'尚未裝備'}</strong><small>大地圖騎乘</small>${m?`<button class="btn ghost" data-mount-unseat ${lock?'disabled':''}>卸下坐騎</button>`:'<button class="btn ghost" data-go="bag">前往背包裝備</button>'}</div>`;
+}
 function travelReady(i){return Number.isInteger(i)&&i>=0&&i<MAPS.length&&power()>=MAPS[i].p&&state.realm>=REGION_REALM[i]}
 function explore(i,risk=0){
   if(!state||!travelReady(i))return;
@@ -698,7 +725,7 @@ function qzReward(){const q=qz(),r=q.run,d=r.depth,first=q.clears[d]===0,factor=
  if(first&&!state.ownedGear.includes(qzGear('weapon'))){state.ownedGear.push(qzGear('weapon'));bonus+='；專屬武器「竹王牙刃」'}q.clears[d]++;state.journey.clears[state.location]++;state.journey.progress[state.location]=0;state.journey.pending=null;q.run=null;q.fight=null;rememberJourney(qzText(`${qzDepths()[d].name}通關！${first?'首通材料加倍。':''}獲靈晶 ${(2+d)*factor}、感悟 ${(1+d)*factor}、殘片 ${factor}；${bonus}。`));showModal('victory',qzText(`<h2 id="modalTitle">竹海狼王伏誅</h2><p>${first?'首次通關，基礎材料加倍。':'本趟歷練完成。'}</p><p>${bonus}</p><p>怪物專屬材料已記入青州圖鑑。可更換目標或挑戰更深路線。</p><button class="btn" data-action="close">返回營地</button>`))}
 function qzTick(dt){const q=qz(),f=q?.fight,r=q?.run;if(!f||!r||document.hidden||$('gameEntry')?.open||f.paused)return;f.clock+=Math.min(1,dt);if(f.clock<1)return;f.clock-=1;f.round++;if(!f.tactical&&solo().manualHeal!==false&&state.hp/maxHP()<.5&&state.items.heal>0&&f.pills<3){state.items.heal--;f.pills++;state.hp=Math.min(maxHP(),state.hp+maxHP()*.6);f.lines.push('自動服用回春丹，回復 60% 最大氣血。')}const m=qzEnemies()[f.id],stats=qzEnemyStats(f.id,r.depth),rnd=commissionRandom((r.seed^Math.imul(f.round,2654435761))>>>0),poisonDamage=f.martial?.poison>0?f.martial.venom||0:0,turn=expeditionTurn(f,{regenerate:!f.realtime}),shield=f.id==='construct'&&f.round%3===0;
  const stance=SOLO_STANCES[solo().stance];if(f.breakNext){turn.control=true;f.breakNext=false;f.lines.push('破招生效，打斷本回合攻勢。')}const physical=Math.max(0,turn.damage-poisonDamage),damage=Math.round(physical*(f.frost?.7:1)*(1-m.armor)*(shield?.55:1))+poisonDamage;f.frost=false;f.hp-=damage;if(f.tactical&&engineTurnPresentation)Object.assign(engineTurnPresentation,{id:turn.id,type:turn.type,name:turn.name,damage,healed:turn.healed||0,control:turn.control});artFeedback(turn);if(damage>0)playExpeditionSlash(f.hp<=0);f.lines.push(`${turn.name}造成 ${fmt(damage)} 傷害${turn.healed?'，回復 '+fmt(turn.healed)+' 氣血':''}${shield?'；傀儡劍盾減傷':''}。`);
- if(f.hp<=0){qzRecordKill(f.id);const xp=expeditionXP(state.location,r.depth),money=[45,100,220][r.depth]*(state.location+1);addXP(xp);state.stones+=money;rememberJourney(`擊敗${m.name}，獲${m.drop} 1、修為 ${xp}、靈石 ${money}。`);q.fight=null;if(f.id==='wolfking')qzReward();else if(f.id==='construct'){r.hidden=true;r.clue=Math.max(r.clue,2);if(!state.ownedGear.includes(qzGear('charm'))){state.ownedGear.push(qzGear('charm'));rememberJourney(qzText('劍廬密室開啟，取得專屬護符「竹心劍印」。'))}r.won=true;qzPending();showQzEncounter()}else{r.won=true;qzPending();showQzEncounter()}renderAll();save();return}
+ if(f.hp<=0){qzRecordKill(f.id);rollMount(state.location,r.depth>0);const xp=expeditionXP(state.location,r.depth),money=[45,100,220][r.depth]*(state.location+1);addXP(xp);state.stones+=money;rememberJourney(`擊敗${m.name}，獲${m.drop} 1、修為 ${xp}、靈石 ${money}。`);q.fight=null;if(f.id==='wolfking')qzReward();else if(f.id==='construct'){r.hidden=true;r.clue=Math.max(r.clue,2);if(!state.ownedGear.includes(qzGear('charm'))){state.ownedGear.push(qzGear('charm'));rememberJourney(qzText('劍廬密室開啟，取得專屬護符「竹心劍印」。'))}r.won=true;qzPending();showQzEncounter()}else{r.won=true;qzPending();showQzEncounter()}renderAll();save();return}
  let harm=0;if(!turn.control){let mult=1;if(f.id==='bee')mult+=Math.floor(f.round/4)*.2;if(f.id==='wolf'&&f.round%3===0)mult=1.5;if(f.id==='boar'&&f.round%3===0)mult=1.8;if(f.id==='ape'&&f.round%4===0)mult=1.9;if(f.id==='wolfking'){if(f.hp/f.max<.45)mult*=1.5;if(f.round%4===0)mult*=1.8}
  harm=expeditionHarm(stats.attack,mult,turn,f.guardNext,r.path==='aid');if(f.id==='serpent'&&f.round%3===0)f.poison=3;if(state.location&&f.id==='wolfking'&&f.round%3===0){const effect=REGION_EXPEDITIONS[state.location].effect;if(effect==='drain'){const healed=Math.min(f.max-f.hp,Math.round(harm*.35));f.hp+=healed;f.lines.push('汲取生命，回復 '+healed+' 氣血。')}if(effect==='frost'){f.frost=true;f.lines.push('寒意侵體，下回合直接傷害降低 30%。')}if(effect==='surge'){const surge=Math.round(stats.attack*.35*(f.guardNext?.55:1));harm+=surge;f.lines.push('震波追加 '+surge+' 傷害。')}}f.lines.push(`${m.name}反擊 ${fmt(harm)} 傷害。`)}else f.lines.push('控制生效，敵人未能出招。');f.guardNext=false;
  if(f.poison){const poison=Math.round(stats.attack*.3);harm+=poison;f.poison--;f.lines.push('毒傷 '+poison+'。')}if(f.tactical&&engineTurnPresentation)engineTurnPresentation.harm=harm;state.hp-=harm;if(state.hp<=0){state.hp=maxHP()*.2;qzRetreat(true);return}f.lines=f.lines.slice(-12);updateQzFight();renderHUD();save()}
@@ -903,7 +930,7 @@ $('mainArray').innerHTML=arrayHTML();$('creatorArray').innerHTML=arrayHTML();
 function aptitude(stats){const sum=stats.reduce((a,b)=>a+b,0),max=Math.max(...stats),dominant=stats.indexOf(max),names=['金剛道骨','悟道天姿','玄識通明','天眷福星','氣海無垠','踏雲靈軀'];if(sum>=102&&Math.min(...stats)>=14)return {name:'混沌道體',desc:'六維均衡且出眾，修行根基渾然一體。',dominant};if(max>=19&&sum>=86)return {name:'天靈之姿 · '+names[dominant],desc:`${STATS[dominant]}資質極盛，尤擅${['淬體','修煉','神識','機緣','攻伐','身法'][dominant]}。`,dominant};return {name:names[dominant],desc:`${STATS[dominant]}為本次最強資質，偏向${['淬體','修煉','神識','機緣','攻伐','身法'][dominant]}。`,dominant};}
 function creatorStatsHTML(stats,dominant){return stats.map((n,i)=>`<div class="creator-stat ${i===dominant?'creator-stat-best':''}"><div class="creator-stat-head"><span>${STATS[i]}${i===dominant?' · 強項':''}</span><b>${n}<small>/20</small></b></div><div class="creator-stat-track"><span style="width:${n*5}%"></span></div></div>`).join('')}
 function roll(){draft={root:Math.random()<.15?6:Math.random()<.2?rand(3,5):rand(0,3),body:Math.random()<.15?rand(3,4):rand(0,2),stats:STATS.map(()=>rand(1,20))};const fate=aptitude(draft.stats),total=draft.stats.reduce((a,b)=>a+b,0);$('rollRoot').textContent=ROOTS[draft.root].name;$('rollRootDesc').textContent=`修煉 ×${ROOTS[draft.root].mul} · ${ROOTS[draft.root].desc}`;$('rollBody').textContent=BODIES[draft.body].name;$('rollBodyDesc').textContent=`修煉 ×${BODIES[draft.body].mul} · 戰力 +${BODIES[draft.body].power}`;$('rollAptitude').textContent=fate.name;$('rollAptitudeDesc').textContent=fate.desc;$('rollTotal').textContent=total+' / 120';$('rollStats').innerHTML=creatorStatsHTML(draft.stats,fate.dominant);$('rollSummary').textContent='命格稱號依六維資質評定；靈根與體質效果以左側顯示為準。逆天改命可重擲。'}
-function initial(){return{world:window.XianxiaWorld?.fresh(),version:VERSION,solo:soloDefaults(),qingzhou:qzDefaults(),wandering:wanderingDefaults(),sectProgress:sectProgressDefaults(),wardrobe:wardrobeDefaults(),martial:martialDefaults(),gender:draftGender,name:$('nameInput').value.trim()||pick(draftGender==='female'?FEMALE_NAMES:NAMES),...JSON.parse(JSON.stringify(draft)),...journeyDefaults(),...equipmentDefaults(),auto:autoDefaults(),realm:0,xp:0,total:0,stones:180,contribution:0,sect:null,rank:0,book:false,hp:1,steps:12,stepTimer:0,boostUntil:0,quest:null,questCycle:0,salaryTimer:0,seconds:0,items:{heal:3,qi:2,ward:0,herb:0,sword:0},ceremonyUnlocked:false,ceremonyUntil:0,nextCeremony:0,event:null,traitor:false,exSect:null,masterAt:0,logs:[],chats:[],savedAt:Date.now()}}
+function initial(){return{mounts:{owned:[],equipped:null},world:window.XianxiaWorld?.fresh(),version:VERSION,solo:soloDefaults(),qingzhou:qzDefaults(),wandering:wanderingDefaults(),sectProgress:sectProgressDefaults(),wardrobe:wardrobeDefaults(),martial:martialDefaults(),gender:draftGender,name:$('nameInput').value.trim()||pick(draftGender==='female'?FEMALE_NAMES:NAMES),...JSON.parse(JSON.stringify(draft)),...journeyDefaults(),...equipmentDefaults(),auto:autoDefaults(),realm:0,xp:0,total:0,stones:180,contribution:0,sect:null,rank:0,book:false,hp:1,steps:12,stepTimer:0,boostUntil:0,quest:null,questCycle:0,salaryTimer:0,seconds:0,items:{heal:3,qi:2,ward:0,herb:0,sword:0},ceremonyUnlocked:false,ceremonyUntil:0,nextCeremony:0,event:null,traitor:false,exSect:null,masterAt:0,logs:[],chats:[],savedAt:Date.now()}}
 function start(){if(window.xianxiaEntryMode!=='guest'&&window.xianxiaOnline&&!window.xianxiaOnline.signedIn)return toast('請先在標題頁選擇帳號登入或遊客遊玩。');state=initial();state.hp=maxHP();window.dispatchEvent(new Event('xianxia-character-ready'));$('creatorOverlay').classList.add('hidden');log(`${state.name}在青州山腳拾得一卷殘經，從此踏上求仙問道之路。`,'入道');log(`身負${ROOTS[state.root].name}與${BODIES[state.body].name}，你的第一縷真氣在丹田悄然流轉。`,'命格');chat('【散修】白雲舟','新來的道友，記得先凝聚靈氣，修為圓滿後便可突破。');renderAll();routeTo('map');save();showPrologue()}
 function addXP(n){state.xp+=n;state.total+=n;checkCeremony()}
 function checkCeremony(){if(!state.ceremonyUnlocked&&(state.realm>=1||state.stage>=8||state.total>=1240)){state.ceremonyUnlocked=true;openCeremony()}else if(state.ceremonyUnlocked&&state.sect===null&&Date.now()>state.nextCeremony&&Date.now()>state.ceremonyUntil)openCeremony()}
@@ -1147,6 +1174,7 @@ function validBattle(b){
 function validSave(s){
   try{
     if(!s||typeof s!=='object'||Array.isArray(s))return false;
+    if(s.mounts!==undefined&&!validMounts(s.mounts))return false;
     if(s.territories!==undefined&&window.XianxiaTerritories&&!window.XianxiaTerritories.valid(s.territories))return false;
     if(s.achievements!==undefined&&!validAchievements(s.achievements))return false;
     if(s.world!==undefined&&window.XianxiaWorld&&!window.XianxiaWorld.valid(s.world))return false;
@@ -1331,7 +1359,7 @@ function autoTick(dt){
   if(f.hp>0)expeditionFeedback('−'+fmt(damage));
   if(f.hp<=0){
     const mult=f.elite?2:1,xp=Math.round(expeditionXP(a.map,f.qzDepth||0,f.elite)*(a.goal==='xp'?1.2:.85)),money=Math.round(m.reward*.45*mult);
-    addXP(xp);state.stones+=money;a.xp+=xp;a.stones+=money;a.kills++;if(f.qzId)qzRecordKill(f.qzId);
+    addXP(xp);state.stones+=money;a.xp+=xp;a.stones+=money;a.kills++;if(f.qzId){qzRecordKill(f.qzId);rollMount(a.map,f.elite);}
     let text=`擊敗${f.elite?'精英·':''}${f.qzId?qzEnemies()[f.qzId].name:REGIONS[a.map].enemy}，修為 +${fmt(xp)}、靈石 +${money}。`;
     if(f.roll<(a.goal==='materials'?.75:.25)){
       const key=['crystal','insight','fragment'][a.kills%3];state.materials[key]++;a.materials++;text+=` 獲${{crystal:'靈晶',insight:'感悟',fragment:'殘片'}[key]} 1。`;
@@ -1523,7 +1551,7 @@ function gearComparison(g){
 }
 function renderEquipment(){
   const b=gearBonus(),lock=actionLock();
-  $('equipmentPanel').innerHTML=`<div class="appearance-toolbar"><span class="tiny gold">角色外觀</span><div class="appearance-options"><span class="tag">${state.gender==='female'?'女修':'男修'} · 創角後固定</span></div></div>${robeControls()}<h3 class="section-title">穿戴裝備 · ${esc(state.name)}</h3><p class="note">總戰力 ${fmt(power())} · 最大氣血 ${fmt(maxHP())} · 吐納 ${(rate()+territoryBonus()).toFixed(2)}/秒。穿戴欄位與本命法寶分開管理。</p>${lock?`<p class="button-reason">${lock}，暫不能更換裝備。</p>`:''}<div class="paper-doll"><div class="doll-figure" role="img" aria-label="${state.name}完整人物造型 · ${currentOutfit()?.name||'原本造型'}"><div class="doll-portrait">${paintedCharacter(state.gender,currentOutfit())}</div><span class="doll-outfit-label">${currentOutfit()?.name||'散修素衣'}</span></div>${Object.entries(SLOT_NAMES).map(([slot,name])=>{const g=GEAR[state.equipment[slot]];return `<div class="gear-slot ${g?'equipped':''}" data-slot="${slot}"><span class="gear-slot-art" aria-hidden="true">${inventoryIcon(slot,g?.rare,g?.id)}</span><span class="tiny muted">${name}</span><strong>${g?gearDisplayName(g.id):'尚未裝備'}</strong><small>${g?gearDescription(g):'可由地方商店或打怪取得'}</small>${g?`<button class="btn ghost" data-unequip="${slot}" ${lock?'disabled':''} aria-label="卸下${g.name}">卸下</button>`:'<button class="text-action" data-go="shop">尋找裝備</button>'}</div>`}).join('')}</div><p class="note">裝備基礎加成：戰力 +${b.power} · 氣血 +${b.hp} · 修煉 +${Math.round(b.rate*100)}% · 神識 +${b.spirit} · 福緣 +${b.luck}</p><button class="text-action" data-open-artifact>查看本命法寶與餵養進度 ↓</button>`;
+  $('equipmentPanel').innerHTML=`<div class="appearance-toolbar"><span class="tiny gold">角色外觀</span><div class="appearance-options"><span class="tag">${state.gender==='female'?'女修':'男修'} · 創角後固定</span></div></div>${robeControls()}<h3 class="section-title">穿戴裝備 · ${esc(state.name)}</h3><p class="note">總戰力 ${fmt(power())} · 最大氣血 ${fmt(maxHP())} · 吐納 ${(rate()+territoryBonus()).toFixed(2)}/秒。坐騎只供大地圖騎乘，與穿戴裝備及本命法寶分開管理。</p>${lock?`<p class="button-reason">${lock}，暫不能更換裝備。</p>`:''}<div class="paper-doll"><div class="doll-figure" role="img" aria-label="${state.name}完整人物造型 · ${currentOutfit()?.name||'原本造型'}"><div class="doll-portrait">${paintedCharacter(state.gender,currentOutfit())}</div><span class="doll-outfit-label">${currentOutfit()?.name||'散修素衣'}</span></div>${Object.entries(SLOT_NAMES).map(([slot,name])=>{const g=GEAR[state.equipment[slot]];return `<div class="gear-slot ${g?'equipped':''}" data-slot="${slot}"><span class="gear-slot-art" aria-hidden="true">${inventoryIcon(slot,g?.rare,g?.id)}</span><span class="tiny muted">${name}</span><strong>${g?gearDisplayName(g.id):'尚未裝備'}</strong><small>${g?gearDescription(g):'可由地方商店或打怪取得'}</small>${g?`<button class="btn ghost" data-unequip="${slot}" ${lock?'disabled':''} aria-label="卸下${g.name}">卸下</button>`:'<button class="text-action" data-go="shop">尋找裝備</button>'}</div>`}).join('')}${mountSlot(lock)}</div><p class="note">裝備基礎加成：戰力 +${b.power} · 氣血 +${b.hp} · 修煉 +${Math.round(b.rate*100)}% · 神識 +${b.spirit} · 福緣 +${b.luck}</p><button class="text-action" data-open-artifact>查看本命法寶與餵養進度 ↓</button>`;
 }
 function equipGear(id){
   if(blockedJourney()||!Object.hasOwn(GEAR,id)||!state.ownedGear.includes(id))return;
@@ -1531,7 +1559,7 @@ function equipGear(id){
   toast(`已穿戴${g.name} · 戰力 ${fmt(before)} → ${fmt(power())} · 最大氣血 ${fmt(hp)} → ${fmt(maxHP())}`);renderAll();save();
 }
 function unequipGear(slot){if(blockedJourney()||!Object.hasOwn(SLOT_NAMES,slot))return;state.equipment[slot]=null;state.hp=Math.min(state.hp,maxHP());renderAll();save()}
-function shopKey(){return [state.materials.insight,state.wandering?.pages,...Object.keys(WILD_ARTS).map(id=>state.martial.known[id]||0),state.location,marketEpoch(),Math.floor(state.stones),...Object.keys(ITEMS).map(k=>state.items[k]),state.ownedGear.length,...Object.values(state.equipment),state.realm,state.stage,state.foundation,state.training.body,state.training.soul,state.artifact.level,state.boostUntil>Date.now(),state.market.specialLeft[state.location],state.market.rareBought[state.location],!!combat,state.auto.active].join('|')}
+function shopKey(){return [mountState().owned.join(),state.materials.insight,state.wandering?.pages,...Object.keys(WILD_ARTS).map(id=>state.martial.known[id]||0),state.location,marketEpoch(),Math.floor(state.stones),...Object.keys(ITEMS).map(k=>state.items[k]),state.ownedGear.length,...Object.values(state.equipment),state.realm,state.stage,state.foundation,state.training.body,state.training.soul,state.artifact.level,state.boostUntil>Date.now(),state.market.specialLeft[state.location],state.market.rareBought[state.location],!!combat,state.auto.active].join('|')}
 const SHOP_KEEPERS=[
  {name:'沈掌櫃',shop:'青竹小閣',title:'青州行商',greet:'道友裡邊請！架上丹藥補氣養元，左櫃的青州法器也都仔細驗過了。'},
  {name:'雲掌櫃',shop:'雲夢水榭',title:'水鄉掌櫃',greet:'一路涉水辛苦了。喝口熱茶，再瞧瞧這一櫃雲夢特產。'},
@@ -1549,6 +1577,10 @@ function talkToKeeper(){
 }
 function shopStock(key){
  const [type,id]=String(key).split(':');
+ if(type==='mount'&&id===MOUNT_IDS[state.location]&&key==='mount:'+id){
+  const m=MOUNTS[id],cost=Math.ceil(m.price*discount()),owned=mountState().owned.includes(id);
+  return {key,type,id,name:m.name,desc:mountDescription(m),icon:key,cost,label:'地方坐騎',stock:owned?'已收藏':'現貨 1 隻',reason:actionLock()||(owned?'已收藏':costReason(cost))};
+ }
  if(type==='manual'&&String(key).split(':').length===2&&Object.hasOwn(WILD_ARTS,id)&&WILD_ARTS[id].region!==null&&wildMarketOffers().includes(id)){
   const a=ARTS[id],r=WILD_ARTS[id],known=!!state.martial.known[id],typeName={mind:'心法',strike:'攻伐',guard:'護體',heal:'療傷',move:'身法',poison:'毒術',drain:'吸血'}[a.type];
   return {key,type,id,name:a.name,desc:a.desc+' 習得後需到角色頁配置；參悟成本與時間為宗門功法的兩倍。',cost:a.cost,insight:r.insight,rare:r.realm>=2,label:'散修古籍 · '+typeName,stock:known?'已習得 · 本輪展售':'本輪現貨 1 冊',reason:actionLock()||(known?'已習得，可至角色頁配置與參悟':wildLearnReason(id))};
@@ -1567,7 +1599,7 @@ function renderShop(){
  }
  setText('keeperSpeech',shopDialogue);{setText('marketRemaining',bookstallRemaining());setText('bookstallRemaining',bookstallRemaining())};
  $('shopGrid').innerHTML=Object.entries(ITEMS).filter(([id,v])=>v.price).map(([id])=>shelfItem('item:'+id)).join('');
- $('localShopGrid').innerHTML=Object.values(GEAR).filter(g=>g.region===i&&!g.rare).map(g=>shelfItem('gear:'+g.id)).join('')+shelfItem('material:crystal');
+ $('localShopGrid').innerHTML=Object.values(GEAR).filter(g=>g.region===i&&!g.rare).map(g=>shelfItem('gear:'+g.id)).join('')+shelfItem('material:crystal')+shelfItem('mount:'+MOUNT_IDS[i]);
  $('rareShop').innerHTML=rareAvailable()?shelfItem('gear:'+rare.id):`<div class="empty-cabinet">${inventoryIcon('charm',true)}<strong>掌櫃尋貨中</strong><p>本輪尚無珍品。<br>下一次補貨再來看看。</p></div>`;
  $('wildArtShop').innerHTML=wildArtHall(true);
  shopRenderKey=shopKey();
@@ -1580,7 +1612,7 @@ function purchaseAtShop(key,wear=false){
  if(modalKind!=='shopItem'||shopModalKey!==key)return;
  refreshMarket();const v=shopStock(key);if(!v){closeModal();renderShop();return toast('商品已換輪或離櫃，請查看最新貨架。')}if(v.reason){openShopItem(key);return toast(v.reason)}
  const before=state.stones;
- if(v.type==='manual')artAction(v.id,'learn');else if(v.type==='item')buy(v.id);else if(v.type==='gear')buyGear(v.id,wear);else if(v.type==='material')buyLocalMaterial();
+ if(v.type==='manual')artAction(v.id,'learn');else if(v.type==='item')buy(v.id);else if(v.type==='gear')buyGear(v.id,wear);else if(v.type==='material')buyLocalMaterial();else if(v.type==='mount'){state.stones-=v.cost;mountState().owned.push(v.id);save();renderAll();}
  if(state.stones<before){shopDialogue=`${SHOP_KEEPERS[state.location].name}：承惠 ${fmt(before-state.stones)} 靈石！${v.name}已替道友備妥，願此物助你仙途順遂。`;setText('keeperSpeech',shopDialogue);closeModal()}
 }
 function buyGear(id,wear=false){
@@ -1604,9 +1636,10 @@ $('meditateBtn').onclick=meditateRest;
 $('chatForm').onsubmit=e=>{e.preventDefault();const input=$('chatInput'),text=input.value.trim();if(!text)return;const tag=sect()?`${sect().short}·${state.rank===4?state.sect===2?'教主':'宗主':RANKS[state.rank]}`:'散修';chat(`【${REALMS[state.realm]}】【${tag}】${state.name}`,text,state.rank===4);input.value='';save()};
 // Inventory keeps the existing save schema. All transactions recheck stock before settlement.
 let bagFilter='all',bagUnworn=false,inventoryTransaction=null,inventorySerial=0;
-const BAG_FILTERS={all:'全部',gear:'裝備',item:'丹藥／靈物',material:'材料'};
+const BAG_FILTERS={all:'全部',gear:'裝備',item:'丹藥／靈物',material:'材料',mount:'坐騎'};
 const BAG_MATERIALS={crystal:{name:'靈晶',base:120,desc:'跨境突破與重塑道基的材料。出售前請確認突破需求。',icon:'crystal'},insight:{name:'感悟',base:0,protected:true,desc:'修行心得，用於煉體、養神與重塑道基；屬於角色累積，不能販賣或丟棄。',icon:'insight'},fragment:{name:'殘劍碎片',base:60,desc:'淬煉照玄殘劍的材料。出售前請確認淬煉需求。',icon:'fragment'}};
 function inventoryIcon(kind,rare=false,gearId=null){
+ if(typeof kind==='string'&&kind.startsWith('mount:')&&Object.hasOwn(MOUNTS,kind.slice(6)))return `<img src="assets/mounts-v1/mounts/${kind.slice(6)}/item.webp" width="96" height="96" alt="">`;
  if(gearId&&GEAR[gearId])return gearPaintedIcon(gearId);
  if(kind==='sword')return artifactIcon();
  const painted=paintedItemIcon(kind,rare);if(painted)return painted;
@@ -1629,6 +1662,9 @@ function inventoryIcon(kind,rare=false,gearId=null){
 function inventoryEntry(key){
  if(typeof key!=='string')return null;
  const [type,id,...extra]=key.split(':');if(extra.length)return null;
+ if(type==='mount'&&Object.hasOwn(MOUNTS,id)&&mountState().owned.includes(id)){
+  const m=MOUNTS[id];return {key,type,id,name:m.name,count:1,base:m.price,price:Math.floor(m.price/2),icon:key,rare:m.boss,equipped:mountState().equipped===id,desc:mountDescription(m),label:'坐騎'};
+ }
  if(type==='gear'&&Object.hasOwn(GEAR,id)&&state.ownedGear.includes(id)){
   const g=GEAR[id];return {key,type,id,name:gearDisplayName(id),count:1,base:g.price,price:Math.floor(g.price/2),icon:g.slot,rare:g.rare,equipped:state.equipment[g.slot]===id,forgeRank:forgeRank(id),desc:gearDescription(g),label:g.worldBoss?'傳世珍寶 · '+SLOT_NAMES[g.slot]:SLOT_NAMES[g.slot]};
  }
@@ -1639,7 +1675,7 @@ function inventoryEntry(key){
  if(key==='artifact:sword'&&state.artifact.unlocked)return {key,type:'artifact',id:'sword',name:artifactName(),count:1,base:0,price:0,icon:'sword',rare:true,protected:true,desc:`${SWORD_FORMS[swordForm()].name} · 溫養 ${state.artifact.level}/20 階。以殘片與靈石餵養，修至二十階即可重鑄仙劍。不占武器欄位。`,label:'本命法寶'};
  return null;
 }
-function inventoryEntries(){return [...state.ownedGear.map(id=>'gear:'+id),...Object.keys(ITEMS).map(id=>'item:'+id),...Object.keys(BAG_MATERIALS).map(id=>'material:'+id),'artifact:sword'].map(inventoryEntry).filter(Boolean)}
+function inventoryEntries(){return [...mountState().owned.map(id=>'mount:'+id),...state.ownedGear.map(id=>'gear:'+id),...Object.keys(ITEMS).map(id=>'item:'+id),...Object.keys(BAG_MATERIALS).map(id=>'material:'+id),'artifact:sword'].map(inventoryEntry).filter(Boolean)}
 function inventoryBlock(v){return actionLock()||(v.protected?'已認主法寶、已煉化修習與感悟不能販賣或丟棄':v.equipped?'已穿戴，請先卸下再販賣或丟棄':'')}
 function inventoryQuantity(v){const el=$('inventoryQuantity');if(!el)return 1;const n=Number(el.value);return Number.isSafeInteger(n)&&n>=1&&n<=v.count?n:null}
 function renderBag(){
@@ -1651,7 +1687,7 @@ function renderBag(){
 function openInventory(key){
  inventoryTransaction=null;const v=inventoryEntry(key);if(!v){closeModal();renderAll();return toast('此物品已不在背包。')}
  const block=inventoryBlock(v),usable=v.type==='item'&&!['ward','sword'].includes(v.id),equipLock=actionLock();
- showModal('inventory',`<div class="inventory-detail-head"><span class="inventory-large">${v.type==='manual'?manualArt(v.id):inventoryIcon(v.icon,v.rare,v.type==='gear'?v.id:null)}</span><div><span class="tag">${v.label}${v.rare?' · 稀有':''}${v.equipped?' · 已穿戴':''}</span><h2 id="modalTitle">${v.name}</h2><p class="note">持有 ${fmt(v.count)}</p></div></div><p>${v.desc}</p>${v.type==='gear'&&!v.equipped?gearComparison(GEAR[v.id]):''}${v.protected?'<p class="gold">此項目不可販賣或丟棄。</p>':`<p class="note">${v.type==='gear'||v.type==='item'&&v.id!=='herb'?'標準購買價':'設定標準價'} ${fmt(v.base)} 靈石 · 售價 <strong class="gold">${fmt(v.price)} 靈石／件</strong>（半價，向下取整）</p>`}${!v.protected?`<label class="inventory-quantity" for="inventoryQuantity">處理數量<span class="quantity-controls"><button class="btn ghost" data-bag-quantity="minus" aria-label="減少數量">−</button><input class="input" id="inventoryQuantity" aria-label="處理數量（件）" type="number" min="1" max="${v.count}" step="1" inputmode="numeric" value="1"><button class="btn ghost" data-bag-quantity="plus" aria-label="增加數量">＋</button><button class="btn ghost" data-bag-quantity="all">全部</button></span></label><p class="note" id="inventoryQuote" aria-live="polite"></p>`:''}<div class="modal-actions">${usable?`<button class="btn primary" data-bag-use="${v.key}" ${combat&&v.id!=='heal'?'disabled':''}>${ITEMS[v.id].action}一份</button>`:''}${v.type==='item'&&v.id==='ward'?'<p class="note">護劫符在跨境失敗時自動消耗，不需手動使用。</p>':''}${v.type==='gear'?`<button class="btn" data-forge-from-bag="${v.id}">前往熔爐淬鍊</button><button class="btn primary" ${v.equipped?`data-bag-unequip="${v.key}"`:`data-bag-equip="${v.key}"`} ${equipLock?'disabled':''}>${v.equipped?'卸下裝備':'穿戴裝備'}</button>`:''}${v.type==='artifact'?'<button class="btn" data-open-artifact>前往餵養</button>':''}${v.protected?'':`<button class="btn" data-inventory-sell="${v.key}" ${block?'disabled':''}>販賣</button><button class="btn red ghost" data-inventory-discard="${v.key}" ${block?'disabled':''}>丟棄</button>`}<button class="btn ghost" data-action="close">關閉</button></div>${block&&!v.protected?`<p class="button-reason">${block}</p>`:''}<input type="hidden" id="inventoryKey" value="${v.key}">`);
+ showModal('inventory',`<div class="inventory-detail-head"><span class="inventory-large">${v.type==='manual'?manualArt(v.id):inventoryIcon(v.icon,v.rare,v.type==='gear'?v.id:null)}</span><div><span class="tag">${v.label}${v.rare?' · 稀有':''}${v.equipped?' · 已穿戴':''}</span><h2 id="modalTitle">${v.name}</h2><p class="note">持有 ${fmt(v.count)}</p></div></div><p>${v.desc}</p>${v.type==='gear'&&!v.equipped?gearComparison(GEAR[v.id]):''}${v.protected?'<p class="gold">此項目不可販賣或丟棄。</p>':`<p class="note">${v.type==='gear'||v.type==='item'&&v.id!=='herb'?'標準購買價':'設定標準價'} ${fmt(v.base)} 靈石 · 售價 <strong class="gold">${fmt(v.price)} 靈石／件</strong>（半價，向下取整）</p>`}${!v.protected?`<label class="inventory-quantity" for="inventoryQuantity">處理數量<span class="quantity-controls"><button class="btn ghost" data-bag-quantity="minus" aria-label="減少數量">−</button><input class="input" id="inventoryQuantity" aria-label="處理數量（件）" type="number" min="1" max="${v.count}" step="1" inputmode="numeric" value="1"><button class="btn ghost" data-bag-quantity="plus" aria-label="增加數量">＋</button><button class="btn ghost" data-bag-quantity="all">全部</button></span></label><p class="note" id="inventoryQuote" aria-live="polite"></p>`:''}<div class="modal-actions">${usable?`<button class="btn primary" data-bag-use="${v.key}" ${combat&&v.id!=='heal'?'disabled':''}>${ITEMS[v.id].action}一份</button>`:''}${v.type==='item'&&v.id==='ward'?'<p class="note">護劫符在跨境失敗時自動消耗，不需手動使用。</p>':''}${v.type==='gear'?`<button class="btn" data-forge-from-bag="${v.id}">前往熔爐淬鍊</button><button class="btn primary" ${v.equipped?`data-bag-unequip="${v.key}"`:`data-bag-equip="${v.key}"`} ${equipLock?'disabled':''}>${v.equipped?'卸下裝備':'穿戴裝備'}</button>`:''}${v.type==='mount'?`<button class="btn primary" ${v.equipped?`data-bag-unequip="${v.key}"`:`data-bag-equip="${v.key}"`} ${equipLock||!v.equipped&&mountReason(MOUNTS[v.id])?'disabled':''}>${v.equipped?'卸下坐騎':'裝備坐騎'}</button>`:''}${v.type==='artifact'?'<button class="btn" data-open-artifact>前往餵養</button>':''}${v.protected?'':`<button class="btn" data-inventory-sell="${v.key}" ${block?'disabled':''}>販賣</button><button class="btn red ghost" data-inventory-discard="${v.key}" ${block?'disabled':''}>丟棄</button>`}<button class="btn ghost" data-action="close">關閉</button></div>${block&&!v.protected?`<p class="button-reason">${block}</p>`:''}<input type="hidden" id="inventoryKey" value="${v.key}">`);
  updateInventoryQuote();
 }
 function updateInventoryQuote(){
@@ -1681,6 +1717,7 @@ function settleInventoryTransaction(token){
  if(v.type==='gear'){state.ownedGear=state.ownedGear.filter(id=>id!==v.id);if(state.solo)delete state.solo.forge[v.id]}
  else if(v.type==='item')state.items[v.id]-=tx.n;
  else if(v.type==='material')state.materials[v.id]-=tx.n;
+ else if(v.type==='mount')mountState().owned=mountState().owned.filter(id=>id!==v.id);
  else return;
  const gain=tx.mode==='sell'?tx.n*v.price:0;state.stones+=gain;
  closeModal();log(`${tx.mode==='sell'?'販賣':'丟棄'}${v.name} ×${tx.n}${gain?'，獲得 '+fmt(gain)+' 靈石':''}。`,'行囊');toast(gain?`已販賣，獲得 ${fmt(gain)} 靈石。`:'已丟棄物品。');renderAll();save();
@@ -1689,6 +1726,11 @@ function inventoryUseOrEquip(key,action){
  if(modalKind!=='inventory'||$('inventoryKey')?.value!==key)return;
  const v=inventoryEntry(key);if(!v)return;
  if(action==='use'&&v.type==='item'&&!['sword','ward'].includes(v.id))use(v.id);
+ else if(v.type==='mount'&&(action==='equip'||action==='unequip')){
+  const reason=actionLock()||(action==='equip'?mountReason(MOUNTS[v.id]):'');
+  if(reason)return toast(reason);
+  mountState().equipped=action==='equip'?v.id:null;save();renderAll();
+ }
  else if(action==='equip'&&v.type==='gear')equipGear(v.id);
  else if(action==='unequip'&&v.type==='gear'&&v.equipped)unequipGear(GEAR[v.id].slot);
  if(inventoryEntry(key))openInventory(key);else closeModal();
@@ -1696,6 +1738,7 @@ function inventoryUseOrEquip(key,action){
 
 document.addEventListener('click',e=>{const el=e.target.closest('button');if(!el||el.disabled)return;
 if(el.hasAttribute('data-prologue-next')){nextPrologue();return}if(el.hasAttribute('data-prologue-skip')){finishPrologue();return}
+if(el.hasAttribute('data-mount-unseat')){if(!actionLock()){mountState().equipped=null;save();renderAll();}return}
 if(el.dataset.atlasRegion!==undefined){selectAtlasRegion(Number(el.dataset.atlasRegion));return}
 if(el.hasAttribute('data-atlas-current')){selectAtlasRegion(state.location);return}
 if(el.hasAttribute('data-atlas-back')){returnToAtlas();return}
@@ -1815,6 +1858,7 @@ function huntReward(a,f){
  addXP(xp);state.stones+=money;a.xp+=xp;a.stones+=money;a.kills++;qzRecordKill(f.qzId);
  let bonus='';if(f.roll<(a.goal==='materials'?.75:.25)){const key=['crystal','insight','fragment'][a.kills%3];state.materials[key]++;a.materials++;bonus=({crystal:'靈晶',insight:'感悟',fragment:'殘片'}[key])+' ×1';}
  if(f.roll>(a.goal==='gear'?.80:.96)){const id=`${a.map}-${Object.keys(SLOT_NAMES)[a.kills%4]}`;if(!state.ownedGear.includes(id)){state.ownedGear.push(id);a.gear++;bonus=GEAR[id].name;}else{state.materials.fragment++;a.materials++;bonus='殘片 ×1';}}
+ const mountBonus=rollMount(a.map,f.elite);if(mountBonus)bonus=[bonus,mountBonus].filter(Boolean).join(' · ');
  autoHistory(`擊敗${qzEnemies()[f.qzId].name}，修為 +${xp}、靈石 +${money}${bonus?'、'+bonus:''}。`);
  huntEmit({kind:'kill',id:f.qzId,wave:huntSession.wave,xp,money,bonus});a.fight=null;huntSession.spawnAt=huntSession.time+1.05;huntSession.pending=null;a.reason='尋找下一隻妖獸';save();renderHUD();
 }
@@ -1898,7 +1942,7 @@ function battleSessionResolve(){
     const damage=Math.round(turn.damage*(1-qzEnemies()[f.id].armor));f.hp=Math.max(0,f.hp-damage);Object.assign(engineTurnPresentation,turn,{damage});
     if(f.hp>0&&!turn.control){const harm=expeditionHarm(qzEnemyStats(f.id,0).attack,1,turn);state.hp-=harm;engineTurnPresentation.harm=harm;}
    }
-   if(f.hp<=0){qzRecordKill(f.id);resolveEncounter('fight',{battleWon:true});s.foe=null;}
+   if(f.hp<=0){qzRecordKill(f.id);rollMount(state.location,false);resolveEncounter('fight',{battleWon:true});s.foe=null;}
    else if(state.hp<=0){state.hp=maxHP()*.2;resolveEncounter('retreat');s.foe=null;s.reason='交鋒失利，既得收穫保留';}
   }
  }finally{s.resolving=false;}
@@ -1939,7 +1983,7 @@ function fieldStart(mode='wild'){
  window.xianxiaGame?.suspend();window.xianxiaHunt?.close();
  if(worldBoss){const w=worldState();state.location=worldBoss.map;w.region=worldBoss.map;w.place='wild';w.position={x:worldBoss.x,y:worldBoss.y};state.journey.seen[worldBoss.map]|=1;const place=worldBoss.map+'-wild';if(!w.visited.includes(place))w.visited.push(place);W.advance(w,1);W.note(w,'踏入'+worldBoss.lair+'，挑戰'+worldBoss.name+'。');}
  const a=state.auto={...autoDefaults(),active:true,mode:'hunt',map:state.location,reason:worldBoss?'世界妖王討伐中':'自由除妖中'};
- const session=fieldSession={active:true,map:state.location,paid:new Set(),bosses:0,spec,outcome:false,materials:{...state.materials},gear:new Set(state.ownedGear)};if(spec?.feud){const f=worldState().feuds.find(f=>f.id===spec.feud);if(!f||f.status!=='pending'){fieldStop();return {error:'此仇怨已結算。'};}f.status='active';}
+ const session=fieldSession={active:true,map:state.location,paid:new Set(),bosses:0,spec,outcome:false,materials:{...state.materials},gear:new Set(state.ownedGear),mounts:new Set(mountState().owned)};if(spec?.feud){const f=worldState().feuds.find(f=>f.id===spec.feud);if(!f||f.status!=='pending'){fieldStop();return {error:'此仇怨已結算。'};}f.status='active';}
  const valid=()=>session===fieldSession&&session.active&&state.location===session.map;
  const depth=mode==='dungeon'?(spec?.depth??qz().depth):qz().clears[qz().depth]>0?qz().depth:0;if(mode==='dungeon')qz().depth=depth;
  const enemyName=npcFight?(W.bond(worldState(),npc.id).dead?W.regions[npc.map].sect+'執法弟子':npc.name):'';
@@ -1958,7 +2002,8 @@ function fieldStart(mode='wild'){
    const xp=Math.round(expeditionXP(a.map,2,true)*4),money=worldBoss.money;addXP(xp);state.stones+=money;a.xp+=xp;a.stones+=money;a.kills++;
    state.materials.crystal+=worldBoss.crystal;state.materials.fragment+=worldBoss.fragment;state.materials.insight+=worldBoss.insight;
    const owned=state.ownedGear.includes(worldBoss.gear);if(!owned){state.ownedGear.push(worldBoss.gear);a.gear++;}else{state.materials.crystal+=20;state.materials.fragment+=12;}
-   const bonus=(owned?'已收藏珍寶，轉化靈晶 ×20、法寶殘片 ×12':'傳世珍寶「'+worldBoss.relic+'」')+' · 靈晶 ×'+worldBoss.crystal+' · 殘片 ×'+worldBoss.fragment+' · 感悟 ×'+worldBoss.insight;
+   const mountBonus=rollMount(worldBoss.map,true,true);
+   const bonus=(owned?'已收藏珍寶，轉化靈晶 ×20、法寶殘片 ×12':'傳世珍寶「'+worldBoss.relic+'」')+' · 靈晶 ×'+worldBoss.crystal+' · 殘片 ×'+worldBoss.fragment+' · 感悟 ×'+worldBoss.insight+(mountBonus?' · '+mountBonus:'');
    W.note(w,'討伐'+worldBoss.name+'成功，'+(owned?'珍寶轉化為靈材':'獲得'+worldBoss.relic)+'；現實一小時後重生。');autoHistory(worldBoss.name+'討伐成功：'+bonus);save();return {xp,money,bonus};
   }
   const xp=Math.round(expeditionXP(a.map,depth,mob.boss)*(mob.boss?.85:.85/3)),money=Math.round(MAPS[a.map].reward*(mob.boss?1.8:.15));addXP(xp);state.stones+=money;a.xp+=xp;a.stones+=money;a.kills++;qzRecordKill(mob.id);let bonus='';
@@ -1967,10 +2012,11 @@ function fieldStart(mode='wild'){
   if(mob.boss){session.bosses++;bonus+=(bonus?' · ':'')+(mode==='dungeon'?'秘境通關':'野外首領擊破');
    if(mode==='dungeon'){const q=qz(),first=q.clears[depth]===0;q.clears[depth]++;state.journey.clears[a.map]++;state.materials.crystal+=first?3:1;state.materials.fragment+=first?2:1;const id=a.map?'region-'+a.map+'-weapon':'qz-wolffang';if(first&&!state.ownedGear.includes(id)){state.ownedGear.push(id);bonus+=' · '+GEAR[id].name;}window.XianxiaWorld.note(worldState(),'攻克'+MAPS[a.map].name+'秘境，取得突破歷練。');}
   }
+  const mountBonus=rollMount(a.map,mob.boss||depth>0);if(mountBonus)bonus=[bonus,mountBonus].filter(Boolean).join(' · ');
   autoHistory(`自由除妖：擊敗${qzEnemies()[mob.id].name}，修為 +${xp}、靈石 +${money}。`);save();return {xp,money,bonus};
  },stop:fieldStop};if(worldBoss){config.worldBoss={...worldBoss};config.mapName=worldBoss.lair+' · '+worldBoss.name;config.monsters=[{id:'worldboss',art:worldBoss.art}];config.stats={worldboss:{max:worldBoss.hp,attack:worldBoss.attack,armor:worldBoss.armor}};}save();return config;
 }
-function fieldLoot(){if(!fieldSession)return [];const names={crystal:'靈晶',fragment:'法寶殘片',insight:'感悟'};return [...Object.entries(names).flatMap(([key,name])=>{const count=(state.materials[key]||0)-(fieldSession.materials[key]||0);return count>0?[name+' ×'+count]:[];}),...state.ownedGear.filter(id=>!fieldSession.gear.has(id)).map(id=>GEAR[id]?.name||id)];}
+function fieldLoot(){if(!fieldSession)return [];const names={crystal:'靈晶',fragment:'法寶殘片',insight:'感悟'};return [...Object.entries(names).flatMap(([key,name])=>{const count=(state.materials[key]||0)-(fieldSession.materials[key]||0);return count>0?[name+' ×'+count]:[];}),...state.ownedGear.filter(id=>!fieldSession.gear.has(id)).map(id=>GEAR[id]?.name||id),...mountState().owned.filter(id=>!fieldSession.mounts.has(id)).map(id=>MOUNTS[id].name)];}
 window.xianxiaFieldBridge={start:fieldStart,stop:fieldStop,view:()=>state?{active:!!fieldSession?.active,hp:state.hp,maxHP:maxHP(),steps:state.steps,heal:state.items.heal,kills:state.auto.kills,xp:state.auto.xp,stones:state.auto.stones,loot:fieldLoot(),reason:state.auto.reason}:null};
 
 // Resource war state lives in the character snapshot and follows cloud/export saves.
@@ -2069,7 +2115,7 @@ function regionReadiness(map){
 }
 function worldView(){
  if(!state)return null;const W=window.XianxiaWorld,w=worldState(),b=w.bounty;
- return {territories:territoryViews(),patrol:{active:!!state.auto.active&&state.auto.mode!=='hunt'},bosses:worldBossViews(),world:JSON.parse(JSON.stringify(w)),position:w.position||W.point(state.location,w.place),date:W.date(w),achievements:achievementView(),name:state.name,level:levelName(),hp:state.hp,maxHP:maxHP(),xp:state.xp,need:needXP(),stones:state.stones,steps:state.steps,power:power(),map:state.location,artifact:state.artifact.unlocked,sect:state.sect===null?null:{name:sect().name,rank:RANKS[state.rank]},regions:MAPS.map((m,i)=>({...W.regions[i],description:m.desc,readiness:regionReadiness(i),reason:regionReason(i),clears:state.journey.clears[i]})),npcs:W.npcs.map(n=>({...n,greeting:achievementGreeting(n,w.bonds[n.id]||{}),place:W.npcPlace(n,w),bond:w.bonds[n.id]||{affinity:0,met:false},relation:W.hostility(w,n.id),dead:!!w.bonds[n.id]?.dead,sectName:W.regions[n.map].sect,combatPower:Math.round([280,850,3400,17500,52000,110000][n.map]*(1+n.seed%2*.18))})),bounty:b?{...b,progress:Math.min(b.target,Math.max(0,worldKills(b.map)-b.baseline)),reward:MAPS[b.map].reward*2}:null,auction:worldAuction(),locked:!!actionLock(),pending:!!state.journey.pending||!!combat,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},goal:state.realm===0&&!state.artifact.unlocked?'先在竹林尋得本命殘劍，再踏上除妖之路。':state.xp>=needXP()?'修為已滿，前往洞府查看提升與突破條件。':w.bounty?'前往懸賞所在地除妖，完成後回城交付。':'接取城鎮懸賞，打怪、收集資源，準備下一次突破。'};
+ return {mount:mountState().equipped,territories:territoryViews(),patrol:{active:!!state.auto.active&&state.auto.mode!=='hunt'},bosses:worldBossViews(),world:JSON.parse(JSON.stringify(w)),position:w.position||W.point(state.location,w.place),date:W.date(w),achievements:achievementView(),name:state.name,level:levelName(),hp:state.hp,maxHP:maxHP(),xp:state.xp,need:needXP(),stones:state.stones,steps:state.steps,power:power(),map:state.location,artifact:state.artifact.unlocked,sect:state.sect===null?null:{name:sect().name,rank:RANKS[state.rank]},regions:MAPS.map((m,i)=>({...W.regions[i],description:m.desc,readiness:regionReadiness(i),reason:regionReason(i),clears:state.journey.clears[i]})),npcs:W.npcs.map(n=>({...n,greeting:achievementGreeting(n,w.bonds[n.id]||{}),place:W.npcPlace(n,w),bond:w.bonds[n.id]||{affinity:0,met:false},relation:W.hostility(w,n.id),dead:!!w.bonds[n.id]?.dead,sectName:W.regions[n.map].sect,combatPower:Math.round([280,850,3400,17500,52000,110000][n.map]*(1+n.seed%2*.18))})),bounty:b?{...b,progress:Math.min(b.target,Math.max(0,worldKills(b.map)-b.baseline)),reward:MAPS[b.map].reward*2}:null,auction:worldAuction(),locked:!!actionLock(),pending:!!state.journey.pending||!!combat,appearance:{gender:state.gender||'male',outfit_id:currentOutfit()?.id||null},goal:state.realm===0&&!state.artifact.unlocked?'先在竹林尋得本命殘劍，再踏上除妖之路。':state.xp>=needXP()?'修為已滿，前往洞府查看提升與突破條件。':w.bounty?'前往懸賞所在地除妖，完成後回城交付。':'接取城鎮懸賞，打怪、收集資源，準備下一次突破。'};
 }
 function worldAuction(){const w=worldState();if(!w)return null;const slots=Object.keys(SLOT_NAMES),id=w.day%3===0?`${state.location}-rare`:`${state.location}-${slots[(w.day+state.location)%4]}`,g=GEAR[id];return g?{id,name:g.name,price:Math.ceil(g.price*.85),owned:state.ownedGear.includes(id),sold:w.auctionDay===w.day,desc:'每日輪換本地裝備，每三日可見珍品。逐輪競價，最後出價才扣除靈石；成交後裝備進入背包。'}:null;}
 function worldCommand(action,value){
@@ -2141,7 +2187,8 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/world.js?v=19"></script>
 <script type="module" src="assets/engine/field.js?v=20"></script>
 <script type="module" src="assets/engine/territory.js?v=3"></script>
-<script type="module" src="assets/engine/client.js?v=51"></script>
+<script src="assets/mounts-v1/map-data.js"></script>
+<script type="module" src="assets/engine/client.js?v=mount1-51"></script>
 </body></html>
 
 
