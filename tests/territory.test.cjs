@@ -23,8 +23,8 @@ const box={console,Math,Date:Clock,JSON,Number,Object,Array,Set,String,document:
 vm.runInContext(`
 renderSect=renderAll=renderHUD=renderMap=renderRoute=save=log=toast=chat=showModal=closeModal=()=>{};
 draft={root:0,body:0,stats:Array(6).fill(10)};state=initial();state.realm=7;state.stage=1;state.foundation='heaven';state.artifact.unlocked=true;state.hp=maxHP();
-assert.ok(territoryStart({site:'bamboo'}).error,'sect required');state.sect=0;state.sectProgress=sectProgressDefaults(0);state.contribution=10000;state.steps=3;
-let cfg=territoryStart({site:'bamboo'});assert.ok(!cfg.error&&state.steps===0,'three energy exact');assert.ok(validSave(snapshot()),'active war snapshot validates');
+assert.ok(territoryStart({site:'bamboo'}).error,'sect required');state.sect=0;state.sectProgress=sectProgressDefaults(0);state.contribution=10000;state.steps=0;
+let cfg=territoryStart({site:'bamboo'});assert.ok(!cfg.error&&state.steps===0,'manual capture works without energy');assert.ok(validSave(snapshot()),'active war snapshot validates');
 assert.ok(!cfg.territory.win(),'premature victory blocked');cfg.territory.progress(179.99);assert.ok(!cfg.territory.win(),'three minute gate enforced');cfg.territory.progress(180);assert.ok(cfg.territory.win(),'three minute capture accepted');cfg.stop();assert.ok(territoryState().sites.bamboo.owned,'land persisted');assert.ok(!cfg.territory.win(),'duplicate victory blocked');
 const oldGold=state.stones;clock(3600000);territoryUpdate();assert.equal(state.stones,oldGold+45,'income reaches canonical currency');territoryUpdate();assert.equal(state.stones,oldGold+45,'canonical payment once');
 territoryManage('assign','0:bamboo');const merit=state.contribution;territoryManage('train','0');assert.equal(state.contribution,merit-100,'training spends contribution');assert.equal(territoryState().disciples[0].level,1,'training persisted');

@@ -15,7 +15,7 @@ function techniqueButton(id,name,options={}){
 }
 function setHUD(v){
  q('[data-world-name]').textContent=v.mapName;
- q('[data-world-hp]').textContent=`氣血 ${Math.ceil(v.hp)} / ${Math.ceil(v.maxHP)} · 精力 ${Math.floor(v.steps)}`;
+ q('[data-world-hp]').textContent=`氣血 ${Math.ceil(v.hp)} / ${Math.ceil(v.maxHP)}`;
  q('[data-world-hpbar]').style.width=Math.max(0,v.hp/v.maxHP*100)+'%';
  host.classList.toggle('in-battle',!!v.fight);
  if(v.fight){const f=v.fight;
