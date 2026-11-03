@@ -1,5 +1,5 @@
 {
-  "version": "20261103b",
+  "version": "20261103c",
   "sheets": [
     {
       "name": "hero-male",
@@ -156,6 +156,78 @@
       "frameHeight": 256,
       "frames": 16,
       "bytes": 554324
+    },
+    {
+      "name": "sect-combat-sword",
+      "file": "sect-combat-sword.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 470092
+    },
+    {
+      "name": "sect-combat-academy",
+      "file": "sect-combat-academy.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 455948
+    },
+    {
+      "name": "sect-combat-demon",
+      "file": "sect-combat-demon.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 368040
+    },
+    {
+      "name": "sect-combat-ice",
+      "file": "sect-combat-ice.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 526562
+    },
+    {
+      "name": "sect-combat-beast",
+      "file": "sect-combat-beast.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 415570
+    },
+    {
+      "name": "sect-combat-pill",
+      "file": "sect-combat-pill.webp",
+      "width": 1024,
+      "height": 1024,
+      "columns": 4,
+      "rows": 4,
+      "frameWidth": 256,
+      "frameHeight": 256,
+      "frames": 16,
+      "bytes": 467302
     }
   ]
 }

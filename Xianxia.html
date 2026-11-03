@@ -147,6 +147,7 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 <link rel="stylesheet" href="assets/engine/battle-ui.css?v=1">
 <link rel="stylesheet" href="assets/engine/hunt.css?v=2">
 <link rel="stylesheet" href="assets/engine/world.css?v=13">
+<style id="paper-doll-full-body">.paper-doll{grid-template-columns:minmax(0,1fr) minmax(175px,230px) minmax(0,1fr);grid-template-rows:minmax(190px,1fr) minmax(190px,1fr);gap:14px}.paper-doll .doll-figure{grid-column:2;grid-row:1/3;align-self:stretch;opacity:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:390px;padding:12px 6px 10px;border:1px solid #bba77566;border-radius:12px;background:radial-gradient(ellipse at 50% 65%,#476e6070,transparent 75%),linear-gradient(#203830,#10251f);overflow:hidden}.doll-portrait{width:100%;height:350px;display:flex;align-items:end;justify-content:center}.doll-figure .character-illustration{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 10px #0009)}.doll-outfit-label{font-size:12px;color:#f2dfaa;text-align:center;line-height:1.3;margin-top:6px}.paper-doll .gear-slot{min-height:145px}@media(max-width:760px){.paper-doll{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto auto;gap:9px}.paper-doll .doll-figure{grid-column:1/3;grid-row:1;min-height:330px}.doll-portrait{max-width:240px;height:285px}.gear-slot[data-slot="weapon"]{grid-column:1;grid-row:2}.gear-slot[data-slot="robe"]{grid-column:2;grid-row:2}.gear-slot[data-slot="charm"]{grid-column:1;grid-row:3}.gear-slot[data-slot="ring"]{grid-column:2;grid-row:3}}</style>
 <script src="assets/engine/boss-core.js?v=1"></script>
 <script src="assets/engine/world-core.js?v=6"></script>
 <script src="assets/engine/territory-core.js?v=3"></script>
@@ -1526,7 +1527,7 @@ function gearComparison(g){
 }
 function renderEquipment(){
   const b=gearBonus(),lock=actionLock();
-  $('equipmentPanel').innerHTML=`<div class="appearance-toolbar"><span class="tiny gold">角色外觀</span><div class="appearance-options"><span class="tag">${state.gender==='female'?'女修':'男修'} · 創角後固定</span></div></div>${robeControls()}<h3 class="section-title">穿戴裝備 · ${esc(state.name)}</h3><p class="note">總戰力 ${fmt(power())} · 最大氣血 ${fmt(maxHP())} · 吐納 ${(rate()+territoryBonus()).toFixed(2)}/秒。穿戴欄位與本命法寶分開管理。</p>${lock?`<p class="button-reason">${lock}，暫不能更換裝備。</p>`:''}<div class="paper-doll"><div class="doll-figure" aria-hidden="true">${dollSVG()}</div>${Object.entries(SLOT_NAMES).map(([slot,name])=>{const g=GEAR[state.equipment[slot]];return `<div class="gear-slot ${g?'equipped':''}" data-slot="${slot}"><span class="gear-slot-art" aria-hidden="true">${inventoryIcon(slot,g?.rare,g?.id)}</span><span class="tiny muted">${name}</span><strong>${g?gearDisplayName(g.id):'尚未裝備'}</strong><small>${g?gearDescription(g):'可由地方商店或打怪取得'}</small>${g?`<button class="btn ghost" data-unequip="${slot}" ${lock?'disabled':''} aria-label="卸下${g.name}">卸下</button>`:'<button class="text-action" data-go="shop">尋找裝備</button>'}</div>`}).join('')}</div><p class="note">裝備基礎加成：戰力 +${b.power} · 氣血 +${b.hp} · 修煉 +${Math.round(b.rate*100)}% · 神識 +${b.spirit} · 福緣 +${b.luck}</p><button class="text-action" data-open-artifact>查看本命法寶與餵養進度 ↓</button>`;
+  $('equipmentPanel').innerHTML=`<div class="appearance-toolbar"><span class="tiny gold">角色外觀</span><div class="appearance-options"><span class="tag">${state.gender==='female'?'女修':'男修'} · 創角後固定</span></div></div>${robeControls()}<h3 class="section-title">穿戴裝備 · ${esc(state.name)}</h3><p class="note">總戰力 ${fmt(power())} · 最大氣血 ${fmt(maxHP())} · 吐納 ${(rate()+territoryBonus()).toFixed(2)}/秒。穿戴欄位與本命法寶分開管理。</p>${lock?`<p class="button-reason">${lock}，暫不能更換裝備。</p>`:''}<div class="paper-doll"><div class="doll-figure" role="img" aria-label="${state.name}完整人物造型 · ${currentOutfit()?.name||'原本造型'}"><div class="doll-portrait">${paintedCharacter(state.gender,currentOutfit())}</div><span class="doll-outfit-label">${currentOutfit()?.name||'散修素衣'}</span></div>${Object.entries(SLOT_NAMES).map(([slot,name])=>{const g=GEAR[state.equipment[slot]];return `<div class="gear-slot ${g?'equipped':''}" data-slot="${slot}"><span class="gear-slot-art" aria-hidden="true">${inventoryIcon(slot,g?.rare,g?.id)}</span><span class="tiny muted">${name}</span><strong>${g?gearDisplayName(g.id):'尚未裝備'}</strong><small>${g?gearDescription(g):'可由地方商店或打怪取得'}</small>${g?`<button class="btn ghost" data-unequip="${slot}" ${lock?'disabled':''} aria-label="卸下${g.name}">卸下</button>`:'<button class="text-action" data-go="shop">尋找裝備</button>'}</div>`}).join('')}</div><p class="note">裝備基礎加成：戰力 +${b.power} · 氣血 +${b.hp} · 修煉 +${Math.round(b.rate*100)}% · 神識 +${b.spirit} · 福緣 +${b.luck}</p><button class="text-action" data-open-artifact>查看本命法寶與餵養進度 ↓</button>`;
 }
 function equipGear(id){
   if(blockedJourney()||!Object.hasOwn(GEAR,id)||!state.ownedGear.includes(id))return;
@@ -2139,14 +2140,14 @@ if(!state){$('nameInput').value=pick(draftGender==='female'?FEMALE_NAMES:NAMES);
 $('creatorOverlay').classList.add('hidden');$('gameEntry').addEventListener('cancel',e=>e.preventDefault());$('gameEntry').showModal();
 setInterval(tick,250);
 </script>
-<script type="module" src="assets/online/online.js?v=9"></script>
-<script type="module" src="assets/engine/journey.js?v=7"></script>
-<script type="module" src="assets/engine/hunt.js?v=6"></script>
-<script type="module" src="assets/engine/home.js?v=5"></script>
+<script type="module" src="assets/online/online.js?v=10"></script>
+<script type="module" src="assets/engine/journey.js?v=8"></script>
+<script type="module" src="assets/engine/hunt.js?v=7"></script>
+<script type="module" src="assets/engine/home.js?v=6"></script>
 <script type="module" src="assets/engine/world.js?v=18"></script>
-<script type="module" src="assets/engine/field.js?v=17"></script>
+<script type="module" src="assets/engine/field.js?v=18"></script>
 <script type="module" src="assets/engine/territory.js?v=2"></script>
-<script type="module" src="assets/engine/client.js?v=29"></script>
+<script type="module" src="assets/engine/client.js?v=30"></script>
 </body></html>
 
 
