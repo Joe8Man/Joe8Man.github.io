@@ -2,6 +2,7 @@
 export const COMBAT_ART_VERSION='20261103c';
 export const REGIONS=['qingzhou','marsh','sea','snow','nether','heaven'];
 export const SECT_COMBAT=['sword','academy','demon','ice','beast','pill'];
+export const IDLE_ART_VERSION='20261103a';
 export function sectCombatSheet(outfitId){const match=/^sect-([0-5])-robe-[0-4]$/.exec(outfitId||'');return match?'sect-combat-'+SECT_COMBAT[Number(match[1])]:null;}
 export const SPECIES=['wolf','bee','boar','serpent','ape','construct','wolfking'];
 export const BOSS_ROWS={verdant:[0,0],marsh:[0,1],abyss:[0,2],frost:[1,0],nether:[1,1],heaven:[1,2]};
@@ -11,8 +12,8 @@ const FX_SHEETS=['effects-sword-arcane-ice','effects-blood-beast-pill'];
 const still=()=>globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
 export function sheetURL(name){return 'assets/combat-v1/'+name+'.webp?v='+COMBAT_ART_VERSION;}
 export function combatSheets(profile={}){const names=['hero-male','hero-female',...FX_SHEETS,'monsters-'+(REGIONS[profile.map]||REGIONS[0])];for(const outfitId of [profile.appearance?.outfit_id,profile.opponent?.appearance?.outfit_id]){const sheet=sectCombatSheet(outfitId);if(sheet&&!names.includes(sheet))names.push(sheet);}if(profile.territory)names.push('human-enemies');if(profile.worldBoss){const row=BOSS_ROWS[profile.worldBoss.id];if(row)names.push(row[0]===0?'bosses-verdant-marsh-abyss':'bosses-frost-nether-heaven');}return names;}
-export function preloadCombatArt(scene,profile){for(const name of combatSheets(profile))if(!scene.textures.exists('combat-'+name))scene.load.image('combat-'+name,sheetURL(name));}
-export function registerCombatFrames(scene){for(const name of SHEETS){const key='combat-'+name;if(!scene.textures.exists(key))continue;const texture=scene.textures.get(key);if(texture.has('0'))continue;const image=texture.getSourceImage();for(let i=0;i<16;i++){const x=Math.round((i%4)*image.width/4),y=Math.round(Math.floor(i/4)*image.height/4),right=Math.round((i%4+1)*image.width/4),bottom=Math.round((Math.floor(i/4)+1)*image.height/4);texture.add(String(i),0,x,y,right-x,bottom-y);}}}
+export function preloadCombatArt(scene,profile){for(const name of combatSheets(profile))if(!scene.textures.exists('combat-'+name))scene.load.image('combat-'+name,sheetURL(name));const outfit=sectCombatSheet(profile.appearance?.outfit_id);const idleName=outfit?outfit.slice('sect-combat-'.length):'plain';if(!scene.textures.exists('combat-idle-'+idleName))scene.load.image('combat-idle-'+idleName,'assets/map-v4/'+idleName+'-idle.webp?v='+IDLE_ART_VERSION);}
+export function registerCombatFrames(scene){for(const name of [...SHEETS,...['plain',...SECT_COMBAT].map(s=>'idle-'+s)]){const key='combat-'+name;if(!scene.textures.exists(key))continue;const texture=scene.textures.get(key);if(texture.has('0'))continue;const image=texture.getSourceImage();const idle=name.startsWith('idle-'),count=idle?2:16,cols=idle?2:4,rows=idle?1:4;for(let i=0;i<count;i++){const x=Math.round((i%cols)*image.width/cols),y=Math.round(Math.floor(i/cols)*image.height/rows),right=Math.round((i%cols+1)*image.width/cols),bottom=Math.round((Math.floor(i/cols)+1)*image.height/rows);texture.add(String(i),0,x,y,right-x,bottom-y);}}}
 export function monsterCell(id){const i=SPECIES.indexOf(id);return i<0?null:i*2;}
 export function mobArt(profile,mob){
  if(profile.territory&&mob.id==='cultivator'&&mob.role!=='防禦大陣')return {sheet:'human-enemies',first:(mob.artRole??3)*4,count:4};
@@ -24,11 +25,11 @@ export function updateMobArt(node,mob,time){const ref=node?.combatArt;if(!ref)re
 export function makeAtlasRig(scene,rig,x,y,scale,flip,shadowFactory){
  const gender=rig.profile?.gender==='female'?'female':'male',sectSheet=sectCombatSheet(rig.profile?.outfit_id),key='combat-'+(sectSheet||'hero-'+gender),base=gender==='female'?8:0;
  if(!scene.textures.exists(key))return null;
- const root=scene.add.container(x,y).setScale(flip?-scale:scale,scale),body=scene.add.image(0,0,key,sectSheet?String(base):'12').setOrigin(.5,.94).setDisplaySize(260,260);root.add([shadowFactory(scene,0,-3,95,16),body]);
+ const idleKey='combat-idle-'+(sectSheet?sectSheet.slice('sect-combat-'.length):'plain'),idleFrame=gender==='female'?'1':'0';const root=scene.add.container(x,y).setScale(flip?-scale:scale,scale),body=scene.add.image(0,0,idleKey,idleFrame).setOrigin(.5,.94).setDisplaySize(260,260);root.add([shadowFactory(scene,0,-3,95,16),body]);
  let moving=false,action=null,until=0,started=0,dead=false;const reduced=still();
  const sequences=sectSheet?{slash:[base+4,base+5,base+6,base+7],sword:[base+4,base+5,base+6,base+7],combo:[base+5,base+6,base+5,base+6,base+7],cast:[base+4,base+5,base+6,base+7],palm:[base+4,base+5,base+6,base+7],guard:[base+4],stone:[base+4],heal:[base+4,base+5,base+7],hurt:[base+7],fallen:[base+7]}:{slash:[4,5,6,7],sword:[4,5,6,7],combo:[5,6,5,6,5,6,7],claw:[5,6,7],wind:[5,6,7],leaves:[5,6,7],flame:[5,6,7],break:[5,6,7],palm:[8,9,10,11],cast:[8,9,10,11],guard:[13],stone:[13],heal:[8,9,10,11],blossom:[8,9,10,11],hurt:[14],fallen:[15]};
  const walking=sectSheet?[base,base+1,base+2,base+3]:[0,1,2,3],standing=sectSheet?[base]:[12];
- function update(){if(dead)return;const now=scene.time.now;if(action&&now>=until)action=null;const seq=action?sequences[action]||sequences.cast:moving?walking:standing;const index=reduced?0:action?Math.min(seq.length-1,Math.floor((now-started)/(until-started)*seq.length)):Math.floor(now/130)%seq.length;body.setFrame(String(seq[index]));}
+ function update(){if(dead)return;const now=scene.time.now;if(action&&now>=until)action=null;const seq=action?sequences[action]||sequences.cast:moving?walking:standing;const index=reduced?0:action?Math.min(seq.length-1,Math.floor((now-started)/(until-started)*seq.length)):Math.floor(now/130)%seq.length;if(!action&&!moving){if(body.texture.key!==idleKey)body.setTexture(idleKey,idleFrame);}else{if(body.texture.key!==key)body.setTexture(key,String(seq[index]));body.setFrame(String(seq[index]));}body.setDisplaySize(260,260);}
  function perform(family='slash',{interrupt=false}={}){if(action&&!interrupt)return;action=family;started=scene.time.now;until=family==='fallen'?Infinity:started+(family==='combo'?650:['guard','heal','cast','stone','blossom'].includes(family)?650:440);update();}
  const flash=color=>{body.setTint(color||0xffe4c7);scene.time.delayedCall(80,()=>{if(body.active)body.clearTint();});};
  scene.events.on('update',update);root.once('destroy',()=>{dead=true;scene.events.off('update',update);});

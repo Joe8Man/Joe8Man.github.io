@@ -1,8 +1,8 @@
-import {makeGame,makeRig,makeGroundShadow,floatText,slash} from './runtime.js?v=9';
+import {makeGame,makeRig,makeGroundShadow,floatText,slash} from './runtime.js?v=10';
 import {createBattleAtmosphere,playTechnique,techniqueStyle} from './battle-art.js?v=3';
 const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const api=()=>window.xianxiaEngine;
-import {makeMobArt} from './combat-assets.js?v=3';
+import {makeMobArt} from './combat-assets.js?v=4';
 const host=document.getElementById('phaserJourney');
 let runtime=null,opening=false,animating=false,deferredModal=null,worldActive=false,currentMap=-1,moveTarget=null,held=new Set(),actor,enemy,viewKey='',near=null,worldPosition={x:120,y:465};
 const spots=[[260,320],[460,220],[670,330],[820,150]];

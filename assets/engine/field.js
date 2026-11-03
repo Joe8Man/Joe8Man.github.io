@@ -1,5 +1,5 @@
-import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=9';
-import {makeMobArt,updateMobArt,combatEffect,projectileArt,enemyProjectileArt} from './combat-assets.js?v=3';
+import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=10';
+import {makeMobArt,updateMobArt,combatEffect,projectileArt,enemyProjectileArt} from './combat-assets.js?v=4';
 import {techniqueStyle} from './battle-art.js?v=3';
 const bridge=()=>window.xianxiaFieldBridge,escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const host=document.createElement('section');host.id='phaserField';host.className='hidden';host.setAttribute('aria-label','自由除妖戰場');document.getElementById('route-map').prepend(host);
