@@ -1,5 +1,5 @@
 // Shared generated battle atlases. Old illustrations remain the loading fallback.
-export const COMBAT_ART_VERSION='20261103';
+export const COMBAT_ART_VERSION='20261103b';
 export const REGIONS=['qingzhou','marsh','sea','snow','nether','heaven'];
 export const SPECIES=['wolf','bee','boar','serpent','ape','construct','wolfking'];
 export const BOSS_ROWS={verdant:[0,0],marsh:[0,1],abyss:[0,2],frost:[1,0],nether:[1,1],heaven:[1,2]};

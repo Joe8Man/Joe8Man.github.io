@@ -1,5 +1,5 @@
 {
-  "version": "20261103",
+  "version": "20261103b",
   "sheets": [
     {
       "name": "hero-male",
@@ -11,7 +11,7 @@
       "frameWidth": 256,
       "frameHeight": 256,
       "frames": 16,
-      "bytes": 412976
+      "bytes": 410642
     },
     {
       "name": "hero-female",
@@ -23,7 +23,7 @@
       "frameWidth": 256,
       "frameHeight": 256,
       "frames": 16,
-      "bytes": 488032
+      "bytes": 447540
     },
     {
       "name": "human-enemies",

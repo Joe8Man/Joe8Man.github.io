@@ -1,6 +1,6 @@
-import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=7';
+import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=8';
 import {createBattleAtmosphere,techniqueStyle,playHuntEffect} from './battle-art.js?v=3';
-import {makeMobArt,updateMobArt} from './combat-assets.js?v=1';
+import {makeMobArt,updateMobArt} from './combat-assets.js?v=2';
 const host=document.getElementById('phaserHunt'),api=()=>window.xianxiaHuntBridge;
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let runtime=null,actor=null,enemy=null,body=null,enemyBreath=null,opening=false,active=false,paused=false,epoch=0,hudAt=0,combo=0,lastHit=0,hitStop=false,currentContext='patrol',enemyActor=null,enemyPrepared=null;
