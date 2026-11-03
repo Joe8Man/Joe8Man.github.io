@@ -1,4 +1,4 @@
-import {loadPhaser} from './runtime.js?v=10';
+import {loadPhaser} from './runtime.js?v=11';
 // Native canvas presentation. The existing simulation and action validators stay authoritative.
 // Phaser 4 uses physical game dimensions; keep layout and gestures in CSS pixels.
 let display={width:1,height:1,ratio:1};
