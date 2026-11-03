@@ -6,7 +6,7 @@ const uiWidth=()=>display.width,uiHeight=()=>display.height;
 const logicalPointer=p=>({x:p.x/display.ratio,y:p.y/display.ratio,id:p.id,isDown:p.isDown});
 const mapZoom=()=>mapCamera.zoom/display.ratio;
 function setMapZoom(value){mapCamera.setZoom(clamp(value,.5,1.8)*display.ratio);}
-const mapTop=()=>uiWidth()<600?224:160;
+const mapTop=()=>uiWidth()<600?224:180;
 const mapBottom=()=>uiHeight()-72;
 const inMapViewport=y=>y>=mapTop()&&y<mapBottom();
 function mapViewport(){
@@ -87,19 +87,77 @@ function button(parent,x,y,w,h,label,action,disabled=false,primary=false,image,o
  const box=scene.add.image(0,0,skin(w,h,primary,options.tone)).setOrigin(0).setDisplaySize(w,h),tint=()=>box.setTint(state.disabled?0x718478:0xffffff);card.add(box);
  const imageKey=texture(image),icon=options.icon||(/設定/.test(label)?'gear':/山河|此地/.test(label)?'mountain':/選單|更多/.test(label)?'menu':null),compact=w<67;
  const artFrame=options.artFrame;
- const illustrated=!compact&&!detailed&&artFrame!==undefined&&scene.textures.get('map-button-art')?.has(String(artFrame));
- const centered=compact||(!detailed&&!imageKey&&!illustrated&&!icon);
- const inset=imageKey?64:illustrated?38:compact?8:icon?31:12,fs=compact?12:14;
- const t=text(centered?w/2:inset,detailed?12:h/2,label.replace(/^⚙\s*/,''),fs,primary?'#f3dfaa':'#e9e3ce',Math.max(20,w-inset-(compact?8:10)));t.setOrigin(centered?.5:0,detailed?0:.5).setAlign(centered?'center':'left');card.add(t);
- if(imageKey)card.add(scene.add.image(32,h/2,imageKey).setDisplaySize(46,46));else if(illustrated)card.add(scene.add.image(21,h/2,'map-button-art',artFrame).setDisplaySize(28,28));else if(icon&&!compact&&!detailed)rune(card,17,h/2,icon,16);
+ const illustrated=(!compact||options.stackArt)&&!detailed&&artFrame!==undefined&&scene.textures.get('map-button-art')?.has(String(artFrame));
+ const stacked=illustrated&&options.stackArt;
+ const centered=stacked||compact||(!detailed&&!imageKey&&!illustrated&&!icon);
+ const inset=stacked?4:imageKey?64:illustrated?38:compact?8:icon?31:12,fs=stacked?(w<58?10:12):compact?12:14;
+ const t=text(centered?w/2:inset,stacked?h-10:detailed?12:h/2,label.replace(/^⚙\s*/,''),fs,primary?'#f3dfaa':'#e9e3ce',Math.max(20,w-inset-(stacked?4:compact?8:10)));t.setOrigin(centered?.5:0,detailed?0:.5).setAlign(centered?'center':'left');card.add(t);
+ if(imageKey)card.add(scene.add.image(32,h/2,imageKey).setDisplaySize(46,46));else if(illustrated)card.add(scene.add.image(stacked?w/2:21,stacked?15:h/2,'map-button-art',artFrame).setDisplaySize(stacked?23:28,stacked?23:28));else if(icon&&!compact&&!detailed)rune(card,17,h/2,icon,16);
  let detail;if(detailed){detail=text(12,h-19,options.detail,10,'#b8cbb5',w-20);card.add(detail);if(options.icon){t.setPosition(6,34).setOrigin(0).setStyle({fontSize:'12px',align:'center',wordWrap:{width:w-12,useAdvancedWrap:true}}).setFixedSize(w-12,0);rune(card,w/2,18,options.icon,22);}}
  const apply=()=>{t.setAlpha(state.disabled?.65:1);detail?.setAlpha(state.disabled?.65:1);tint();};apply();
  box.setInteractive({useHandCursor:true}).on('pointerover',()=>{if(!state.disabled)box.setTint(0xe4edcf);}).on('pointerout',tint).on('pointerdown',()=>{if(!state.disabled)box.setTint(0x9eb49c);}).on('pointerup',(p,_x,_y,event)=>{event?.stopPropagation();tint();if(!state.disabled&&Math.abs(p.upY-p.downY)<10*display.ratio&&Math.abs(p.upX-p.downX)<10*display.ratio&&(parent.parentContainer!==content||p.y/display.ratio>=76&&p.y/display.ratio<uiHeight()-88)){window.XianxiaAudio?.cue('tap');action();queueMicrotask(rebuild);}});
  return {card,box,update(nextDisabled,nextDetail){state.disabled=!!nextDisabled;entry.disabled=state.disabled;if(detail&&nextDetail!==undefined)detail.setText(nextDetail);apply();}};
 }
 let dynamicMap=null,dynamicBattle=null,dynamicPatrol=null;
+const mapNumber=new Intl.NumberFormat('zh-TW',{maximumFractionDigits:0});
+function refreshMapStatus(v){
+ const {day,realm,power,hp,stones,hpFill}=dynamicMap.status;
+ day.setText('第 '+mapNumber.format(v.world.day)+' 日');
+ realm.setText(v.level.replace(/境\s*·\s*第\s*(\d+)\s*次蛻變$/,'境$1'));
+ power.setText(mapNumber.format(v.power));
+ hp.setText('氣血 '+mapNumber.format(v.hp)+' / '+mapNumber.format(v.maxHP));
+ const hpRatio=v.maxHP>0?clamp(v.hp/v.maxHP,0,1):0;
+ hpFill.setScale(hpRatio,1).setVisible(hpRatio>0);
+ stones.setText('靈石 '+mapNumber.format(v.stones));
+ for(const value of [day,realm,power,hp,stones]){
+  value.setScale(Math.min(1,value.fitWidth/Math.max(1,value.width)),1);
+ }
+}
+function mapStatus(x,y,w){
+ const c=scene.add.container(x,y).setDepth(1002);
+ const panel=scene.add.graphics().fillStyle(0x19372d,1).fillRoundedRect(0,0,w,106,10);
+ panel.lineStyle(1,0x597b64,.85).strokeRoundedRect(.5,.5,w-1,105,10);
+ c.add(panel);
+ const line=(x,y,size,color,fitWidth)=>{
+  const value=text(x,y,'',size,color);value.fitWidth=fitWidth;c.add(value);return value;
+ };
+ const portraitX=44,portraitY=44,radius=32;
+ c.add(scene.add.circle(portraitX,portraitY,radius+2,0x11231d).setStrokeStyle(2,0xcaa465));
+ const sourceKey=texture(thumb(dom('route-character')?.querySelector('.profile')));
+ if(sourceKey){
+  const key='map-medallion-'+sourceKey;
+  if(!scene.textures.exists(key)){
+   const image=scene.textures.get(sourceKey).getSourceImage();
+   const stamp=scene.textures.createCanvas(key,192,192);
+   const ctx=stamp.context;
+   const crop=Math.min(image.width,image.height)*.82;
+   ctx.beginPath();ctx.arc(96,96,96,0,Math.PI*2);ctx.clip();
+   ctx.drawImage(image,(image.width-crop)/2,0,crop,crop,0,0,192,192);
+   stamp.refresh();
+  }
+  c.add(scene.add.image(portraitX,portraitY,key).setDisplaySize(radius*2,radius*2));
+ }else{
+  c.add(text(portraitX,portraitY,'道',25,'#e6c67e').setOrigin(.5));
+ }
+ const infoX=87,infoWidth=w-infoX-12;
+ c.add(text(infoX,19,'戰力',15,'#e6c67e'));
+ const power=line(infoX+38,7,32,'#ffde8c',infoWidth-40);
+ power.setFontFamily('Georgia, serif').setFontStyle('bold italic').setStroke('#382716',2).setShadow(0,2,'#121c13',3,false,true);
+ const hpTrack=scene.add.rectangle(infoX,45,infoWidth,22,0x492d2a).setOrigin(0).setStrokeStyle(1,0xb97752);
+ const hpFill=scene.add.rectangle(infoX+1,46,infoWidth-2,20,0xd66144).setOrigin(0);
+ c.add([hpTrack,hpFill]);
+ const hp=line(infoX+infoWidth/2,56,14,'#fff1cf',infoWidth-10);
+ hp.setOrigin(.5).setFontStyle('bold').setStroke('#522b24',2);
+ const day=line(44,83,13,'#ecdfbb',64);
+ day.setOrigin(.5,0);
+ const realmWidth=Math.round(infoWidth*.46);
+ const realm=line(infoX,81,16,'#bfe5d2',realmWidth-6);
+ const stones=line(infoX+realmWidth,82,14,'#eaddb1',infoWidth-realmWidth);
+ ui.push(c);
+ return {day,realm,power,hp,stones,hpFill};
+}
 function stableSignature(v,rows,width,height){if(v.root?.id==='patrolDialog'){const a=window.xianxiaPatrolBridge.view();return JSON.stringify([v.key,width,height,a.active,window.xianxiaWorldUI.patrolRegion(),a.goal,a.policy,a.healAt,a.useHeal,a.fight?.art,a.fight?.elite]);}if(v.key==='map')return JSON.stringify(['map',menu,width,height]);if(v.key==='battle'){const root=v.root;return JSON.stringify(['battle',width,height,root.querySelector('[data-field-overlay]').classList.contains('hidden'),root.querySelector('[data-field-resume]').classList.contains('hidden'),[...root.querySelectorAll('[data-field-cast]')].map(el=>el.dataset.fieldCast)]);}return JSON.stringify([v.key,menu,dom('toasts')?.textContent,rows.map(r=>[r.type,r.text,r.disabled,r.el?.value,r.el?.open,r.image]),width,height]);}
-function refreshDynamic(){if(screenKey.startsWith('dialog:patrolDialog'))refreshPatrolDynamic();if(screenKey==='map'&&dynamicMap){const v=bridgeWorld();dynamicMap.resources.setText((uiWidth()<600?'第 '+v.world.day+' 日':v.date)+'  ·  氣血 '+Math.round(v.hp)+'/'+Math.round(v.maxHP)+'  ·  靈石 '+v.stones);const note=dom('wanderWorld')?.classList.contains('is-travelling')?'正在行走，抵達後推進日期。':dom('wanderWorld')?.querySelector('[data-world-message]')?.textContent||'';const notification=dom('toasts')?.lastElementChild?.textContent?.trim()||'';dynamicMap.note.setText(note).setVisible(!!note&&!notification);dynamicMap.toast.setText(notification).setVisible(!!notification);renderMap();}if(screenKey==='battle'&&dynamicBattle){const root=dom('phaserField');dynamicBattle.hp.setText('氣血 '+(root.querySelector('[data-field-hp]')?.textContent||''));dynamicBattle.qi.setText('真氣 '+(root.querySelector('[data-field-qi]')?.textContent||'100')+' · 精力 '+(root.querySelector('[data-field-energy]')?.textContent||''));dynamicBattle.wave?.setText(root.querySelector('[data-field-wave]')?.textContent||'');dynamicBattle.feedback?.setText(root.querySelector('[data-field-status]')?.textContent||'');for(const {el,control,base} of dynamicBattle.controls){const cd=el.querySelector('[data-cd]')?.textContent,live=el.dataset.fieldCast==='nova'?el.querySelector('small')?.textContent:base;control.update(el.disabled,cd?'冷卻 '+cd:live);}dynamicBattle.reason?.setText(root.querySelector('[data-field-title]').textContent+'\n'+root.querySelector('[data-field-reason]').textContent);mirror();}}
+function refreshDynamic(){if(screenKey.startsWith('dialog:patrolDialog'))refreshPatrolDynamic();if(screenKey==='map'&&dynamicMap){const v=bridgeWorld();refreshMapStatus(v);const note=dom('wanderWorld')?.classList.contains('is-travelling')?'正在行走，抵達後推進日期。':dom('wanderWorld')?.querySelector('[data-world-message]')?.textContent||'';const notification=dom('toasts')?.lastElementChild?.textContent?.trim()||'';dynamicMap.note.setText(note).setVisible(!!note&&!notification);dynamicMap.toast.setText(notification).setVisible(!!notification);renderMap();}if(screenKey==='battle'&&dynamicBattle){const root=dom('phaserField');dynamicBattle.hp.setText('氣血 '+(root.querySelector('[data-field-hp]')?.textContent||''));dynamicBattle.qi.setText('真氣 '+(root.querySelector('[data-field-qi]')?.textContent||'100')+' · 精力 '+(root.querySelector('[data-field-energy]')?.textContent||''));dynamicBattle.wave?.setText(root.querySelector('[data-field-wave]')?.textContent||'');dynamicBattle.feedback?.setText(root.querySelector('[data-field-status]')?.textContent||'');for(const {el,control,base} of dynamicBattle.controls){const cd=el.querySelector('[data-cd]')?.textContent,live=el.dataset.fieldCast==='nova'?el.querySelector('small')?.textContent:base;control.update(el.disabled,cd?'冷卻 '+cd:live);}dynamicBattle.reason?.setText(root.querySelector('[data-field-title]').textContent+'\n'+root.querySelector('[data-field-reason]').textContent);mirror();}}
 function isolateCameras(){if(!scene||!mapCamera)return;const filter=(node,id)=>{node.cameraFilter=id;node.list?.forEach(child=>filter(child,id));};for(const node of scene.children.list)filter(node,node===mapLayer?scene.cameras.main.id:mapCamera.id);}
 
 // Compact route workspaces. DOM nodes remain the authoritative action targets.
@@ -291,7 +349,29 @@ function rebuild(){if(!scene||editing)return;const v=current(),rows=['map','batt
   const navW=Math.min(900,width-24),navX=(width-navW)/2,gap=6,bw=(navW-gap*4)/5;
   [['map','此地'],['character','角色'],['sect','宗門'],['bag','背包'],['menu','選單']].forEach(([r,label],i)=>button(bottom,navX+i*(bw+gap),height-60,bw,48,label,()=>{if(r==='map'){if(v.key==='map'){dom('wanderWorld').querySelector('[data-w-tab=local]').click();window.xianxiaWorldUI.place(bridgeWorld().map+':'+bridgeWorld().world.place);}else returnToWorld(v);return;}if(v.close)v.close();inspector=null;if(r==='menu'){menu=true;stamp='';return;}menu=false;bridge().go(r);stamp='';},false,r===v.key,null,{tone:'nav'}));
  }
- if(v.key==='map'){const narrow=width<600,stats=bridgeWorld(),resource=text(margin,132,width<600?'第 '+stats.world.day+' 日 · 氣血 '+Math.round(stats.hp)+'/'+Math.round(stats.maxHP)+' · 靈石 '+stats.stones:stats.date+' · 氣血 '+Math.round(stats.hp)+'/'+Math.round(stats.maxHP)+' · 靈石 '+stats.stones,11,'#eee2bd',bodyWidth-12);resource.setBackgroundColor('#19372d').setPadding(6,4).setDepth(1002);ui.push(resource);dynamicMap={resources:resource,note:null};const toolbar=scene.add.container().setDepth(1002);ui.push(toolbar);button(toolbar,margin,80,54,44,'＋',()=>setMapZoom(mapZoom()+.15));button(toolbar,margin+62,80,54,44,'－',()=>setMapZoom(mapZoom()-.15));const actionX=narrow?margin:margin+124,actionY=narrow?176:80;button(toolbar,actionX,actionY,110,42,'自動巡行',()=>window.xianxiaWorldUI.patrol(),false,false,null,{icon:'dash',artFrame:1});button(toolbar,actionX+118,actionY,110,42,'資源地',()=>window.xianxiaTerritoryUI.open(),false,false,null,{icon:'crystal',artFrame:2});button(toolbar,width-192,80,84,44,'指引',()=>bridge().onboarding(),false,false,null,{icon:'book',artFrame:3});button(toolbar,width-100,80,84,44,'定位',()=>mapCamera.centerOn(hero.x,hero.y),false,false,null,{icon:'locate',artFrame:4});}
+ if(v.key==='map'){
+  const narrow=width<600,statusWidth=narrow?bodyWidth:Math.min(480,Math.round(bodyWidth*.55));
+  dynamicMap={status:mapStatus(margin,60,statusWidth),note:null};
+  const toolbar=scene.add.container().setDepth(1002);
+  ui.push(toolbar);
+  const x=narrow?margin:margin+statusWidth+12;
+  const w=narrow?bodyWidth:bodyWidth-statusWidth-12;
+  const controls=[
+   ['＋',()=>setMapZoom(mapZoom()+.15)],
+   ['－',()=>setMapZoom(mapZoom()-.15)],
+   ['自動巡行',()=>window.xianxiaWorldUI.patrol(),'dash',1],
+   ['資源地',()=>window.xianxiaTerritoryUI.open(),'crystal',2],
+   ['指引',()=>bridge().onboarding(),'book',3],
+   ['定位',()=>mapCamera.centerOn(hero.x,hero.y),'locate',4]
+  ];
+  const zoomWidth=36,gap=5;
+  const actionWidth=narrow?(w-2*zoomWidth-5*gap)/4:(w-2*gap)/3;
+  controls.forEach(([label,action,icon,artFrame],i)=>{
+   const left=narrow?(i<2?i*(zoomWidth+gap):2*(zoomWidth+gap)+(i-2)*(actionWidth+gap)):(i%3)*(actionWidth+gap);
+   const y=narrow?173:60+Math.floor(i/3)*54;
+   button(toolbar,x+left,y,narrow&&i<2?zoomWidth:actionWidth,44,label,action,false,false,null,{icon,artFrame,stackArt:artFrame!==undefined});
+  });
+ }
 
  if(v.key==='map'){const note=text(margin,height-106,'',11,'#efe1b8',bodyWidth-12).setDepth(1003).setBackgroundColor('#19372d').setPadding(5);ui.push(note);dynamicMap.note=note;const toast=text(margin+8,height-106,'',12,'#efe1b8',bodyWidth-16).setDepth(1010).setBackgroundColor('#213d30').setPadding(5);ui.push(toast);dynamicMap.toast=toast;refreshDynamic();}
  const notification=dom('toasts')?.lastElementChild?.textContent?.trim();if(notification&&v.key!=='map'){const note=text(margin+8,height-100,notification,12,'#efe1b8',bodyWidth-16);note.setDepth(1010).setBackgroundColor('#213d30').setPadding(5);ui.push(note);}
