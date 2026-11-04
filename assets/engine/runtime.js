@@ -1,4 +1,4 @@
-import {preloadCombatArt,registerCombatFrames,makeAtlasRig} from './combat-assets.js?v=5';
+import {preloadCombatArt,registerCombatFrames,makeAtlasRig} from './combat-assets.js?v=6';
 let loading;
 export function loadPhaser(){if(window.Phaser)return Promise.resolve(window.Phaser);if(!loading)loading=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='assets/vendor/phaser-4.2.1.min.js';script.onload=()=>resolve(window.Phaser);script.onerror=()=>{loading=null;reject(Error('2D 引擎載入失敗，請重新整理。'));};document.head.append(script);});return loading;}
 // Reuse the same painted appearance for profiles, exploration and combat.

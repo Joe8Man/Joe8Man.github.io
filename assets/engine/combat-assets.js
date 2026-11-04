@@ -2,7 +2,7 @@
 export const COMBAT_ART_VERSION='20261103c';
 export const REGIONS=['qingzhou','marsh','sea','snow','nether','heaven'];
 export const SECT_COMBAT=['sword','academy','demon','ice','beast','pill'];
-export const IDLE_ART_VERSION='20261103a';
+export const IDLE_ART_VERSION='20261104';
 export function sectCombatSheet(outfitId){const match=/^sect-([0-5])-robe-[0-4]$/.exec(outfitId||'');return match?'sect-combat-'+SECT_COMBAT[Number(match[1])]:null;}
 export const SPECIES=['wolf','bee','boar','serpent','ape','construct','wolfking'];
 export const BOSS_ROWS={verdant:[0,0],marsh:[0,1],abyss:[0,2],frost:[1,0],nether:[1,1],heaven:[1,2]};
@@ -12,7 +12,7 @@ const FX_SHEETS=['effects-sword-arcane-ice','effects-blood-beast-pill'];
 const still=()=>globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
 export function sheetURL(name){return 'assets/combat-v1/'+name+'.webp?v='+COMBAT_ART_VERSION;}
 export function combatSheets(profile={}){const names=['hero-male','hero-female',...FX_SHEETS,'monsters-'+(REGIONS[profile.map]||REGIONS[0])];for(const outfitId of [profile.appearance?.outfit_id,profile.opponent?.appearance?.outfit_id]){const sheet=sectCombatSheet(outfitId);if(sheet&&!names.includes(sheet))names.push(sheet);}if(profile.territory)names.push('human-enemies');if(profile.worldBoss){const row=BOSS_ROWS[profile.worldBoss.id];if(row)names.push(row[0]===0?'bosses-verdant-marsh-abyss':'bosses-frost-nether-heaven');}return names;}
-export function preloadCombatArt(scene,profile){for(const name of combatSheets(profile))if(!scene.textures.exists('combat-'+name))scene.load.image('combat-'+name,sheetURL(name));for(const appearance of [profile.appearance,profile.opponent?.appearance]){const outfit=sectCombatSheet(appearance?.outfit_id),idleName=outfit?outfit.slice('sect-combat-'.length):'plain';if(!scene.textures.exists('combat-idle-'+idleName))scene.load.image('combat-idle-'+idleName,'assets/map-v4/'+idleName+'-idle.webp?v='+IDLE_ART_VERSION);}}
+export function preloadCombatArt(scene,profile){for(const name of combatSheets(profile))if(!scene.textures.exists('combat-'+name))scene.load.image('combat-'+name,sheetURL(name));for(const appearance of [profile.appearance,profile.opponent?.appearance]){const outfit=sectCombatSheet(appearance?.outfit_id),idleName=outfit?outfit.slice('sect-combat-'.length):'plain';if(!scene.textures.exists('combat-idle-'+idleName))scene.load.image('combat-idle-'+idleName,'assets/map-idle/'+idleName+'.webp?v='+IDLE_ART_VERSION);}}
 export function registerCombatFrames(scene){for(const name of [...SHEETS,...['plain',...SECT_COMBAT].map(s=>'idle-'+s)]){const key='combat-'+name;if(!scene.textures.exists(key))continue;const texture=scene.textures.get(key);if(texture.has('0'))continue;const image=texture.getSourceImage();const idle=name.startsWith('idle-'),count=idle?2:16,cols=idle?2:4,rows=idle?1:4;for(let i=0;i<count;i++){const x=Math.round((i%cols)*image.width/cols),y=Math.round(Math.floor(i/cols)*image.height/rows),right=Math.round((i%cols+1)*image.width/cols),bottom=Math.round((Math.floor(i/cols)+1)*image.height/rows);texture.add(String(i),0,x,y,right-x,bottom-y);}}}
 export function monsterCell(id){const i=SPECIES.indexOf(id);return i<0?null:i*2;}
 export function mobArt(profile,mob){

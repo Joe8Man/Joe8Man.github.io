@@ -1,4 +1,4 @@
-import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=11';
+import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=12';
 import {makeMobArt,updateMobArt,combatEffect,projectileArt,enemyProjectileArt} from './combat-assets.js?v=5';
 import {techniqueStyle} from './battle-art.js?v=3';
 const bridge=()=>window.xianxiaFieldBridge,escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

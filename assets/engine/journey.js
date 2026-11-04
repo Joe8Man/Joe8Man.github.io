@@ -1,4 +1,4 @@
-import {makeGame,makeRig,makeGroundShadow,floatText,slash} from './runtime.js?v=11';
+import {makeGame,makeRig,makeGroundShadow,floatText,slash} from './runtime.js?v=12';
 import {createBattleAtmosphere,playTechnique,techniqueStyle} from './battle-art.js?v=3';
 const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const api=()=>window.xianxiaEngine;

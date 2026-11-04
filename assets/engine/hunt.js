@@ -1,4 +1,4 @@
-import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=11';
+import {makeGame,makeRig,makeGroundShadow,floatText,fillTint} from './runtime.js?v=12';
 import {createBattleAtmosphere,techniqueStyle,playHuntEffect} from './battle-art.js?v=3';
 import {makeMobArt,updateMobArt} from './combat-assets.js?v=5';
 const host=document.getElementById('phaserHunt'),api=()=>window.xianxiaHuntBridge;
