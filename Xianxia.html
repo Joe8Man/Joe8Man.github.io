@@ -933,7 +933,8 @@ function roll(){draft={root:Math.random()<.15?6:Math.random()<.2?rand(3,5):rand(
 function initial(){return{mounts:{owned:[],equipped:null},world:window.XianxiaWorld?.fresh(),version:VERSION,solo:soloDefaults(),qingzhou:qzDefaults(),wandering:wanderingDefaults(),sectProgress:sectProgressDefaults(),wardrobe:wardrobeDefaults(),martial:martialDefaults(),gender:draftGender,name:$('nameInput').value.trim()||pick(draftGender==='female'?FEMALE_NAMES:NAMES),...JSON.parse(JSON.stringify(draft)),...journeyDefaults(),...equipmentDefaults(),auto:autoDefaults(),realm:0,xp:0,total:0,stones:180,contribution:0,sect:null,rank:0,book:false,hp:1,steps:12,stepTimer:0,boostUntil:0,quest:null,questCycle:0,salaryTimer:0,seconds:0,items:{heal:3,qi:2,ward:0,herb:0,sword:0},ceremonyUnlocked:false,ceremonyUntil:0,nextCeremony:0,event:null,traitor:false,exSect:null,masterAt:0,logs:[],chats:[],savedAt:Date.now()}}
 function start(){if(window.xianxiaEntryMode!=='guest'&&window.xianxiaOnline&&!window.xianxiaOnline.signedIn)return toast('請先在標題頁選擇帳號登入或遊客遊玩。');state=initial();state.hp=maxHP();window.dispatchEvent(new Event('xianxia-character-ready'));$('creatorOverlay').classList.add('hidden');log(`${state.name}在青州山腳拾得一卷殘經，從此踏上求仙問道之路。`,'入道');log(`身負${ROOTS[state.root].name}與${BODIES[state.body].name}，你的第一縷真氣在丹田悄然流轉。`,'命格');chat('【散修】白雲舟','新來的道友，記得先凝聚靈氣，修為圓滿後便可突破。');renderAll();routeTo('map');save();showPrologue()}
 function addXP(n){state.xp+=n;state.total+=n;checkCeremony()}
-function checkCeremony(){if(!state.ceremonyUnlocked&&(state.realm>=1||state.stage>=8||state.total>=1240)){state.ceremonyUnlocked=true;openCeremony()}else if(state.ceremonyUnlocked&&state.sect===null&&Date.now()>state.nextCeremony&&Date.now()>state.ceremonyUntil)openCeremony()}
+function sectJoinUnlocked(){return state.realm>=1||state.stage>=2}
+function checkCeremony(){if(!state.ceremonyUnlocked&&sectJoinUnlocked()){state.ceremonyUnlocked=true;if(state.sect===null)openCeremony()}}
 function gather(){if(!state||combat)return;if(Date.now()-lastGather<1000)return;lastGather=Date.now();const n=gatherValue();addXP(n);const x=document.createElement('span');x.className='float-xp';x.textContent=`+${fmt(n)} 修為`;document.querySelector('.scene').append(x);setTimeout(()=>x.remove(),1200);renderHUD()}
 function boost(){if(combat)return toast('請先完成宗主挑戰。');if(state.boostUntil>Date.now())return;if(state.stones<120)return toast('靈石不足，聚靈大陣需 120 靈石。');state.stones-=120;state.boostUntil=Date.now()+60000;log('一百二十枚靈石化作流光，五行歸元陣轟然運轉。修煉速率提升 500%，持續六十息。','陣法');renderHUD();save()}
 function setFeed(next){feed=next;$('logFeed').classList.toggle('hidden',next!=='log');$('chatFeed').classList.toggle('hidden',next!=='chat');$('chatForm').classList.toggle('hidden',next!=='chat');$('logFooter').classList.toggle('hidden',next==='chat');document.querySelectorAll('[data-feed]').forEach(e=>e.classList.toggle('active',e.dataset.feed===next));if(next==='chat')$('chatFeed').scrollTop=$('chatFeed').scrollHeight}
@@ -942,9 +943,23 @@ function renderChat(){$('chatFeed').innerHTML=state.chats.slice(-45).map(x=>`<di
 function renderHUD(){if(!state)return;renderArtifact();const t=eff(),s=sect(),p=power(),hpmax=maxHP(),req=needXP();$('playerName').textContent=state.name;$('avatar').textContent=state.name.slice(0,1);$('playerTitle').textContent=s?`${s.name} · ${state.rank===4&&state.sect===2?'魔教教主':RANKS[state.rank]}`:'江湖散修 · '+(state.traitor?'負劍遠行':'初入仙途');$('rootTag').textContent=ROOTS[state.root].name;$('power').textContent=fmt(p);$('stones').textContent=fmt(state.stones);$('contribution').textContent=fmt(state.contribution);$('age').textContent=16+Math.floor(((state.world?.day||1)-1)/360);$('hpText').textContent=`${fmt(state.hp)} / ${fmt(hpmax)}`;$('hpBar').style.width=`${Math.min(100,state.hp/hpmax*100)}%`;$('rate').textContent=`+${(rate()+territoryBonus()).toFixed(2)} / 秒`;$('xpBar').style.width=`${Math.min(100,state.xp/req*100)}%`;$('xpText').textContent=`修為 ${fmt(state.xp)} / ${fmt(req)}`;$('xpPercent').textContent=`${Math.min(100,Math.floor(state.xp/req*100))}%`;$('gatherAmount').textContent=`+${fmt(gatherValue())}`;$('breakChance').textContent=`${Math.round(chance()*100)}% 成功率`;$('arrayBtn').disabled=state.boostUntil>Date.now()||!!combat;$('arrayText').textContent=state.boostUntil>Date.now()?`靈陣運轉 · ${Math.ceil((state.boostUntil-Date.now())/1000)} 秒`:'開啟聚靈大陣';$('rootName').textContent=ROOTS[state.root].name;$('rootEffect').textContent=`吐納速率 ×${ROOTS[state.root].mul} · ${ROOTS[state.root].desc}`;$('bodyName').textContent=BODIES[state.body].name;$('bodyEffect').textContent=`修煉 ×${BODIES[state.body].mul} · 初始戰力 +${BODIES[state.body].power}`;$('playerStats').innerHTML=statsHTML(t);$('sectHint').textContent=s?`${RANKS[state.rank]} · 俸祿 ${salary()}/分`:state.ceremonyUnlocked?'仙緣已至，前往宗門擇道':'煉氣第九層，叩問仙門';$('stepHint').textContent=`${Math.max(0,MAPS.filter((m,i)=>travelReady(i)).length)} 處秘境可探`;$('worldClock').textContent=window.XianxiaWorld?window.XianxiaWorld.date(worldState()):`修行第 ${Math.floor(state.seconds/60)+1} 日`;renderEvent();renderCultivation();renderPlayerDock();$('locationLabel').textContent='所在地 · '+MAPS[state.location].name}
 function renderAll(){if(!state)return;if(!state.wardrobe)state.wardrobe=wardrobeDefaults();if(state.wardrobe.equipped&&!currentOutfit())state.wardrobe.equipped=null;renderCharacterArt();renderHUD();renderLog();renderChat();renderRoute()}
 function renderRoute(){if(route==='sect')renderSect();if(route==='map')renderMap();if(route==='shop')renderShop();if(route==='bag')renderBag();if(route==='character'){renderEquipment();renderMartial()}}
-function sectCards(){return SECTS.map((s,i)=>`<article class="glass feature-card"><div class="big-icon"><i aria-hidden="true" class="${s.icon}"></i></div><h3>${s.name}</h3><p>${s.desc}</p><div class="tiny jade">${s.effect}</div>${state.traitor&&state.exSect===i?'<p class="danger tiny">舊宗因果未消，本輪不可重返。</p>':`<button class="btn wide" data-join="${i}">拜入${s.short}<i aria-hidden="true" class="ri-arrow-right-line"></i></button>`}</article>`).join('')}
-function showCeremony(){showModal('ceremony',`<div class="kicker">THE HEAVENLY SUMMONS</div><h2 id="modalTitle">天尊令 · 宗門大典</h2><p>六大仙門已至。九十息之內，擇一道而行；錯過可靜候下輪接引。</p><div class="tiny gold" id="ceremonyCountdown"></div><div class="card-grid" style="margin-top:20px">${sectCards()}</div>`)}
-function renderSectContent(){const s=sect();if(!s){const active=state.ceremonyUntil>Date.now();$('sectContent').innerHTML=`<h2 class="route-title">仙門萬千，何處問道？</h2><p class="route-sub">你尚是一名江湖散修。仙門之緣，待修行而至。</p><div class="banner"><div><div class="kicker">THE HEAVENLY SUMMONS</div><h3 class="gold" style="font-weight:400">${state.ceremonyUnlocked?active?'宗門大典 · 接引中':'靜候下一輪接引':'煉氣第九層，仙門自開'}</h3><p class="note">${state.ceremonyUnlocked?active?`接引剩餘 <span id="sectCountdown">${Math.ceil((state.ceremonyUntil-Date.now())/1000)}</span> 秒`:`下輪接引尚餘 <span id="sectCountdown">${Math.max(0,Math.ceil((state.nextCeremony-Date.now())/1000))}</span> 秒`:'晉入煉氣第九層，或累積 1,240 修為，將觸發全服天尊令。'}</p></div><i aria-hidden="true" class="ri-ancient-gate-line watermark"></i></div><div class="card-grid">${active?sectCards():SECTS.map(s=>`<article class="glass feature-card"><div class="big-icon"><i aria-hidden="true" class="${s.icon}"></i></div><h3>${s.name}</h3><p>${s.desc}</p><span class="tiny jade">${s.effect}</span><p class="tiny muted">${state.ceremonyUnlocked?'靜候大典':'尚待仙緣'}</p></article>`).join('')}</div>`;return}
+const SECT_INTRO=[
+ ['近身連斬、御劍輸出','cloud'],
+ ['雷法輸出、靈盾護身','thunder'],
+ ['吸血續戰、燃血爆發','drain'],
+ ['冰霜削弱、冰封控場','frost'],
+ ['靈爪近攻、靈獸協戰','summon'],
+ ['施毒消耗、丹術療傷','poison']
+];
+function sectCards(){
+ const unlocked=sectJoinUnlocked();
+ return SECTS.map((s,i)=>{
+  const [style,art]=SECT_INTRO[i];
+  const excluded=state.traitor&&state.exSect===i;
+  return `<article class="glass feature-card"><div class="big-icon"><i aria-hidden="true" class="${s.icon}"></i></div><h3>${s.name}</h3><p>${s.desc}</p><p><strong>${style}</strong></p><p class="note">代表招式 · ${ARTS[art].name}</p><div class="tiny jade">${s.effect}</div>${excluded?'<p class="danger tiny">舊宗因果未消，本輪不可重返。</p>':unlocked?`<button class="btn wide" data-join="${i}">拜入${s.short}<i aria-hidden="true" class="ri-arrow-right-line"></i></button>`:'<p class="tiny muted">煉氣第三層可拜入</p>'}</article>`;
+ }).join('');
+}
+function renderSectContent(){const s=sect();if(!s){const unlocked=sectJoinUnlocked();$('sectContent').innerHTML=`<h2 class="route-title">仙門萬千，何處問道？</h2><p class="route-sub">先比較六宗的打法與代表招式。也可以繼續以散修身分遊歷。</p><div class="banner"><div><div class="kicker">天尊令 · 宗門接引</div><h3 class="gold">${unlocked?'六宗接引已開放':'煉氣第三層開放拜師'}</h3><p class="note">${unlocked?'隨時可選一宗拜師，從外門弟子開始。代表招式可在入宗後依藏經閣條件習得。':'先累積修為，再到洞府修煉提升小境。達到煉氣第三層後，隨時都可以回來拜師。'}</p></div><i aria-hidden="true" class="ri-ancient-gate-line watermark"></i></div><div class="card-grid">${sectCards()}</div>`;return}
 return renderSect()}
 // Legacy definitions remain intact so accepted tasks from older saves settle unchanged.
 const QUEST_VARIANTS=[['看守藥園','護養靈芝','採集晨露'],['護送靈舟','押運靈礦','巡守山門'],['剿滅魔修','清除妖窟','破除邪陣']];
@@ -1006,7 +1021,7 @@ function validCommissionQuest(q,s){
  const offer=commissionOffers(q.offerEpoch,s).find(v=>v.index===q.index);return !!offer&&q.start>=offer.postedAt&&q.start<offer.expires&&q.end-q.start===offer.seconds*1000;
 }
 function validCommissionBoard(b){return b===undefined||!!(b&&Number.isSafeInteger(b.epoch)&&b.epoch>=0&&b.epoch<=1e12&&Array.isArray(b.claimed)&&b.claimed.length<=9&&new Set(b.claimed).size===b.claimed.length&&b.claimed.every(i=>Number.isInteger(i)&&i>=0&&i<COMMISSIONS.length))}
-function join(i){if(state.sect!==null||!SECTS[i])return;if(Date.now()>state.ceremonyUntil)return toast('接引時限已過，請靜候下輪大典。');if(state.traitor&&state.exSect===i)return toast('舊宗不再接納你，請另擇仙門。');state.sect=i;state.sectProgress=sectProgressDefaults(i);state.rank=0;state.book=false;state.salaryTimer=0;state.hp=maxHP();closeModal();log(`接引長老將一枚${SECTS[i].short}玉牌交予你。自此，你是${SECTS[i].name}的外門弟子。`,'拜師');chat('天尊令',`${state.name}拜入${SECTS[i].name}，仙途從此再續新章。`,true);toast(`拜入${SECTS[i].name}`);routeTo('sect');renderHUD();save()}
+function join(i){if(state.sect!==null||!SECTS[i])return;if(!sectJoinUnlocked())return toast('煉氣第三層開放拜師。');if(state.traitor&&state.exSect===i)return toast('舊宗不再接納你，請另擇仙門。');state.sect=i;state.sectProgress=sectProgressDefaults(i);state.rank=0;state.book=false;state.salaryTimer=0;state.hp=maxHP();closeModal();log(`接引長老將一枚${SECTS[i].short}玉牌交予你。自此，你是${SECTS[i].name}的外門弟子。`,'拜師');chat('天尊令',`${state.name}拜入${SECTS[i].name}，仙途從此再續新章。`,true);toast(`拜入${SECTS[i].name}`);routeTo('sect');renderHUD();save()}
 function promote(){if(blockedJourney()||!sect())return;const p=PROMOS[state.rank];if(!p)return;const missing=promotionChecks().find(x=>!x.ok);if(missing)return toast('尚未達標：'+missing.text);state.contribution-=p.c;state.rank=p.next;log(`掌門親頒新令，你已晉升「${RANKS[state.rank]}」，宗門俸祿隨之提高。`,'晉升');renderAll();save()}
 function learn(){if(combat||state.book||!sect())return;if(state.contribution<600)return toast('參悟神功需 600 宗門貢獻。');state.contribution-=600;state.book=true;log(`你閉目參悟「${sect().book}」，識海中金文流轉。自此修煉潛力提升，收益經遞減換算。`,'悟道');toast('神功大成 · 修煉潛力提升');renderAll();save()}
 function takeQuest(i){
@@ -1024,7 +1039,7 @@ function completeQuest(){
  log(`${q.story} 獲得 ${c} 貢獻與 ${s} 靈石。`,'結算');toast(`${q.name}完成 · 貢獻 +${c}`);if(route==='sect')renderSect();renderHUD();save();
 }
 function betray(){if(state.realm<2||!sect()||combat)return;showModal('confirm',`<div class="kicker">A PATH OF YOUR OWN</div><h2 id="modalTitle">斬斷師門因果？</h2><p>你將失去所有貢獻、本門神功、職位與俸祿，未完成的任務也會取消。天道將發布追殺通緝，舊宗不再接納你，你可在大典中轉投其他門派。</p><div class="modal-actions"><button class="btn ghost" data-action="close">再思量</button><button class="btn red" data-action="confirmBetray">因果既斷，踏風而去</button></div>`)}
-function confirmBetray(){if(actionLock()){toast(actionLock());return;}territoryUpdate();if(!sect()||state.realm<2)return;const old=sect().name;state.exSect=state.sect;state.traitor=true;state.wardrobe.equipped=null;state.sect=null;state.sectProgress=sectProgressDefaults();state.contribution=0;state.book=false;state.rank=0;state.quest=null;state.hp=Math.min(state.hp,maxHP());closeModal();log(`你將弟子令牌留在山門，斬斷${old}因果，重為散修。昔日功法與俸祿隨風消散。`,'叛離');chat('九州追殺令',`${old}昭告九州：${state.name}叛出師門！諸門弟子，遇之務必小心。`,true);state.ceremonyUntil=Date.now()+90000;state.nextCeremony=Date.now()+210000;renderAll();save()}
+function confirmBetray(){if(actionLock()){toast(actionLock());return;}territoryUpdate();if(!sect()||state.realm<2)return;const old=sect().name;state.exSect=state.sect;state.traitor=true;state.wardrobe.equipped=null;state.sect=null;state.sectProgress=sectProgressDefaults();state.contribution=0;state.book=false;state.rank=0;state.quest=null;state.hp=Math.min(state.hp,maxHP());closeModal();log(`你將弟子令牌留在山門，斬斷${old}因果，重為散修。昔日功法與俸祿隨風消散。`,'叛離');chat('九州追殺令',`${old}昭告九州：${state.name}叛出師門！諸門弟子，遇之務必小心。`,true);renderAll();save()}
 function startSectChallenge(kind){const reason=sectCombatReason(kind==='sovereign');if(reason)return toast('尚未達標：'+reason);if(kind==='trial'&&sectProgress().trial)return toast('已通過繼任試煉。');const trial=kind==='trial';showModal('confirm',`<h2 id="modalTitle">${trial?'繼任試煉 · 傳承守關':'問鼎宗主 · 三重生死關'}</h2><p>${trial?'先擊敗傳承守關人，證明繼任資格。最多服用一顆回春丹；失敗保留境界、職位與貢獻。':'連戰護山尊者、太上長老與現任宗主。整場最多三顆回春丹，貢獻 10,000 僅在登位成功後扣除。失敗跌落一階、清空本境修為、貶回外門，並重置繼任試煉資格。'}</p><p>沿用當前氣血；建議先療傷並配置功法。關閉視窗不會停止戰鬥。</p><div class="modal-actions"><button class="btn ghost" data-action="close">暫且退下</button><button class="btn primary" data-action="${trial?'confirmTrial':'confirmBoss'}">確認挑戰</button></div>`)}
 function startBoss(){startSectChallenge('sovereign')}
 function startTrial(){startSectChallenge('trial')}
@@ -1096,13 +1111,13 @@ function guideDestination(target){if(actionLock())return toast('請先結束目�
 function guideProgress(){
  if(!state)return '<p>建立角色後，這裡會顯示你的境界、宗門與下一步晉升條件。</p>';
  const exact=n=>Math.floor(n).toLocaleString('zh-TW');
- let next='尚未拜師：煉氣第九層或累積 1,240 修為開啟接引大典。';
+ let next='尚未拜師：煉氣第三層開放拜師，可先到宗門頁了解六宗。';
  if(sect()){
   const p=PROMOS[state.rank];
   if(p)next=`下一階：${RANKS[p.next]}。${promotionDescription(p)}。${promotionChecks().filter(x=>!x.ok).map(x=>'未達標：'+x.text).join('；')||'條件齊備，可前往宗務晉升。'}`;
   else if(state.rank===5)next='下一階：一派宗主。'+(sovereignChecks().filter(x=>!x.ok).map(x=>'未達標：'+x.text).join('；')||'資格齊備，可前往宗務挑戰宗主。');
   else next='已登宗主之位：可繼續修煉、培養法寶與挑戰更高地區。';
- }else if(state.ceremonyUnlocked)next=state.ceremonyUntil>Date.now()?'接引大典進行中：前往宗門選擇仙門。':'已解鎖拜師：前往宗門查看下一輪接引時間。';
+ }else if(sectJoinUnlocked())next='已解鎖拜師：前往宗門選擇仙門。';
  return `<h3>你的修行進度</h3><p>${levelName()} · ${sect()?sect().name+'／'+RANKS[state.rank]:'江湖散修'}<br>戰力 <strong class="gold">${exact(power())}</strong> · 宗門貢獻 ${exact(state.contribution)}</p><p>${next}</p><p class="tiny muted">數值為開啟手冊時的狀態；重新開啟即可更新。</p>`;
 }
 function filterGuide(value){
@@ -1121,7 +1136,7 @@ function help(){
  showModal('help',`<div class="kicker">CULTIVATION HANDBOOK</div><h2 id="modalTitle">九州修行手冊</h2><p class="guide-intro">查階級、找材料、看突破條件。內容依目前遊戲規則整理，標示底色的是你的當前位置。</p><div class="guide-current">${guideProgress()}</div><label class="guide-search" for="guideSearch">搜尋手冊<input class="input" id="guideSearch" type="search" placeholder="例如：階級、天道、靈晶、販賣" autocomplete="off"></label><p class="guide-empty hidden" id="guideEmpty" role="status">沒有符合的內容，試試「突破」「宗門」或「資源」。</p>
  ${section('一 · 新手起步與戰力','<p>先在洞府吐納，依「下一步」前往青州竹林尋得照玄殘劍，再於角色頁穿戴裝備、配置功法，逐步開啟自動歷練與宗門修行。</p><p><strong>頂部金色戰力數字可點擊：</strong>前往角色查看裝備與養成。戰力受境界、蛻變、道基、資質、宗門、修習、劍意、本命法寶與裝備影響；氣血、真氣、招式配置也會影響戰鬥，達到門檻不代表一定獲勝。</p>')}
  ${section('二 · 境界、突破與道基',`<ol class="guide-realms">${REALMS.map((r,i)=>`<li ${state&&state.realm===i?'class="guide-active"':''}>${i+1}. ${r}</li>`).join('')}</ol><p><strong>小境提升：</strong>修為足夠可提升一階，必定成功，多餘修為保留。<strong>大境突破：</strong>第九階起可選擇跨境，需完成歷練、功法、裝備與材料準備，或繼續淬煉本境；確切需求、上限與成功率以洞府面板為準。</p><p>大境突破失敗保留材料與境界，損失門檻 25% 修為及最大氣血 20%；持有護劫符時自動消耗一張，保住修為與氣血。</p><h4>凡道與天道築基</h4><p>凡道：煉氣第九層起、修為達標、靈晶 2。天道：煉氣第十三層起、修為達標、靈晶 6、感悟 3；成功後戰力、最大氣血永久 ×1.25，修煉潛力提升。凡道築基後可用靈晶 8、感悟 5 重塑天道。層數與數值為遊戲改編。</p>`)}
- ${section('三 · 宗門階級、俸祿與服裝',`${table(['職位','晉升條件','俸祿／分鐘','本階法衣'],ranks)}<p>貢獻用於晉升、藏經閣與衣閣；晉升消耗貢獻，戰力只作門檻。俸祿於遊戲運轉時每分鐘發放。法衣需達到對應身分，另付貢獻兌換，並於衣閣或角色頁穿上；六宗各有專屬剪裁、材質與配色。</p><p>煉氣第九層或累積 1,240 修為開啟接引大典，接引持續 90 秒；錯過可等待下輪。</p><h4>問鼎宗主與繼任試煉</h4><p>${sovereignDescription()}</p><p>高階委託為戰力接取門檻 ≥ 1,000 的任務，計入二十件總數。只累積目前宗門的新制委託，無法回溯辨識的舊委託不補算；叛離會歸零。既有職位保留，已登位的宗主不會被降級。首席長老俸祿每分鐘 800 靈石，沿用長老法衣；宗主法衣只供宗主穿戴。</p><p>先完成委託、停止自動歷練並處理探索事件，再進行試煉。繼任試煉對戰傳承守關人，限服一顆回春丹；失敗保留境界、職位與貢獻。通過後可挑戰宗主三關。</p><p>護山尊者逐回合增強攻勢；太上長老每三回合護體、承傷減少 40%；現任宗主每四回合重擊，提前一回合提示。三關氣血連續，整場最多服三顆回春丹。控制可阻止反擊，護體與療傷有助續航。關閉視窗不會停止戰鬥。</p><p>登位成功才扣 ${SOVEREIGN.contribution.toLocaleString('zh-TW')} 貢獻，獲得 1,500 靈石、氣血全滿、戰力 +15%，俸祿 ${SALARIES[4].toLocaleString('zh-TW')} 靈石／分鐘。宗主戰失敗跌落一階、清空本境修為並貶回外門；不扣登位貢獻、保留委託實績，繼任試煉需重新通過。</p><p>金丹起可叛離：失去貢獻、本門神功、職位與俸祿，取消委託，本門傳承封存，卸下宗門服飾並清空本門實績；可轉投其他宗門，舊宗不再接納。</p>`,true)}
+ ${section('三 · 宗門階級、俸祿與服裝',`${table(['職位','晉升條件','俸祿／分鐘','本階法衣'],ranks)}<p>貢獻用於晉升、藏經閣與衣閣；晉升消耗貢獻，戰力只作門檻。俸祿於遊戲運轉時每分鐘發放。法衣需達到對應身分，另付貢獻兌換，並於衣閣或角色頁穿上；六宗各有專屬剪裁、材質與配色。</p><p>煉氣第三層起可隨時拜師。達標前可到宗門頁比較六宗的打法和代表招式。</p><h4>問鼎宗主與繼任試煉</h4><p>${sovereignDescription()}</p><p>高階委託為戰力接取門檻 ≥ 1,000 的任務，計入二十件總數。只累積目前宗門的新制委託，無法回溯辨識的舊委託不補算；叛離會歸零。既有職位保留，已登位的宗主不會被降級。首席長老俸祿每分鐘 800 靈石，沿用長老法衣；宗主法衣只供宗主穿戴。</p><p>先完成委託、停止自動歷練並處理探索事件，再進行試煉。繼任試煉對戰傳承守關人，限服一顆回春丹；失敗保留境界、職位與貢獻。通過後可挑戰宗主三關。</p><p>護山尊者逐回合增強攻勢；太上長老每三回合護體、承傷減少 40%；現任宗主每四回合重擊，提前一回合提示。三關氣血連續，整場最多服三顆回春丹。控制可阻止反擊，護體與療傷有助續航。關閉視窗不會停止戰鬥。</p><p>登位成功才扣 ${SOVEREIGN.contribution.toLocaleString('zh-TW')} 貢獻，獲得 1,500 靈石、氣血全滿、戰力 +15%，俸祿 ${SALARIES[4].toLocaleString('zh-TW')} 靈石／分鐘。宗主戰失敗跌落一階、清空本境修為並貶回外門；不扣登位貢獻、保留委託實績，繼任試煉需重新通過。</p><p>金丹起可叛離：失去貢獻、本門神功、職位與俸祿，取消委託，本門傳承封存，卸下宗門服飾並清空本門實績；可轉投其他宗門，舊宗不再接納。</p>`,true)}
  ${section('四 · 六宗特色、藏經閣與招式',`${table(['宗門','戰鬥風格','宗門加成'],sects)}<p>宗門內分堂口查閱總覽、任務、藏經閣、衣閣與事務。任務堂每三分鐘輪換委託，注意張貼時間、接取期限與戰力門檻；一次只能接一件。完成後結算靈石與貢獻。</p><p>本門神功需 600 貢獻，習得後修煉與凝氣速率 ×3。藏經閣其他傳承有各自的職位與費用要求；習得後需在角色頁配置才會使用。</p><p>可主修一部心法、一部身法、最多三個招式。每回合按排列順序選擇第一個真氣足夠且冷卻完成的招式，否則普通攻擊；卸下再配置可調整順序。身法常駐減傷。手動探索依起手招式結算，自動歷練與宗主戰逐回合施放。</p><p>功法依序為入門 → 小成 → 大成 → 圓滿。一次參悟一部；只計遊戲開啟且未戰鬥的時間，背景、離線或離開所屬宗門時暫停，進度保留。</p>`)}
  ${section('五 · 散修求道、坊市古籍與遺跡殘卷',`${table(['功法','取得渠道','習得條件'],Object.keys(WILD_ARTS).map(id=>row([ARTS[id].name,wildSource(id),wildRequirements(id)])))}<p>初始自帶無名吐納訣與青鋒劍法。角色頁「散修求道」可查看全部來源與尚缺條件；古籍必須在對應地區的坊市古籍攤求購；每 15 分鐘隨機上架四冊，不同地區書源不同，重新整理與進出坊市不會重抽。本輪未展售者不能購買；翻閱期間若換輪，確認購買時會重新核對。買下即習得入門，不是背包裡的可轉售物品。古籍以標價加所列感悟購入，不受福緣折扣影響；已習得不重複扣費。殘卷則在角色頁花費靈石、感悟與道藏殘頁補全。</p><p>道藏殘頁來源：手動探索遇古陣，選「神魂參悟」且成功必得一頁。失敗、撤退、破陣取寶與自動歷練不給殘頁。殘頁與淬劍用的殘劍碎片不同，不能販賣或丟棄。每次補全消耗所列殘頁，不會重複習得扣費。</p><p>散修古籍參悟需 ${artStudyTime('guard',2)}／${artStudyTime('guard',3)}／${artStudyTime('guard',4)} 秒，費用依目前境界為 ${artStudyCost('guard',1)}／${artStudyCost('guard',2)}／${artStudyCost('guard',3)} 靈石，為宗門功法的兩倍。一次參悟一部，背景、離線與戰鬥時暫停。沒有宗門俸祿、貢獻兌換與鎮派神功加速，需自行探索積累；拜師或叛離後，已習得的通用功法與殘頁仍保留。</p><p>習得後到角色配置一部心法、一部身法與最多三個招式，並非買到就自動施放。散修古籍不計入「本門功法圓滿」的宗主資格。</p>`)}
  ${section('六 · 大地圖、秘境與自動歷練',`${table(['地區','境界門檻','戰力門檻'],regions)}<p>目前大地圖提供六處歷練地區，尚非完整九州版圖。點地標只查看詳情；按「前往」啟程。精力只用於自動巡行，每 12 秒恢復 1 點，上限 12 點。當地坊市特產隨所在地改變。</p><p>青州的新分支路線請看下方專章；其他地區手動探索可選普通或冒險路線，秘境共四個節點，末節為首領，首次通關材料加倍。事件與進度會保存，有未完成事件時需接續或撤退，才能繼續行動。</p><p>先在青州竹林尋得殘劍，並在目標地區完成一次手動探索，才可於當地開啟自動歷練。自動巡邏可獲修為、靈石與材料；氣血不足依設定補給或撤退，離線與背景不持續自動打怪。探索前查看境界、戰力與氣血條件。</p><p>天道異象有接取時限，成功率最高 65%，失敗損失 25% 最大氣血；請先閱讀風險再決定。</p>`)}
@@ -1151,7 +1166,7 @@ function save(){
 }
 function enterGuest(){window.xianxiaEntryMode='guest';window.xianxiaOnline?.cancelEntry?.();window.xianxiaBridge.finishEntry();}
 function accountSettings(){closeModal();if(window.xianxiaOnline?.account)window.xianxiaOnline.account();else toast('帳號服務尚未載入，請稍後重試。');}
-function settingsMenu(){const online=!!window.xianxiaOnline?.signedIn;showModal('settings',`<div class="kicker">YOUR JOURNEY, YOUR CHOICE</div><h2 id="modalTitle">遊戲設定</h2><p>${online?'帳號已登入，可手動管理雲端進度。':'目前以遊客方式遊玩，進度儲存在這個瀏覽器。'}</p><div class="settings-options"><button class="btn ghost" data-audio-setting="music" aria-pressed="${window.XianxiaAudio?.enabled('music')??true}"><i class="ri-music-2-line" aria-hidden="true"></i><span>背景音樂 · ${(window.XianxiaAudio?.enabled('music')??true)?'開':'關'}<small>山河探索與戰鬥配樂，點擊切換</small></span></button><button class="btn ghost" data-audio-setting="effects" aria-pressed="${window.XianxiaAudio?.enabled('effects')??true}"><i class="ri-volume-up-line" aria-hidden="true"></i><span>遊戲音效 · ${(window.XianxiaAudio?.enabled('effects')??true)?'開':'關'}<small>按鈕、招式、受擊與獲得獎勵</small></span></button><button class="btn ghost" data-action="replayPrologue"><i class="ri-film-line" aria-hidden="true"></i><span>重看開場<small>再看一遍九州的起源與接下來的旅程</small></span></button><button class="btn" data-action="saveMenu" ${!state?'disabled':''}><i class="ri-save-3-line" aria-hidden="true"></i><span>存檔與備份<small>匯出、匯入本機進度與重新輪迴</small></span></button><button class="btn ghost" data-action="accountSettings"><i class="ri-account-circle-line" aria-hidden="true"></i><span>帳號與雲端存檔<small>${online?'查看雲端、上傳進度或登出':'登入帳號，使用雲端存檔與線上功能'}</small></span></button></div><p class="note">遊戲每 5 秒自動儲存本機進度；雲端存檔需由你手動上傳或下載。</p>`);}
+function settingsMenu(){const online=!!window.xianxiaOnline?.signedIn;showModal('settings',`<div class="kicker">YOUR JOURNEY, YOUR CHOICE</div><h2 id="modalTitle">遊戲設定</h2><p>${online?'帳號已登入，可手動管理雲端進度。':'目前以遊客方式遊玩，進度儲存在這個瀏覽器。'}</p><div class="settings-options"><button class="btn ghost" data-action="toggleMainTracker" aria-pressed="${mainTracker.visible}">主線追蹤 · ${mainTracker.visible?'顯示':'隱藏'}</button><button class="btn ghost" data-audio-setting="music" aria-pressed="${window.XianxiaAudio?.enabled('music')??true}"><i class="ri-music-2-line" aria-hidden="true"></i><span>背景音樂 · ${(window.XianxiaAudio?.enabled('music')??true)?'開':'關'}<small>山河探索與戰鬥配樂，點擊切換</small></span></button><button class="btn ghost" data-audio-setting="effects" aria-pressed="${window.XianxiaAudio?.enabled('effects')??true}"><i class="ri-volume-up-line" aria-hidden="true"></i><span>遊戲音效 · ${(window.XianxiaAudio?.enabled('effects')??true)?'開':'關'}<small>按鈕、招式、受擊與獲得獎勵</small></span></button><button class="btn ghost" data-action="replayPrologue"><i class="ri-film-line" aria-hidden="true"></i><span>重看開場<small>再看一遍九州的起源與接下來的旅程</small></span></button><button class="btn" data-action="saveMenu" ${!state?'disabled':''}><i class="ri-save-3-line" aria-hidden="true"></i><span>存檔與備份<small>匯出、匯入本機進度與重新輪迴</small></span></button><button class="btn ghost" data-action="accountSettings"><i class="ri-account-circle-line" aria-hidden="true"></i><span>帳號與雲端存檔<small>${online?'查看雲端、上傳進度或登出':'登入帳號，使用雲端存檔與線上功能'}</small></span></button></div><p class="note">遊戲每 5 秒自動儲存本機進度；雲端存檔需由你手動上傳或下載。</p>`);}
 function saveMenu(){save();showModal('save',`<div class="kicker">PRESERVE YOUR JOURNEY</div><h2 id="modalTitle">一紙因果，留待來日。</h2><p>${storageOK?'目前進度已儲存於此瀏覽器。建議定期匯出備份，換裝置或清除資料後可重新匯入。':'此瀏覽器限制本機儲存，請匯出備份以保留進度。'}</p><div class="modal-actions" style="justify-content:start"><button class="btn" data-action="export"><i aria-hidden="true" class="ri-download-2-line"></i>匯出存檔</button><button class="btn ghost" data-action="import"><i aria-hidden="true" class="ri-upload-2-line"></i>匯入存檔</button>${combat?'<button class="btn" data-action="battle">返回問道臺</button>':''}</div><div class="rule"></div><p class="tiny">重新輪迴將清除本機所有修行進度，建議先匯出備份。</p><button class="btn red" data-action="reset">重新輪迴</button><button class="btn ghost" data-action="settings">返回設定</button>`)}
 function exportSave(){
   if(!state)return;save();
@@ -1230,7 +1245,7 @@ function tick(){const now=Date.now(),elapsed=Math.max(0,(now-lastFrame)/1000),dt
 territoryUpdate(now);
 const missed=Math.max(0,Math.min(7200,elapsed)-dt);
 if(missed>0){const xp=rate(false)*missed;state.xp+=xp;state.total+=xp;state.seconds+=missed;state.steps=Math.min(12,state.steps+missed/12);if(!combat&&!state.auto.fight&&!qz()?.fight&&!fieldSession?.active)state.hp=Math.min(maxHP(),state.hp+maxHP()*.006*missed);if(route==='map')renderMap()}
-martialTick(dt);state.seconds+=dt;const boostSeconds=Math.max(0,Math.min(dt,(state.boostUntil-(now-dt*1000))/1000));addXP(rate(false)*(dt+boostSeconds));if(!combat&&!state.auto.fight&&!qz()?.fight&&!fieldSession?.active)state.hp=Math.min(maxHP(),state.hp+maxHP()*.006*dt);state.stepTimer+=dt;if(state.stepTimer>=12){const gained=Math.floor(state.stepTimer/12);state.steps=Math.min(12,state.steps+gained);state.stepTimer%=12;if(route==='map')renderMap()}if(sect()){state.salaryTimer+=dt;if(state.salaryTimer>=60){const periods=Math.floor(state.salaryTimer/60),pay=salary()*periods;state.salaryTimer%=60;state.stones+=pay;log(`山門執事送來 ${pay} 靈石俸祿，願你道業精進。`,'俸祿')}}if(state.quest&&now>=state.quest.end)completeQuest();if(state.quest&&$('questBar')){$('questBar').style.width=`${Math.min(100,(now-state.quest.start)/(state.quest.end-state.quest.start)*100)}%`;$('questTimer').textContent=`歷練中 · 剩餘 ${Math.max(0,Math.ceil((state.quest.end-now)/1000))} 秒`}if(state.ceremonyUntil&&now>=state.ceremonyUntil&&modalKind==='ceremony'){closeModal();toast('宗門靈舟暫別，靜候下輪接引。');if(route==='sect')renderSect()}if($('ceremonyCountdown'))$('ceremonyCountdown').textContent=`接引剩餘 ${Math.max(0,Math.ceil((state.ceremonyUntil-now)/1000))} 秒`;if($('sectCountdown'))$('sectCountdown').textContent=Math.max(0,Math.ceil(((state.ceremonyUntil>now?state.ceremonyUntil:state.nextCeremony)-now)/1000));if(state.event&&now>=state.event.until){state.event=null;renderEvent()}battleTick(dt);qzTick(dt);autoTick(dt);npcElapsed+=dt;eventElapsed+=dt;saveElapsed+=dt;renderElapsed+=dt;if(npcElapsed>=5){npcElapsed%=5;npc()}if(now>=state.nextEventAt)spawnEvent();if(saveElapsed>=5){saveElapsed%=5;save()}if(renderElapsed>=.5){renderElapsed=0;renderHUD();updateCommissionHall();if(route==='shop'&&shopRenderKey!==shopKey())renderShop();if(route==='shop'&&$('marketRemaining'))$('marketRemaining').textContent=Math.ceil((900000-Date.now()%900000)/60000)}}
+martialTick(dt);state.seconds+=dt;const boostSeconds=Math.max(0,Math.min(dt,(state.boostUntil-(now-dt*1000))/1000));addXP(rate(false)*(dt+boostSeconds));if(!combat&&!state.auto.fight&&!qz()?.fight&&!fieldSession?.active)state.hp=Math.min(maxHP(),state.hp+maxHP()*.006*dt);state.stepTimer+=dt;if(state.stepTimer>=12){const gained=Math.floor(state.stepTimer/12);state.steps=Math.min(12,state.steps+gained);state.stepTimer%=12;if(route==='map')renderMap()}if(sect()){state.salaryTimer+=dt;if(state.salaryTimer>=60){const periods=Math.floor(state.salaryTimer/60),pay=salary()*periods;state.salaryTimer%=60;state.stones+=pay;log(`山門執事送來 ${pay} 靈石俸祿，願你道業精進。`,'俸祿')}}if(state.quest&&now>=state.quest.end)completeQuest();if(state.quest&&$('questBar')){$('questBar').style.width=`${Math.min(100,(now-state.quest.start)/(state.quest.end-state.quest.start)*100)}%`;$('questTimer').textContent=`歷練中 · 剩餘 ${Math.max(0,Math.ceil((state.quest.end-now)/1000))} 秒`}if(state.event&&now>=state.event.until){state.event=null;renderEvent()}battleTick(dt);qzTick(dt);autoTick(dt);npcElapsed+=dt;eventElapsed+=dt;saveElapsed+=dt;renderElapsed+=dt;if(npcElapsed>=5){npcElapsed%=5;npc()}if(now>=state.nextEventAt)spawnEvent();if(saveElapsed>=5){saveElapsed%=5;save()}if(renderElapsed>=.5){renderElapsed=0;renderHUD();updateCommissionHall();if(route==='shop'&&shopRenderKey!==shopKey())renderShop();if(route==='shop'&&$('marketRemaining'))$('marketRemaining').textContent=Math.ceil((900000-Date.now()%900000)/60000)}}
 function actionLock(){return territorySession?.active?'資源戰進行中，請先結束戰鬥':qz()?.fight?MAPS[state.location].name+'交鋒中，請先完成戰鬥':combat?'宗主戰鬥中，請先完成戰鬥':state.auto.active?'自動歷練中，請先停止歷練':''}
 function blockedJourney(){const reason=actionLock();if(reason){toast(reason);return true}return false}
 function setText(id,value){const el=$(id);if(el&&el.textContent!==String(value))el.textContent=value}
@@ -1269,6 +1284,97 @@ function renderCultivation(){
   const daoReason=lock||(state.materials.crystal<8?`尚缺靈晶 ${8-state.materials.crystal}`:state.materials.insight<5?`尚缺感悟 ${5-state.materials.insight}`:'');
   el.innerHTML=`<p class="note">修行節奏：越接近本境極限，每層需求增幅越大。凝氣每秒一次；丹藥僅輔助積累，秘境以材料與裝備為主要收穫。已有境界與修為均保留。</p><h3 class="section-title">肉身與神魂</h3><p class="note">煉體 ${state.training.body}/20 · 神魂 ${state.training.soul}/20</p><div class="training-actions">${train('body','煉體','每階根骨 +2，增加氣血與減傷。')}${train('soul','養神','每階神識 +2、悟性 +1。')}</div><button class="text-action" data-resource="insight">感悟取得方式</button><div class="rule"></div><button class="btn ghost wide" data-open-artifact>前往本命法寶 · 餵養與蛻變</button>${state.realm>0&&state.foundation!=='heaven'?`<div class="rule"></div><button class="btn wide" data-train="foundation" ${daoReason?'disabled':''}>重塑天道 · 靈晶 8／感悟 5</button><p class="button-reason">${daoReason||'戰力與最大氣血提升 25%，修煉潛力提升。'}</p>`:''}`;
 }
+const MAIN_STORY=[
+ {title:'竹溪夜鐘',place:'0:town',where:'竹溪鎮',story:'竹溪鎮的守夜人把半張巡山圖塞進你手裡。「昨夜山裡的鐘響了三次，可古劍廬那口鐘，早在十年前就裂了。」',hint:'到竹溪鎮聽守夜人的委託。',finish:'接下巡山委託'},
+ {title:'斷刃回聲',place:'0:wild',where:'青州竹林',story:'巡山圖上墨跡已褪，唯有一筆劍痕仍泛著微光。踏入竹林後，地底有什麼應了你一聲。',hint:'到青州竹林尋訪秘境，拾得照玄殘劍。',action:'explore',label:'尋找照玄殘劍',ready:()=>state.artifact.unlocked,finish:'查看殘劍上的刻痕'},
+ {title:'竹影試鋒',place:'0:wild',where:'青州竹林',story:'殘劍上的刻痕指向古劍廬。兩隻受鐘聲驚動的妖獸擋住了山路，正循著劍鳴靠近。',hint:'在青州野外除妖兩隻。戰鬥中用移動搖桿避開攻擊，再用普攻或招式反擊。',action:'field',label:'進入野外除妖',ready:()=>worldKills(0)>=2,finish:'收劍查看戰利品'},
+ {title:'行囊備戰',story:'守夜人在巡山圖背面留了字。「上山前翻翻行囊。要用的丹藥和兵刃，總不能等到妖獸眼前才找。」',hint:'打開背包，熟悉丹藥、材料與裝備分類。裝備可點選後穿戴。',page:'bag',label:'打開背包'},
+ {title:'洞府養氣',story:'每次試著握緊殘劍，劍身都把你的靈氣震散。先回洞府調息，等氣息穩了再上山。',hint:'到洞府累積修為，修為滿時提升小境，直到煉氣第三層。',page:'home',label:'前往洞府修煉',ready:sectJoinUnlocked,finish:'循劍鳴前往山門'},
+ {title:'山門問道',place:'0:sect',where:'青嵐山門',story:'青嵐山門的接引人認出刻痕。「這是舊日封陣的劍。六宗各有修法，但能走到陣前的，未必一定有師門。」',hint:'比較六宗的打法與代表招式。可以拜師，也可以散修身分繼續。',page:'sect',label:'比較六宗',ready:()=>state.sect!==null,finish:'記下修行方向',optional:'以散修身分繼續'},
+ {title:'古劍廬破陣',place:'0:ruin',where:'古劍廬',story:'古劍廬的鐘繩已斷，鐘聲卻從秘境深處傳來。殘劍指著首領背後的石碑，那裡刻著和劍身一樣的紋路。',hint:'挑戰青州秘境的首個深度，擊敗首領。若戰力不足，可先修煉、穿戴裝備或回野外歷練。',action:'explore',label:'查看秘境試煉',ready:()=>state.qingzhou?.clears?.[0]>0,finish:'拓下石碑線索'},
+ {title:'鐘聲往雲夢',place:'0:town',where:'竹溪鎮',story:'石碑上的字只有半句：「鐘沉澤底，劍歸其鞘。」守夜人將拓片轉過來，露出雲夢大澤煙水集的渡口印。那三聲鐘響，是有人在等這把劍。',hint:'回竹溪鎮交付拓片，完成第一章。',finish:'交付拓片'}
+];
+function mainStoryIndex(){
+ const step=state?.mainStoryStep;
+ return Number.isInteger(step)&&step>=0&&step<=MAIN_STORY.length?step:0;
+}
+function mainStoryAt(place){
+ const [map,type]=place.split(':'),w=worldState();
+ return state.location===Number(map)&&w.place===type;
+}
+function mainStoryReady(step){
+ if(step.ready?.())return true;
+ return !step.ready&&(!step.place||mainStoryAt(step.place));
+}
+function showMainStory(){
+ if(!state)return;
+ const index=mainStoryIndex(),step=MAIN_STORY[index];
+ if(!step){
+  showModal('mainStory','<span class="kicker">主線 · 第一章</span><h2 id="modalTitle">青州初入道 · 已完成</h2><p>你已查明青州異動與古劍廬的關聯。下一條線索在雲夢大澤的煙水集，待地區解鎖後可前往遊歷。</p><button class="btn" data-action="mainStoryGuide">仙途指引</button>');
+  return;
+ }
+ const ready=mainStoryReady(step),here=!step.place||mainStoryAt(step.place);
+ const button=(action,label)=>`<button class="btn primary" data-action="${action}">${label}</button>`;
+ const next=ready?button(step.page==='bag'?'mainStoryGo':'mainStoryNext',step.finish||step.label):here?button('mainStoryGo',step.label):button('mainStoryGo','自動前往 · '+step.where);
+ const choices=here&&step.optional&&!ready?button('mainStoryScatter',step.optional):'';
+ const progress=index===2?` · 除妖 ${Math.min(2,worldKills(0))}／2`:'';
+ showModal('mainStory',`<span class="kicker">主線 · 青州初入道 · ${index+1}／${MAIN_STORY.length}</span><h2 id="modalTitle">${step.title}</h2><p>${step.story}</p><p class="note">${step.hint}${progress}</p><div class="modal-actions">${next}${choices}<button class="btn ghost" data-action="mainStoryGuide">仙途指引</button></div>`);
+}
+function advanceMainStory(scatter=false){
+ const index=mainStoryIndex(),step=MAIN_STORY[index];
+ if(!step||(!mainStoryReady(step)&&!(scatter&&step.optional&&mainStoryAt(step.place))))return;
+ state.mainStoryStep=index+1;
+ if(state.mainStoryStep===MAIN_STORY.length){
+  state.stones+=100;
+  log('青州初入道已完成。守夜人謝你送回拓片，贈予 100 靈石。','主線');
+  toast('主線完成 · 靈石 +100');
+ }
+ save();showMainStory();
+}
+async function goMainStory(){
+ const index=mainStoryIndex(),step=MAIN_STORY[index];
+ if(!step)return;
+ const locked=actionLock();
+ if(locked)return toast(locked);
+ if(step.place&&!mainStoryAt(step.place)){
+  if(state.journey.pending)return toast('請先接續或撤退目前的探索事件。');
+  if(!window.xianxiaWorldUI?.questTravel)return toast('大地圖尚未載入。');
+  const character=state;
+  closeModal();routeTo('map');
+  const arrived=await window.xianxiaWorldUI.questTravel(step.place);
+  if(arrived&&state===character&&route==='map'&&mainStoryIndex()===index&&!modalKind)showMainStory();
+  return;
+ }
+ closeModal();
+ if(step.page){
+  if(step.page==='bag'){state.mainStoryStep=index+1;save();}
+  routeTo(step.page);return;
+ }
+ if(step.action){const result=window.xianxiaWorldUI?.questAction(step.action);if(result?.error)toast(result.error);return;}
+ showMainStory();
+}
+const MAIN_TRACKER_KEY='xianxia-main-tracker';
+let mainTracker={visible:true,scale:100,collapsed:false};
+try{
+ const prefs=JSON.parse(localStorage.getItem(MAIN_TRACKER_KEY));
+ if(prefs)mainTracker={visible:prefs.visible!==false,scale:Number.isInteger(prefs.scale)?Math.min(130,Math.max(70,prefs.scale)):100,collapsed:prefs.collapsed===true};
+}catch{}
+function updateMainTracker(change){
+ Object.assign(mainTracker,change);
+ try{localStorage.setItem(MAIN_TRACKER_KEY,JSON.stringify(mainTracker))}catch{}
+}
+window.xianxiaMainStory={
+ open:showMainStory,
+ track(){
+  const step=MAIN_STORY[mainStoryIndex()];
+  if(step?.place&&!mainStoryReady(step)&&!mainStoryAt(step.place))return goMainStory();
+  showMainStory();
+ },
+ tracker(){const index=mainStoryIndex(),step=MAIN_STORY[index];return {...mainTracker,title:step?.title||'',progress:index+1,total:MAIN_STORY.length};},
+ resize(delta){updateMainTracker({scale:Math.min(130,Math.max(70,mainTracker.scale+delta))});},
+ collapse(){updateMainTracker({collapsed:!mainTracker.collapsed});}
+};
+
 function goalInfo(){
   if(state.journey.pending)return {title:'有一段探險等待你的決定',text:'事件已暫存。你仍可修行或整理裝備，返回後繼續選擇。',action:'encounter',label:'接續事件'};
   if(state.auto.active)return {title:'角色正在自動歷練',text:'收穫會自動累積；換裝或跨境前，可先使用上方的停止歷練按鈕。',action:'guideAuto',label:'查看歷練'};
@@ -1276,7 +1382,8 @@ function goalInfo(){
   const gear=state.ownedGear.find(id=>!state.equipment[GEAR[id].slot]);
   if(gear)return {title:`你有尚未穿戴的${GEAR[gear].name}`,text:'到角色頁比較能力，或直接穿戴。',action:'guideGear',label:'查看裝備'};
   if(state.xp>=needXP()&&state.stage<LIMITS[state.realm]-1)return {title:'修為已滿，可以提升一階',text:state.stage>=8?'可查看破境條件，準備歷練、功法與裝備，或繼續淬煉本境。':'小境提升必定成功，多餘修為會保留。',action:'guideCultivation',label:'查看修行'};
-  if(state.ceremonyUnlocked&&state.sect===null)return {title:'已開放拜入宗門',text:state.ceremonyUntil>Date.now()?'接引正在進行，可前往宗門選擇修行方向。':'可前往宗門查看下一輪接引時間。',action:'guideSect',label:'前往宗門'};
+  if(mainStoryIndex()<MAIN_STORY.length)return {title:'主線 · '+MAIN_STORY[mainStoryIndex()].title,text:MAIN_STORY[mainStoryIndex()].hint,action:'mainStoryOpen',label:'查看主線'};
+  if(state.sect===null)return {title:sectJoinUnlocked()?'已開放拜入宗門':'先認識六大宗門',text:sectJoinUnlocked()?'到宗門頁比較打法，隨時可拜師。':'煉氣第三層可拜師。現在就能查看六宗的打法與代表招式。',action:'guideSect',label:'查看六宗'};
   if(state.stage>=8&&state.materials.crystal<state.realm+2)return {title:`跨境還缺靈晶 ${state.realm+2-state.materials.crystal}`,text:'手動秘境通關、地方商店與自動歷練都能取得材料。',action:'guideMap',label:'前往探索'};
   return {title:state.auto.active?'角色正在自動歷練':'修行持續中，可以安排歷練',text:'手動探險推進秘境路線；自動歷練在已探區域巡邏、打怪並收集資源。',action:'guideAuto',label:state.auto.active?'查看歷練':'安排歷練'};
 }
@@ -1286,7 +1393,7 @@ function renderPlayerDock(){
   setText('dockGold',fmt(state.stones));setText('dockPower',fmt(power()));setText('dockSteps',`${Math.floor(state.steps)}/12`);
   setText('dockActivity',qz()?.fight?MAPS[state.location].name+'交鋒中':combat?'宗主挑戰中':state.auto.active?state.auto.fight?'自動交戰中':'自動巡邏中':state.journey.pending?'探索事件待處理':'自動吐納中');
   $('dockStop').classList.toggle('hidden',!state.auto.active);
-  const sectButton=document.querySelector('[data-route="sect"]');sectButton.classList.toggle('has-alert',state.sect===null&&state.ceremonyUntil>Date.now());
+  const sectButton=document.querySelector('[data-route="sect"]');sectButton.classList.toggle('has-alert',state.sect===null&&sectJoinUnlocked());
   const notice=state.journey.pending?`${MAPS[state.journey.pending.map].name} · ${ENCOUNTERS[state.journey.pending.kind]}已暫收，等待你的選擇。`:combat?'宗主挑戰尚未完成，離開即時畫面會暫停，可返回接續。':'';
   $('activityNotice').classList.toggle('hidden',!notice);setText('noticeText',notice);$('noticeAction').dataset.action=combat?'battle':'encounter';setText('noticeAction',combat?'返回戰鬥':'接續事件');
   const goal=goalInfo(),key=Object.values(goal).join('|');
@@ -1314,9 +1421,8 @@ function routeTo(next){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function openCeremony(){
-  state.ceremonyUntil=Date.now()+90000;state.nextCeremony=Date.now()+210000;
   chat('天尊令','宗門接引已開放，前往宗門可查看六種修行方向。',true);
-  log('仙門接引靈舟降臨，宗門頁已開放選擇；錯過可等待下一輪。','仙門');
+  log('仙門接引靈舟降臨，宗門頁已開放選擇；之後可隨時前往拜師。','仙門');
   toast('宗門接引已開放，可自行前往宗門查看。');
   if(route==='sect')renderSect();
 }
@@ -1747,6 +1853,12 @@ if(el.dataset.buyRobe){buyRobe(el.dataset.buyRobe);return}
 if(el.dataset.wearRobe){wearRobe(el.dataset.wearRobe);return}
 if(el.hasAttribute('data-open-wardrobe')){sectTab='wardrobe';sectTabOwner=state.sect;routeTo('sect');return}
 if(el.dataset.previewRegion!==undefined){const map=Number(el.dataset.previewRegion);if(Number.isInteger(map)&&map>=0&&map<WORLD_ART.length)qingzhouPreview(map);return}
+if(el.dataset.action==='toggleMainTracker'){updateMainTracker({visible:!mainTracker.visible});settingsMenu();return}
+if(el.dataset.action==='mainStoryOpen'){showMainStory();return}
+if(el.dataset.action==='mainStoryGo'){goMainStory();return}
+if(el.dataset.action==='mainStoryNext'){advanceMainStory();return}
+if(el.dataset.action==='mainStoryScatter'){advanceMainStory(true);return}
+if(el.dataset.action==='mainStoryGuide'){beginnerGuide();return}
 if(el.dataset.action==='breakthrough'){breakthrough();return}
 if(el.dataset.soloTab){if(['hunt','forge','stance'].includes(el.dataset.soloTab)){soloTab=el.dataset.soloTab;showSolo()}return}
 if(el.dataset.solo){({open:showSolo,accept:soloAccept,claim:soloClaim,abandon:soloAbandon,break:soloBreak,pause:soloPause,autoHeal:soloHealToggle})[el.dataset.solo]?.();return}
@@ -2184,11 +2296,11 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/journey.js?v=10"></script>
 <script type="module" src="assets/engine/hunt.js?v=8"></script>
 <script type="module" src="assets/engine/home.js?v=7"></script>
-<script type="module" src="assets/engine/world.js?v=19"></script>
+<script type="module" src="assets/engine/world.js?v=20"></script>
 <script type="module" src="assets/engine/field.js?v=21"></script>
 <script type="module" src="assets/engine/territory.js?v=3"></script>
 <script src="assets/mounts-v1/map-data.js"></script>
-<script type="module" src="assets/engine/client.js?v=mount1-57"></script>
+<script type="module" src="assets/engine/client.js?v=mount1-58"></script>
 </body></html>
 
 

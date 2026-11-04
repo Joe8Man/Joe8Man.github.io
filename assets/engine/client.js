@@ -160,7 +160,7 @@ function mapStatus(x,y,w){
  ui.push(c);
  return {day,realm,power,hp,stones,hpFill};
 }
-function stableSignature(v,rows,width,height){if(v.root?.id==='patrolDialog'){const a=window.xianxiaPatrolBridge.view();return JSON.stringify([v.key,width,height,a.active,window.xianxiaWorldUI.patrolRegion(),a.goal,a.policy,a.healAt,a.useHeal]);}if(v.key==='map')return JSON.stringify(['map',menu,width,height]);if(v.key==='battle'){const root=v.root;return JSON.stringify(['battle',width,height,root.querySelector('[data-field-overlay]').classList.contains('hidden'),root.querySelector('[data-field-resume]').classList.contains('hidden'),[...root.querySelectorAll('[data-field-cast]')].map(el=>el.dataset.fieldCast)]);}return JSON.stringify([v.key,menu,dom('toasts')?.textContent,rows.map(r=>[r.type,r.text,r.disabled,r.el?.value,r.el?.open,r.image]),width,height]);}
+function stableSignature(v,rows,width,height){if(v.root?.id==='patrolDialog'){const a=window.xianxiaPatrolBridge.view();return JSON.stringify([v.key,width,height,a.active,window.xianxiaWorldUI.patrolRegion(),a.goal,a.policy,a.healAt,a.useHeal]);}if(v.key==='map')return JSON.stringify(['map',menu,width,height,window.xianxiaMainStory.tracker()]);if(v.key==='battle'){const root=v.root;return JSON.stringify(['battle',width,height,root.querySelector('[data-field-overlay]').classList.contains('hidden'),root.querySelector('[data-field-resume]').classList.contains('hidden'),[...root.querySelectorAll('[data-field-cast]')].map(el=>el.dataset.fieldCast)]);}return JSON.stringify([v.key,menu,dom('toasts')?.textContent,rows.map(r=>[r.type,r.text,r.disabled,r.el?.value,r.el?.open,r.image]),width,height]);}
 function refreshDynamic(){if(screenKey.startsWith('dialog:patrolDialog'))refreshPatrolDynamic();if(screenKey==='map'&&dynamicMap){const v=bridgeWorld();refreshMapStatus(v);const note=dom('wanderWorld')?.classList.contains('is-travelling')?'正在行走，抵達後推進日期。':dom('wanderWorld')?.querySelector('[data-world-message]')?.textContent||'';const notification=dom('toasts')?.lastElementChild?.textContent?.trim()||'';dynamicMap.note.setText(note).setVisible(!!note&&!notification);dynamicMap.toast.setText(notification).setVisible(!!notification);renderMap();}if(screenKey==='battle'&&dynamicBattle){const root=dom('phaserField');dynamicBattle.hp.setText('氣血 '+(root.querySelector('[data-field-hp]')?.textContent||''));dynamicBattle.qi.setText('真氣 '+(root.querySelector('[data-field-qi]')?.textContent||'100'));dynamicBattle.wave?.setText(root.querySelector('[data-field-wave]')?.textContent||'');dynamicBattle.feedback?.setText(root.querySelector('[data-field-status]')?.textContent||'');for(const {el,control,base} of dynamicBattle.controls){const cd=el.querySelector('[data-cd]')?.textContent,live=el.dataset.fieldCast==='nova'?el.querySelector('small')?.textContent:base;control.update(el.disabled,cd?'冷卻 '+cd:live);}dynamicBattle.reason?.setText(root.querySelector('[data-field-title]').textContent+'\n'+root.querySelector('[data-field-reason]').textContent);mirror();}}
 function isolateCameras(){if(!scene||!mapCamera)return;const filter=(node,id)=>{node.cameraFilter=id;node.list?.forEach(child=>filter(child,id));};for(const node of scene.children.list)filter(node,node===mapLayer?scene.cameras.main.id:mapCamera.id);}
 
@@ -431,7 +431,7 @@ function rebuild(){if(!scene||editing)return;const v=current(),rows=['map','batt
    ['－',()=>setMapZoom(mapZoom()-.15)],
    ['自動巡行',()=>window.xianxiaWorldUI.patrol(),'dash',1],
    ['資源地',()=>window.xianxiaTerritoryUI.open(),'crystal',2],
-   ['指引',()=>bridge().onboarding(),'book',3],
+   ['主線',()=>window.xianxiaMainStory.open(),'book',3],
    ['定位',()=>mapCamera.centerOn(hero.x,hero.y),'locate',4]
   ];
   const zoomWidth=36,gap=5;
@@ -441,6 +441,23 @@ function rebuild(){if(!scene||editing)return;const v=current(),rows=['map','batt
    const y=narrow?173:60+Math.floor(i/3)*54;
    button(toolbar,x+left,y,narrow&&i<2?zoomWidth:actionWidth,44,label,action,false,false,null,{icon,artFrame,stackArt:artFrame!==undefined});
   });
+  const tracker=window.xianxiaMainStory.tracker();
+  if(tracker.visible&&tracker.title){
+   const scale=tracker.scale/100,y=mapTop()+5;
+   const width=Math.min(bodyWidth,Math.round((tracker.collapsed?100:230)*scale));
+   const h=Math.round(32*scale),control=Math.max(27,Math.round(30*scale));
+   if(tracker.collapsed){
+    button(toolbar,margin,y,width,h,'展開主線',()=>window.xianxiaMainStory.collapse());
+   }else{
+    button(toolbar,margin,y,width-3*(control+3),h,tracker.progress+'／'+tracker.total+' '+tracker.title,()=>window.xianxiaMainStory.track());
+    const trackerActions=[
+     ['－','縮小主線追蹤',()=>window.xianxiaMainStory.resize(-10),tracker.scale<=70],
+     ['＋','放大主線追蹤',()=>window.xianxiaMainStory.resize(10),tracker.scale>=130],
+     ['▴','收起主線追蹤',()=>window.xianxiaMainStory.collapse(),false]
+    ];
+    trackerActions.forEach(([label,ariaLabel,action,disabled],i)=>button(toolbar,margin+width-(3-i)*(control+3)+3,y,control,h,label,action,disabled,false,null,{ariaLabel}));
+   }
+  }
  }
 
  if(v.key==='map'){const note=text(margin,height-106,'',11,'#efe1b8',bodyWidth-12).setDepth(1003).setBackgroundColor('#19372d').setPadding(5);ui.push(note);dynamicMap.note=note;const toast=text(margin+8,height-106,'',12,'#efe1b8',bodyWidth-16).setDepth(1010).setBackgroundColor('#213d30').setPadding(5);ui.push(toast);dynamicMap.toast=toast;refreshDynamic();}
