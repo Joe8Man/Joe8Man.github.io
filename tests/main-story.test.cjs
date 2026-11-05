@@ -42,7 +42,7 @@ vm.runInContext(`
  assert.equal(state.artifact.unlocked,true);
  assert.equal(modalKind,'mainStory');
  assert.match(content,/查看殘劍上的刻痕/);
- assert.match(content,/任務獎勵 · 竹影劍、青竹道袍/);
+ assert.match(content,/任務獎勵 · 修為 .*竹影劍、青竹道袍/);
  const starterStones=state.stones;
  advanceMainStory();
  assert.deepEqual(state.ownedGear,['0-weapon','0-robe']);
