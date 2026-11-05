@@ -300,7 +300,45 @@ function renderForge(v){
  page.items.forEach((el,i)=>tile(c,x+i%columns*(cw+8),y+Math.floor(i/columns)*(cardHeight+8),cw,cardHeight,{title:plain(el.querySelector('span')),subtitle:plain(el.querySelector('small')),image:thumb(el),selected:el.classList.contains('selected'),action:()=>invoke(el),artHeight:43}));
  pager('forge:choices',page.page,page.pages);return true;
 }
+function renderStoryJournal(v){
+ const root=v.root,ending=root.querySelector('.story-ending'),chapter=root.querySelector('.story-chapter-card');
+ if(!ending&&!chapter)return false;
+ const width=uiWidth(),height=uiHeight(),w=Math.min(720,width-32),x=(width-w)/2,c=scene.add.container();addUI(c);
+ const compact=height<760,small=width<550,copySize=compact?12:small?13:15;
+ let y=82;
+ const copy=(value,size=copySize,color='#bdccba',gap=9)=>{const node=text(x,y,value,size,color,w);c.add(node);y+=node.height+gap;};
+ copy(plain(root.querySelector('.kicker')),11,'#b2c7ad',compact?4:9);
+ copy(plain(root.querySelector('h2')),small?21:27,'#ecd99f',compact?10:17);
+ if(ending){
+  const paragraphs=[...ending.querySelectorAll('p')];
+  copy(plain(ending.querySelector('strong')),small?16:19,'#f0d89e',compact?5:10);
+  copy(plain(paragraphs[0]),copySize,'#d2dbca',compact?5:9);
+  if(!compact)copy(plain(paragraphs[1]),copySize,'#c4d4bf',9);
+  copy(compact?'第一卷完結 · 州印留下新篇線索，目前沒有新主線。':plain(root.querySelector('p.note')),compact?11:12,'#a7c2ac',compact?8:15);
+  copy('第一卷 · 六章回顧',compact?16:19,'#e9d29a',compact?6:11);
+  const cards=[...root.querySelectorAll('.story-chapter-link')],gap=9,cols=width>=760?3:2,cw=(w-gap*(cols-1))/cols;
+  const actions=[...root.querySelectorAll('.modal-actions button')],actionH=compact?39:45,cardH=Math.max(compact?54:65,Math.min(90,Math.floor((height-114-y-actionH-25-gap*2)/Math.ceil(cards.length/cols))));
+  cards.forEach((el,i)=>{const bx=x+i%cols*(cw+gap),by=y+Math.floor(i/cols)*(cardH+gap),title=plain(el.querySelector('strong'));
+   button(c,bx,by,cw,cardH,title,()=>invoke(el),false,false,null,{ariaLabel:plain(el)});
+   c.add(text(bx+11,by+5,plain(el.querySelector('span')),10,'#b8d0b9',cw-20));
+   c.add(text(bx+11,by+cardH-18,plain(el.querySelector('small')),10,'#b8d0b9',cw-20));
+  });
+  y+=Math.ceil(cards.length/cols)*(cardH+gap)+5;
+  const aw=(w-9)/Math.max(1,actions.length);
+  actions.forEach((el,i)=>button(c,x+i*(aw+9),y,aw,actionH,plain(el).replace('返回九州繼續歷練','返回九州'),()=>invoke(el),el.disabled,i===0,null,{ariaLabel:plain(el)}));
+ }else{
+  copy(plain(chapter.querySelector('p:first-child')),copySize,'#d4dfcf',compact?8:17);
+  const rows=[...root.querySelectorAll('.story-chapter-list>div')],actions=[...root.querySelectorAll('.modal-actions button')],gap=5;
+  const rowH=Math.max(32,Math.min(51,Math.floor((height-132-y-(compact?43:48)-20-(rows.length-1)*gap)/rows.length)));
+  rows.forEach((el,i)=>{const by=y+i*(rowH+gap);c.add(scene.add.rectangle(x,by,w,rowH,0x284638,.65).setOrigin(0).setStrokeStyle(1,0x72917b,.4));c.add(text(x+10,by+7,plain(el.querySelector('span')),11,'#d6bf88'));c.add(text(x+37,by+5,plain(el.querySelector('strong')),13,'#eadbb2',w*.52));c.add(text(x+w*.60,by+8,plain(el.querySelector('small')),10,'#abc7b1',w*.37));});
+  y+=rows.length*(rowH+gap)+8;
+  const aw=(w-9*(actions.length-1))/Math.max(1,actions.length);
+  actions.forEach((el,i)=>button(c,x+i*(aw+9),y,aw,compact?39:45,plain(el).replace('返回目前主線','返回終章'),()=>invoke(el),el.disabled,el.classList.contains('primary'),null,{ariaLabel:plain(el)}));
+ }
+ return true;
+}
 function renderWorkspace(v){const width=uiWidth(),height=uiHeight(),w=Math.min(900,width-32),x=(width-w)/2,bottom=height-126,cols=width>=700?4:3;content.clearMask();content.setPosition(0,0);offset=0;total=0;
+ if(v.key.startsWith('modal:')&&renderStoryJournal(v))return true;
  if(v.root.id==='territoryDialog'&&v.root.querySelector('[data-t-site]')){const c=scene.add.container();addUI(c);c.add(text(x,88,'六處靈地 · 宗門爭鋒',24,'#efd39b',w));c.add(text(x,126,'每六小時反攻 · 弟子自動防守 · 可親自支援',12,'#b7d0bd',w));button(c,x,158,120,40,'查看戰報',()=>invoke(v.root.querySelector('[data-t-history]')));const sites=window.xianxiaTerritoryBridge.view();grid(sites.map(s=>({title:s.name,image:s.art,landscape:true,subtitleLines:2,subtitle:(s.attack?'反攻中':s.owned?'我方佔領':'尚未佔領')+'\n修為 +'+s.xp+'/秒 · '+s.gold+'靈石/時',selected:s.owned,icon:'mountain',action:()=>window.xianxiaTerritoryUI.open(s.id)})),214,bottom,width>=700?3:2,'territory:sites',Math.min(154,Math.max(132,Math.floor((bottom-194)/3)-10)));return true;}
  if(v.key==='sect'&&dom('sectTabs')?.querySelector('[data-sect-tab=territory][aria-selected=true]')){const source=[...dom('sectTabs').querySelectorAll('button')];tabs(v.key,source.map(el=>({id:el.dataset.sectTab,label:plain(el),el})),'territory',item=>invoke(item.el));const c=scene.add.container();addUI(c);const sites=window.xianxiaTerritoryBridge.view(),t=window.xianxiaTerritoryBridge.state();c.add(text(x,132,'貢獻 '+bridge().snapshot().contribution+' · 弟子十二名 · 每地最多三人',12,'#d8dbbd',w));button(c,x,163,w,40,'資源地、大陣與反攻戰報',()=>window.xianxiaTerritoryUI.open());grid(t.disciples.map(d=>({title:'弟子 '+(d.id+1)+' · '+d.level+'階',subtitle:'戰力 '+Math.round(100*(1+d.level*.3))+' · '+(sites.find(s=>s.id===d.site)?.name||'待命'),icon:'sword',selected:!!d.site,action:()=>window.xianxiaTerritoryUI.member(d.id)})),220,bottom,width>=700?4:2,'territory:disciples',112);return true;}
  if(v.root.id==='worldBossDialog'&&renderBossBrief(v))return true;
