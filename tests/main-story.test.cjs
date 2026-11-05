@@ -151,13 +151,43 @@ vm.runInContext(`
  }
  assert.equal(sawSectBranch,true);
  assert.equal(MAIN_STORY_CHAPTERS.length,6);
- assert.match(content,/第一卷 · 已完成/);
+ assert.match(content,/九州重封 · 鐘歇人歸/);
+ assert.match(content,/六章主線已完成/);
+ assert.match(content,/目前沒有新的主線任務/);
+ assert.equal(content.split('data-story-chapter=').length-1,6);
+ assert.equal(window.xianxiaMainStory.tracker().title,'第一卷已完成');
+ assert.equal(window.xianxiaMainStory.tracker().progress,6);
  assert.ok(state.stones>afterQingzhou);
  const finalSave=snapshot();
  state=migrateSave(finalSave);
+ window.xianxiaMainStory.open();
+ assert.match(content,/六章主線已完成/);
+ mainStoryArchive(5);
+ assert.match(content,/第6章 · 九州重封/);
+ assert.match(content,/鐘歇人歸/);
+ mainStoryArchive(6);
+ assert.match(content,/六章主線已完成/);
+ mainStoryArchive(0);
+ assert.match(content,/第1章 · 青州初入道/);
+ assert.equal(state.mainStoryStep,MAIN_STORY.length);
  advanceMainStory();
  assert.equal(state.stones,finalSave.stones);
  assert.equal(mainStoryIndex(),MAIN_STORY.length);
+
+ fresh();
+ state.mainStoryStep=MAIN_STORY.findIndex(step=>step.title==='煙水失渡');
+ state.location=0;
+ state.world.place='town';
+ state.realm=REGION_REALM[1];
+ power=()=>200000;
+ assert.equal(mainStoryReady(mainStoryStepAt(mainStoryIndex())),false);
+ window.xianxiaMainStory.open();
+ assert.match(content,/自動前往 · 煙水集/);
+ advanceMainStory();
+ assert.equal(mainStoryIndex(),8);
+ await goMainStory();
+ assert.equal(mainStoryAt('1:town'),true);
+ assert.equal(mainStoryReady(mainStoryStepAt(mainStoryIndex())),true);
 
  fresh();
  state.realm=2;
@@ -176,6 +206,8 @@ vm.runInContext(`
  assert.equal(mainStoryIndex(),0);
  await goMainStory();
  advanceMainStory();
+ assert.match(content,/自動前往 · 青州竹林/);
+ await goMainStory();
  assert.match(content,/查看殘劍上的刻痕/);
  advanceMainStory();
  assert.match(content,/除妖 2／2/);
@@ -199,6 +231,7 @@ vm.runInContext(`
  fresh();
  state=migrateSave(snapshot());
  state.mainStoryStep=1;
+ state.world.place='wild';
  state.journey.pending={map:0,kind:4,risk:0,roll:0};
  await window.xianxiaMainStory.track();
  assert.match(content,/data-action="encounter"/);

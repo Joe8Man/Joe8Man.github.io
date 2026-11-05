@@ -156,6 +156,17 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 <script src="assets/engine/audio.js?v=3"></script>
 <link rel="stylesheet" href="assets/engine/client.css?v=3">
 <link rel="stylesheet" href="assets/ui-v1/buttons.css">
+<style>
+.story-ending{display:grid;grid-template-columns:68px minmax(0,1fr);gap:17px;align-items:start;margin:20px 0;padding:22px;border:1px solid #c6aa6a66;border-radius:12px;background:radial-gradient(circle at 0 0,#65714944,transparent 55%),#19332a}
+.story-ending-mark{display:grid;place-items:center;width:64px;height:64px;border:2px solid #d6bd7a;border-radius:50%;box-shadow:0 0 0 5px #d6bd7a22,inset 0 0 18px #d6bd7a44;color:#f1d697;font-size:29px}
+.story-ending strong{color:#f3dfa9;font-size:19px}.story-ending p{margin:9px 0 0;line-height:1.85}
+.story-chapter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0 20px}
+.story-chapter-link{min-height:78px;text-align:left;display:grid;gap:1px;padding:12px 15px;border:1px solid #b9a57155;border-radius:9px;background:#213e32;color:#dbe6d6}
+.story-chapter-link:hover,.story-chapter-link:focus-visible{background:#2d5040;border-color:#d7c08c}.story-chapter-link span,.story-chapter-link small{font-size:11px;color:#aec4b5}.story-chapter-link strong{color:#e6d39f;font-size:15px}
+.story-chapter-card{border-left:3px solid #bfa76e;padding:12px 18px;margin:18px 0;background:#213c3099}.story-chapter-card p{margin:5px 0}
+.story-chapter-list{display:grid;gap:6px;margin:16px 0}.story-chapter-list>div{display:flex;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid #b9a57133}.story-chapter-list span{color:#c6af7d}.story-chapter-list strong{flex:1;color:#e4d8b4;font-weight:500}.story-chapter-list small{color:#9fb6aa}
+@media(max-width:540px){.story-ending{grid-template-columns:1fr;padding:16px}.story-chapter-grid{grid-template-columns:1fr}.story-chapter-link{min-height:64px}}
+</style>
 </head>
 <style>
 #modalOverlay:has(.prologue-scene) .modal{max-width:760px;padding:0;overflow:hidden;background:#12291f;border:1px solid #ab9463;box-shadow:0 20px 70px #000b}
@@ -1389,16 +1400,38 @@ function mainStoryReward(reward){
  return Object.entries(reward).map(([kind,amount])=>({stones:'靈石',crystal:'靈晶',insight:'感悟',fragment:'殘片'}[kind]+' ×'+fmt(amount))).join('、');
 }
 function mainStoryReady(step){
+ if(step.place&&!mainStoryAt(step.place))return false;
  if(step.kills!==undefined)return worldKills(mainStoryMap(step))>=step.kills;
  if(step.depth!==undefined)return qz(mainStoryMap(step)).clears[step.depth]>0;
  if(step.ready?.())return true;
  return !step.ready&&(!step.place||mainStoryAt(step.place));
 }
+const MAIN_STORY_RECAP=[
+ '竹溪夜鐘牽出照玄殘劍；古劍廬石碑指出，鐘聲來自雲夢澤底。',
+ '煙水集渡船失蹤。你從澤底古陣帶回鐘舌，查出舊鞘沉在東海。',
+ '歸墟龍王守著舊鞘；鑄劍師看出當年有人自斷照玄劍以鎮海眼。',
+ '崑崙留下封陣圖與口訣，守門人的姓名和魂魄卻被壓在幽冥。',
+ '你護住忘川渡船、破開往生殿外印，讓守門人得以親自引路。',
+ '鐘舌、舊鞘與殘劍在仙宮合契。天門重封，燈罩卻留下陌生州印。'
+];
+function mainStoryChapterStart(chapter){
+ return MAIN_STORY_CHAPTERS.slice(0,chapter).reduce((count,entry)=>count+entry.steps.length,0);
+}
+function mainStoryArchive(chapter){
+ const completed=MAIN_STORY_CHAPTERS.filter((entry,index)=>mainStoryIndex()>=mainStoryChapterStart(index)+entry.steps.length).length;
+ if(!Number.isInteger(chapter)||chapter<0||chapter>=completed)return showMainStory();
+ const entry=MAIN_STORY_CHAPTERS[chapter];
+ showModal('mainStory',`<span class="kicker">仙途記事 · 第一卷回顧</span><h2 id="modalTitle">第${chapter+1}章 · ${entry.title}</h2><p class="note">本章已完成 · ${entry.steps.length} 段旅程</p><div class="story-chapter-card"><p>${MAIN_STORY_RECAP[chapter]}</p><p class="jade">章節收穫 · ${mainStoryReward(entry.reward)}</p></div><div class="story-chapter-list">${entry.steps.map((step,index)=>`<div><span>${index+1}</span><strong>${step.title}</strong><small>${step.where||step.place&&mainStoryDestination(step)||'修行'}</small></div>`).join('')}</div><div class="modal-actions">${chapter>0?`<button class="btn ghost" data-story-chapter="${chapter-1}">上一章</button>`:''}${chapter+1<completed?`<button class="btn ghost" data-story-chapter="${chapter+1}">下一章</button>`:''}<button class="btn primary" data-action="mainStoryOpen">返回目前主線</button></div>`);
+}
+function mainStoryEnding(){
+ const chapters=MAIN_STORY_CHAPTERS.map((chapter,index)=>`<button class="story-chapter-link" data-story-chapter="${index}"><span>第${index+1}章</span><strong>${chapter.title}</strong><small>已完成 · ${chapter.steps.length} 段</small></button>`).join('');
+ showModal('mainStory',`<span class="kicker">仙途記事 · 第一卷終章</span><h2 id="modalTitle">九州重封 · 鐘歇人歸</h2><div class="story-ending"><span class="story-ending-mark" aria-hidden="true">印</span><div><strong>六章主線已完成</strong><p>天門重封，守門人終於能放下多年的燈。你把引路燈交給天街的巡夜人，鐘聲卻從遙遠的西面輕輕傳來。</p><p>燈罩上多了一枚陌生的州印。你記下這個印記；它指向九州尚未揭開的故事。</p></div></div><p class="note">第一卷至此完結。州印是後續篇章的線索，目前沒有新的主線任務；境界、秘境、宗門與各地歷練仍可繼續。</p><h3 class="section-title">第一卷 · 旅程回顧</h3><div class="story-chapter-grid">${chapters}</div><div class="modal-actions"><button class="btn primary" data-go="map" data-dismiss="true">返回九州繼續歷練</button><button class="btn ghost" data-action="mainStoryGuide">查看仙途指引</button></div>`);
+}
 function showMainStory(){
  if(!state)return;
  const index=mainStoryIndex(),step=mainStoryStepAt(index);
  if(!step){
-  showModal('mainStory','<span class="kicker">主線 · 第一卷</span><h2 id="modalTitle">第一卷 · 已完成</h2><p>天門重封，守門人終於放下守了多年的燈。引路燈上的陌生州印，將是下一段旅程的線索。</p><button class="btn" data-action="mainStoryGuide">仙途指引</button>');
+  mainStoryEnding();
   return;
  }
  const ready=mainStoryReady(step),here=!step.place||mainStoryAt(step.place);
@@ -1419,7 +1452,7 @@ function showMainStory(){
  const gearLink=step.action==='field'&&!ready?'<button class="btn ghost" data-go="bag" data-dismiss="true">打開背包穿戴裝備</button>':'';
  const service=here?({shop:'<button class="btn ghost" data-go="shop" data-dismiss="true">查看此地坊市</button>',forge:'<button class="btn ghost" data-guide-go="forge">前往煉器坊</button>'}[step.service]||''):'';
  const chapter=MAIN_STORY_CHAPTERS[step.chapter];
- showModal('mainStory',`<span class="kicker">主線 · 第${step.chapter+1}章 ${chapter.title} · ${step.number}／${step.total}</span><h2 id="modalTitle">${step.title}</h2><p>${step.story}</p><p class="note">${step.hint}${progress}</p>${blocked&&!resume?`<p class="note">${esc(blocked)}</p>`:''}${reward?`<p class="jade">任務獎勵 · ${reward}</p>`:''}<div class="modal-actions">${next}${gearLink}${choices}${service}<button class="btn ghost" data-action="mainStoryGuide">仙途指引</button></div>`);
+ showModal('mainStory',`<span class="kicker">主線 · 第${step.chapter+1}章 ${chapter.title} · ${step.number}／${step.total}</span><h2 id="modalTitle">${step.title}</h2><p>${step.story}</p><p class="note">${step.hint}${progress}</p>${blocked&&!resume?`<p class="note">${esc(blocked)}</p>`:''}${reward?`<p class="jade">任務獎勵 · ${reward}</p>`:''}<div class="modal-actions">${next}${gearLink}${choices}${service}<button class="btn ghost" data-action="mainStoryGuide">仙途指引</button>${step.chapter>0?`<button class="btn ghost" data-story-chapter="${step.chapter-1}">回顧已完成章節</button>`:''}</div>`);
 }
 function advanceMainStory(scatter=false){
  const index=mainStoryIndex(),step=mainStoryStepAt(index);
@@ -1502,7 +1535,7 @@ window.xianxiaMainStory={
   const expected=mode==='wild'?'field':mode==='dungeon'?'explore':null;
   if(expected&&step?.action===expected&&map===mainStoryMap(step)&&step.objective!=='sword'&&mainStoryAt(step.place)&&mainStoryReady(step)&&!modalKind)showMainStory();
  },
- tracker(){const step=mainStoryStepAt(mainStoryIndex());return {...mainTracker,title:step?.title||'',progress:step?.number||0,total:step?.total||0};},
+ tracker(){const step=mainStoryStepAt(mainStoryIndex());return {...mainTracker,title:step?.title||'第一卷已完成',progress:step?.number||MAIN_STORY_CHAPTERS.length,total:step?.total||MAIN_STORY_CHAPTERS.length};},
  resize(delta){updateMainTracker({scale:Math.min(130,Math.max(70,mainTracker.scale+delta))});},
  collapse(){updateMainTracker({collapsed:!mainTracker.collapsed});}
 };
@@ -1987,6 +2020,7 @@ if(el.hasAttribute('data-open-wardrobe')){sectTab='wardrobe';sectTabOwner=state.
 if(el.dataset.previewRegion!==undefined){const map=Number(el.dataset.previewRegion);if(Number.isInteger(map)&&map>=0&&map<WORLD_ART.length)qingzhouPreview(map);return}
 if(el.dataset.action==='toggleMainTracker'){updateMainTracker({visible:!mainTracker.visible});settingsMenu();return}
 if(el.dataset.action==='mainStoryOpen'){showMainStory();return}
+if(el.dataset.storyChapter!==undefined){mainStoryArchive(Number(el.dataset.storyChapter));return}
 if(el.dataset.storyStep!==undefined&&Number(el.dataset.storyStep)!==mainStoryIndex())return;
 if(el.dataset.action==='mainStoryGo'){goMainStory();return}
 if(el.dataset.action==='mainStoryNext'){advanceMainStory();return}
