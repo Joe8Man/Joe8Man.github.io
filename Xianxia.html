@@ -132,6 +132,8 @@ body{background:#0b1212;font-family:system-ui,-apple-system,'Noto Serif TC',sans
 
 /* Fate reading and learned manuals */
 .aptitude-banner{display:flex;align-items:center;gap:14px;margin:14px 0 12px;padding:17px;background:radial-gradient(circle at 12% 50%,#bfa16625,transparent 40%),linear-gradient(120deg,#18392f,#10271f);border:1px solid #bda66b8c;box-shadow:inset 0 0 0 4px #101e1a,0 10px 28px #0003;border-radius:10px}.aptitude-sigil{flex:none;display:grid;place-items:center;width:56px;height:56px;border:1px solid #d7bb7d;border-radius:50%;color:#e8cf91;font-size:26px;background:#876e3829;box-shadow:0 0 0 5px #a8944f22}.aptitude-banner div{min-width:0;flex:1}.aptitude-banner small{display:block;color:#acbca9;letter-spacing:.12em}.aptitude-banner strong{display:block;color:#f2daa0;font-size:20px;line-height:1.5}.aptitude-banner p{margin:2px 0 0;font-size:11px;color:#bdc8b5}.aptitude-total{align-self:flex-start;white-space:nowrap;color:#e7d5a6;font-size:11px}.creator-stats{gap:9px!important}.creator-stat{padding:10px 12px;border:1px solid #78968255;border-radius:7px;background:linear-gradient(135deg,#213f33a6,#142b25b5)}.creator-stat-best{border-color:#d7be7c;background:linear-gradient(135deg,#6a593467,#1a3c30)}.creator-stat-head{display:flex;justify-content:space-between;gap:5px;align-items:baseline;font-size:12px;color:#c8d3bc}.creator-stat-head b{font-size:18px;color:#f1dca6}.creator-stat-head small{font-size:10px;color:#9dad9b}.creator-stat-track{height:5px;margin-top:8px;border-radius:6px;background:#091c18;overflow:hidden}.creator-stat-track span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#6c9e87,#e9c577)}.art-discovery{margin-top:20px;padding:15px;border:1px solid var(--line);border-radius:8px}.art-discovery-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:7px;margin:14px 0}.art-discovery-list>div{padding:9px;background:#19332a;border:1px solid #56705c66;border-radius:5px}.art-discovery-list strong,.art-discovery-list span{display:block}.art-discovery-list span{font-size:11px;color:#a6b6aa}.art-discovery .btn{margin:4px 7px 4px 0}@media(max-width:480px){.aptitude-banner{gap:10px;padding:12px}.aptitude-sigil{width:46px;height:46px}.aptitude-banner strong{font-size:17px}.creator-stat{padding:8px}}
+
+.sh-icon{width:88px;height:88px;object-fit:contain;flex:0 0 88px;border-radius:12px;background:#101921}.sh-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.sh-tabs .btn{min-height:40px;font-size:12px;padding:8px 12px}.sh-list{display:grid;gap:12px}.sh-card{display:flex;gap:16px;padding:16px;border:1px solid #698b7155;border-radius:12px;background:#172b25}.sh-card>div{min-width:0}.sh-card h3{font-size:17px;margin:4px 0}.sh-card .btn{margin:4px 5px 0 0}.sh-card p{margin:7px 0}.sh-storage-row{display:flex;align-items:center;gap:14px;text-align:left}.sh-storage-row .sh-icon,.sh-storage-row svg{width:58px;height:58px;flex-basis:58px}.sh-list>.sh-card:has(>h3){display:block}@media(max-width:480px){.sh-card{gap:10px;padding:12px}.sh-card>.sh-icon{width:66px;height:66px;flex-basis:66px}.sh-card h3{font-size:16px}}
 </style>
 <style>
 /* Persistent combat power and searchable cultivation handbook. */
@@ -2460,6 +2462,164 @@ function worldCommand(action,value){
 }
 window.xianxiaWorldBridge={view:worldView,command:worldCommand};
 
+// BEGIN SHANHAI EXPANSION V1 — six regions share rules, never progress or loot.
+const SH_NAMES=[['晨露靈筍','蒼狼牙','竹心髓','碧竹靈砂','竹海藏寶圖','清露丹','竹影護符','青鋒劍紋','竹心守紋','靈鹿草糧','青竹陣石','竹海故人箋'],['水澤幽蓮','毒蟒鱗','澤心珠','水脈靈砂','迷澤藏寶圖','淨澤丹','避瘴護符','斷水劍紋','水幕守紋','靈鷺魚糧','碧澤陣石','煙波故人箋'],['潮生珊瑚','玄甲殼','海龍骨','潮汐靈砂','龍宮藏寶圖','滄瀾丹','鎮潮護符','滄海劍紋','玄甲守紋','海蛟靈糧','潮音陣石','滄海故人箋'],['冰魄雪蓮','霜狼牙','冰靈髓','冰魄靈砂','雪境藏寶圖','雪魄丹','禦寒護符','霜華劍紋','冰壁守紋','霜狐靈糧','寒玉陣石','雪山故人箋'],['幽冥魂草','噬魂爪','凝魂珠','幽魂靈砂','古陵藏寶圖','還魂丹','鎮魂護符','斬魂劍紋','冥甲守紋','幽駒靈糧','鎮魂陣石','幽冥故人箋'],['九霄仙芝','天羽翎','星隕鐵','天心靈砂','仙闕藏寶圖','九霄丹','天光護符','天罡劍紋','星穹守紋','仙鶴靈糧','星穹陣石','九霄故人箋']];
+const SH_ASSETS=['bamboo','marsh','sea','snow','nether','heaven'];
+const SH_KIND=['靈植','獸材','珍材','靈砂','藏寶圖','丹藥','護符','攻伐銘紋','守禦銘紋','坐騎靈糧','守陣靈石','故人信物'];
+const SH_DESC=['採藥、奇遇或除妖取得；用於煉丹和靈糧。','本區妖物掉落；用於護符、靈糧與守陣石。','本區首領必掉，普通妖物偶得；用於銘紋和守陣石。','本區除妖或奇遇取得；用於各種製作。','在對應地區尋寶，可選穩妥採集或冒險取寶；一次消耗一張。','戰鬥外回復 40% 氣血，並得有限修為；不超過當層需求 1%。','轉化為一張護劫符，跨境失敗時自動保護。','裝入攻伐銘紋欄，提升戰力；同時僅一枚生效。','裝入守禦銘紋欄，提升最大氣血；同時僅一枚生效。','培養本區已擁有的普通坐騎，每階探索採集多得一份靈植，最高五階。','用於本區已佔領資源地的大陣，提升一階；上限十階，反攻中不能使用。','在本區與交情達 15 的道友開啟三段故事；每段需要信物一份及指定交情。'];
+const SH_ITEMS=Object.fromEntries(SH_NAMES.flatMap((names,map)=>names.map((name,index)=>{const id=`sh-${map}-${index}`;return [id,{id,map,index,name,kind:SH_KIND[index],desc:SH_DESC[index],price:Math.round((20+index*18)*(map+1)),rare:index>=4}]})));
+const SH_RECIPES={5:[[0,3],[3,2]],6:[[1,3],[3,2]],7:[[1,4],[2,2],[3,4]],8:[[0,4],[2,2],[3,4]],9:[[0,3],[1,2]],10:[[1,3],[2,1],[3,3]],11:[[0,2],[3,2]]};
+function shDefaults(){return {version:1,bag:{},warehouse:{},runes:{attack:null,guard:null},mountCare:[0,0,0,0,0,0],kills:[0,0,0,0,0,0],bounty:null,bounties:[0,0,0,0,0,0],stories:{},visits:[-1,-1,-1,-1,-1,-1],treasure:null};}
+function sh(s=state){return s.shanhai??=shDefaults();}
+function shId(map,index){return `sh-${map}-${index}`;}
+function shCount(map,index){return sh().bag[shId(map,index)]||0;}
+function shAdd(map,index,n=1){const id=shId(map,index);sh().bag[id]=Math.min(1e8-(sh().warehouse['supply:'+id]||0),(sh().bag[id]||0)+n);return SH_ITEMS[id].name+' ×'+n;}
+function shLocked(){return actionLock()||(fieldSession?.active?'野外戰鬥中，請先收劍':'')||(state.journey.pending?'請先完成或撤退目前的秘境事件':'');}
+function shValid(x,s){
+ if(x===undefined)return true;
+ const obj=v=>v&&typeof v==='object'&&!Array.isArray(v),nat=(n,max=1e8)=>Number.isSafeInteger(n)&&n>=0&&n<=max,six=(v,max=1e8)=>Array.isArray(v)&&v.length===6&&v.every(n=>nat(n,max));
+ if(!obj(x)||x.version!==1||!obj(x.bag)||!obj(x.warehouse)||!obj(x.runes)||!six(x.mountCare,5)||!six(x.kills)||!six(x.bounties)||!Array.isArray(x.visits)||x.visits.length!==6||!x.visits.every(n=>Number.isSafeInteger(n)&&n>=-1&&n<=1e8)||!obj(x.stories))return false;
+ if(Object.entries(x.bag).some(([id,n])=>!Object.hasOwn(SH_ITEMS,id)||!nat(n)))return false;
+ for(const [slot,index] of [['attack',7],['guard',8]])if(x.runes[slot]!==null&&(!SH_ITEMS[x.runes[slot]]||SH_ITEMS[x.runes[slot]].index!==index||!(x.bag[x.runes[slot]]>0)))return false;
+ for(const [key,n] of Object.entries(x.warehouse)){
+  if(!nat(n)||n<1)return false;const [type,id,...extra]=key.split(':');if(extra.length)return false;
+  if(type==='supply'){if(!Object.hasOwn(SH_ITEMS,id))return false;}
+  else if(type==='item'){if(!Object.hasOwn(ITEMS,id)||id==='sword'||n+(s.items?.[id]||0)>1e8)return false;}
+  else if(type==='material'){if(!['crystal','fragment'].includes(id)||n+(s.materials?.[id]||0)>1e8)return false;}
+  else if(type==='gear'){if(n!==1||!s.ownedGear?.includes(id)||Object.values(s.equipment||{}).includes(id))return false;}
+  else if(type==='mount'){if(n!==1||!s.mounts?.owned?.includes(id)||s.mounts?.equipped===id)return false;}
+  else return false;
+  if(type==='supply'&&n+(x.bag[id]||0)>1e8)return false;
+ }
+ if(x.bounty!==null&&(!obj(x.bounty)||!nat(x.bounty.map,5)||!nat(x.bounty.start)||!nat(x.bounty.target,30)||x.bounty.target<1||x.bounty.start>x.kills[x.bounty.map]))return false;
+ if(Object.entries(x.stories).some(([id,n])=>!window.XianxiaWorld?.npcs.some(v=>v.id===id)||!nat(n,3)))return false;
+ if(x.treasure!==null&&(!obj(x.treasure)||!nat(x.treasure.map,5)||!['aid','ruin','beast'].includes(x.treasure.kind)||typeof x.treasure.roll!=='number'||x.treasure.roll<0||x.treasure.roll>=1))return false;
+ return true;
+}
+function shIcon(id){const v=SH_ITEMS[id];return `<img class="sh-icon" src="assets/expansion-v1/items/${id}.webp" width="96" height="96" alt="${v.name}">`;}
+function shEntry(key){const id=key.slice(7),v=SH_ITEMS[id];if(!v||!sh().bag[id])return null;return {key,type:'supply',id,name:v.name,count:sh().bag[id],base:v.price,price:Math.floor(v.price/2),icon:id,rare:v.rare,equipped:Object.values(sh().runes).includes(id),desc:v.desc,label:v.kind};}
+let shTab='items',shMap=0,shFilter='all',shWarehouseSide='bag';
+function shMenu(tab='items',map=state.location){
+ if(!state)return;shTab=tab;shMap=Number.isInteger(map)&&MAPS[map]?map:state.location;
+ const x=sh(),m=shMap,lock=shLocked(),tabs={items:'百物圖鑑',craft:'百藝製作',travel:'奇遇尋寶',bounty:'宗門懸賞',stories:'道友故事',build:'銘紋養成'};
+ let body='';
+ if(tab==='items'||tab==='craft')body=SH_NAMES[m].map((name,index)=>{const id=shId(m,index),v=SH_ITEMS[id],recipe=SH_RECIPES[index],cost=(m+1)*(index>=7?80:25),source=index<4?'本區除妖、奇遇採集':index===4?'本區每討伐 12 隻必得一張；首領 25% 額外掉落':'百藝製作';return `<article class="sh-card">${shIcon(id)}<div><span class="tiny jade">${v.kind} · 持有 ${shCount(m,index)}</span><h3>${name}</h3><p class="note">${v.desc}</p><p class="tiny">來源：${source}</p>${recipe?`<p class="note">製作：${recipe.map(([i,n])=>SH_NAMES[m][i]+' '+shCount(m,i)+'/'+n).join('、')}；${cost} 靈石</p><button class="btn" data-sh-craft="${id}" ${lock||m!==state.location||state.stones<cost||recipe.some(([i,n])=>shCount(m,i)<n)?'disabled':''}>製作一份</button>`:''}<button class="btn ghost" data-sh-item="${id}">查看／使用</button></div></article>`}).filter((_,i)=>tab!=='craft'||SH_RECIPES[i]).join('');
+ if(tab==='travel'){
+  const e=x.treasure;
+  body=e?`<article class="sh-card"><h3>${MAPS[e.map].name} · ${e.kind==='aid'?'落難旅人':e.kind==='ruin'?'封藏古陣':'獸影守寶'}</h3><p>${REGIONS[e.map].ruin}傳來異響。穩妥採集不受傷；冒險取寶有六成機會取得珍材，失敗損失 15% 最大氣血，最低保留一點。</p><button class="btn" data-sh-resolve="safe">穩妥採集 · 靈植與靈砂</button><button class="btn" data-sh-resolve="risk">冒險取寶 · 珍材與圖紙</button></article>`:`<p>尋訪每日每區一次，取得當地材料並推進一刻。使用藏寶圖可額外尋寶；選擇會保留在存檔，重整不能重抽。</p><button class="btn" data-sh-visit="${m}" ${lock||m!==state.location||x.visits[m]===(state.world?.day||1)?'disabled':''}>尋訪${MAPS[m].name}</button><button class="btn" data-sh-treasure="${m}" ${lock||m!==state.location||!shCount(m,4)?'disabled':''}>使用藏寶圖 · 持有 ${shCount(m,4)}</button>`;
+ }
+ if(tab==='bounty'){
+  const b=x.bounty,progress=b?Math.min(b.target,x.kills[b.map]-b.start):0;
+  body=`<p>需加入宗門；六區各有獨立懸賞進度。只計接取後的本地擊殺，野外、秘境與巡行皆可。每次僅接一張，報酬含當地珍材與宗門貢獻。</p>${b?`<h3>${MAPS[b.map].name} · ${progress}/${b.target}</h3><button class="btn" data-sh-bounty="claim" ${lock||progress<b.target||state.location!==b.map||state.sect===null?'disabled':''}>回本地交付 · 貢獻 ${60*(b.map+1)}、珍材 ×2</button><button class="btn ghost" data-sh-bounty="abandon" ${lock?'disabled':''}>放棄懸賞</button>`:`<h3>${MAPS[m].name} · 第 ${x.bounties[m]+1} 張懸賞</h3><button class="btn" data-sh-bounty="take" ${lock||state.sect===null||m!==state.location?'disabled':''}>討伐本地妖物 ${8+Math.min(12,x.bounties[m]*2)} 隻</button>`}`;
+ }
+ if(tab==='stories'){
+  const W=window.XianxiaWorld,w=worldState();body=`<p>與道友交談、送禮累積交情。交情 15／35／60 可依序推進三段故事；每段消耗當地故人箋一份並給一次性獎勵。請前往道友所在位置。</p>`+(W?.npcs||[]).filter(n=>n.map===m).map(n=>{const b=W.bond(w,n.id),stage=x.stories[n.id]||0,reason=shStoryReason(n);return `<article class="sh-card">${shIcon(shId(m,11))}<div><h3>${esc(n.name)} · ${stage}/3</h3><p>交情 ${b.affinity} · ${stage===3?'往事已圓滿':['初識心願','尋回舊物','共守道心'][stage]}</p><p class="note">${reason||'可交付故人箋，續寫往事。'}</p><button class="btn" data-sh-story="${n.id}" ${lock||reason?'disabled':''}>聆聽與相助</button></div></article>`}).join('');
+ }
+ if(tab==='build')body=`<p>攻伐銘紋與守禦銘紋各一欄，可自由更換；戰力加成 2～7%，氣血加成 3～8%，不同地區不疊加。提升最大氣血不會免費補血。</p><h3>攻伐：${SH_ITEMS[x.runes.attack]?.name||'未裝入'}</h3><h3>守禦：${SH_ITEMS[x.runes.guard]?.name||'未裝入'}</h3><button class="btn ghost" data-sh-clear-runes ${lock?'disabled':''}>卸下銘紋</button><p>本區普通坐騎培養：${x.mountCare[m]}/5 階。每階使每日尋訪多得一份當地靈植。靈糧與守陣石都在百藝製作取得。</p>`;
+ showModal('shanhai',`<div data-sh-workspace="${tab}" data-sh-region="${m}"><span class="kicker">山海百物 · 六域同行</span><h2 id="modalTitle">${tabs[tab]||tabs.items}</h2><div class="sh-tabs">${Object.entries(tabs).map(([k,v])=>`<button class="btn ghost ${tab===k?'active':''}" data-sh-tab="${k}">${v}</button>`).join('')}<button class="btn" data-sh-warehouse>洞府倉庫</button></div><div class="sh-tabs">${MAPS.map((r,i)=>`<button class="btn ghost ${m===i?'active':''}" data-sh-map="${i}">${r.name}</button>`).join('')}</div><p class="note">所在地：${MAPS[state.location].name}${m!==state.location?'；可查看其他地區，製作與行動需前往當地。':''}${lock?' · '+lock:''}</p><div class="sh-list">${body}</div><button class="btn ghost" data-action="close">返回遊戲</button></div>`);
+}
+function shCraft(id){const v=SH_ITEMS[id],recipe=v&&SH_RECIPES[v.index];if(!v||!recipe||shLocked()||state.location!==v.map)return false;const cost=(v.map+1)*(v.index>=7?80:25);if(state.stones<cost||recipe.some(([i,n])=>shCount(v.map,i)<n))return false;for(const [i,n]of recipe)sh().bag[shId(v.map,i)]-=n;state.stones-=cost;shAdd(v.map,v.index);save();renderAll();return true;}
+function shOpenItem(id){const v=SH_ITEMS[id];if(!v)return;const n=shCount(v.map,v.index),recipe=SH_RECIPES[v.index],cost=(v.map+1)*(v.index>=7?80:25),locked=shLocked();showModal('shItem',`<div class="inventory-detail-head"><span class="inventory-large">${shIcon(id)}</span><div><span class="tag">${MAPS[v.map].name} · ${v.kind}</span><h2 id="modalTitle">${v.name}</h2><p>持有 ${n}</p></div></div><p>${v.desc}</p>${recipe?`<p>製作：${recipe.map(([i,need])=>SH_NAMES[v.map][i]+' '+shCount(v.map,i)+'/'+need).join('、')}；${cost} 靈石</p><button class="btn" data-sh-craft-detail="${id}" ${locked||v.map!==state.location||state.stones<cost||recipe.some(([i,need])=>shCount(v.map,i)<need)?'disabled':''}>製作一份</button>`:'<p>來源：本區除妖與奇遇；藏寶圖每十二次擊殺必得一張。</p>'}<p>標準價 ${v.price} 靈石；出售每份 ${Math.floor(v.price/2)} 靈石。</p><label>數量<input class="input" id="shQuantity" aria-label="處理數量" type="number" min="1" max="${Math.max(1,n)}" value="1" inputmode="numeric"></label><div class="modal-actions">${v.index>=4?`<button class="btn primary" data-sh-use="${id}" ${locked||!n?'disabled':''}>${[7,8].includes(v.index)?'裝入銘紋':'使用一份'}</button>`:''}<button class="btn" data-sh-store-item="supply:${id}" ${locked||!n?'disabled':''}>存入倉庫</button><button class="btn ghost" data-sh-sell="${id}" ${locked||!n?'disabled':''}>販賣所選數量</button><button class="btn red ghost" data-sh-discard="${id}" ${locked||!n?'disabled':''}>丟棄所選數量</button><button class="btn ghost" data-sh-tab="items">返回百物</button></div>`);}
+function shUse(id){
+ const v=SH_ITEMS[id];if(!v||!shCount(v.map,v.index)||shLocked())return false;const x=sh(),m=v.map,i=v.index;
+ if(m!==state.location)return toast('請先前往'+MAPS[m].name+'使用。');
+ if(i===4){if(x.treasure)return toast('請先處理目前奇遇。');x.bag[id]--;x.treasure={map:m,kind:['aid','ruin','beast'][rand(0,2)],roll:Math.random()};save();shMenu('travel',m);return true;}
+ if(i===5){state.hp=Math.min(maxHP(),state.hp+maxHP()*.4);addXP(Math.max(1,Math.floor(Math.min(rate(false)*20,needXP()*.01))));}
+ else if(i===6)state.items.ward++;
+ else if(i===7||i===8){x.runes[i===7?'attack':'guard']=id;state.hp=Math.min(state.hp,maxHP());save();renderAll();shMenu('build',m);return true;}
+ else if(i===9){const mount=MOUNT_IDS[m];if(!mountState().owned.includes(mount)||x.mountCare[m]>=5)return toast('需擁有本區普通坐騎，且培養未達五階。');x.mountCare[m]++;}
+ else if(i===10){territoryUpdate();const T=window.XianxiaTerritories,t=territoryState(),site=T?.catalog[m],r=site&&t?.sites[site.id];if(state.sect===null||!r?.owned||r.attack||r.ward>=10)return toast('需要本區已佔領、未反攻且大陣未滿十階的資源地。');r.ward++;}
+ else if(i===11){shMenu('stories',m);return true;}
+ else return false;
+ x.bag[id]--;save();renderAll();shMenu('items',m);return true;
+}
+function shVisit(m){if(!Number.isInteger(m)||!MAPS[m]||m!==state.location||shLocked()||sh().treasure)return false;const x=sh(),day=state.world?.day||1;if(x.visits[m]===day)return false;x.visits[m]=day;const care=mountState().owned.includes(MOUNT_IDS[m])?x.mountCare[m]:0;shAdd(m,0,2+care);shAdd(m,3,2);x.treasure={map:m,kind:['aid','ruin','beast'][(day+m)%3],roll:Math.random()};window.XianxiaWorld?.advance(worldState(),1);save();shMenu('travel',m);return true;}
+function shResolve(choice){const x=sh(),e=x.treasure;if(!e||shLocked()||e.map!==state.location||!['safe','risk'].includes(choice))return false;x.treasure=null;let message='';if(choice==='safe'){message=shAdd(e.map,0,3)+'、'+shAdd(e.map,3,2);if(e.kind==='aid')message+='、'+shAdd(e.map,11);}
+ else if(e.roll<.6){message=shAdd(e.map,2,2)+'、'+shAdd(e.map,4);if(e.kind==='ruin'){state.wandering.pages++;state.wandering.ruins++;message+='、道藏殘頁 ×1';}}
+ else {state.hp=Math.max(1,state.hp-maxHP()*.15);message='冒險未成，損失 15% 最大氣血；仍帶回'+shAdd(e.map,1);}
+ log(MAPS[e.map].name+'奇遇：'+message,'山海');toast(message);save();renderAll();shMenu('travel',e.map);return true;}
+function shKill(map,id){if(!MAPS[map])return;const x=sh();x.kills[map]++;const drops=[shAdd(map,id==='boar'||id==='wolf'||id==='ape'?1:0)];if(x.kills[map]%3===0)drops.push(shAdd(map,3));if(id==='wolfking'||id==='construct')drops.push(shAdd(map,2));else if(Math.random()<.08)drops.push(shAdd(map,2));if(x.kills[map]%12===0||id==='wolfking'&&Math.random()<.25)drops.push(shAdd(map,4));log('山海掉落：'+drops.join('、'),'戰利品');return drops.join('、');}
+function shBounty(action){const x=sh();if(shLocked())return false;if(action==='abandon'){x.bounty=null;save();return true;}if(state.sect===null)return false;if(action==='take'){const m=shMap;if(x.bounty||m!==state.location)return false;x.bounty={map:m,start:x.kills[m],target:8+Math.min(12,x.bounties[m]*2)};}
+ else if(action==='claim'){const b=x.bounty;if(!b||state.location!==b.map||x.kills[b.map]-b.start<b.target)return false;x.bounty=null;x.bounties[b.map]++;state.contribution+=60*(b.map+1);state.stones+=MAPS[b.map].reward;shAdd(b.map,2,2);shAdd(b.map,11);log('交付'+MAPS[b.map].name+'山海懸賞，取得宗門貢獻與當地靈材。','懸賞');}else return false;save();renderAll();return true;}
+function shStoryReason(n){const x=sh(),w=worldState(),b=window.XianxiaWorld.bond(w,n.id),stage=x.stories[n.id]||0;if(stage>=3)return '三段故事已圓滿';if(b.dead||(b.hate||0)>=60)return '故人已逝或已結仇';if(n.map!==state.location||window.XianxiaWorld.npcPlace(n,w)!==w.place||w.position&&Math.hypot(w.position.x-window.XianxiaWorld.point(n.map,w.place).x,w.position.y-window.XianxiaWorld.point(n.map,w.place).y)>8)return '需走近道友所在位置';if(b.affinity<[15,35,60][stage])return '交情需達 '+[15,35,60][stage];if(shCount(n.map,11)<1)return '尚缺'+SH_NAMES[n.map][11];return '';}
+function shStory(id){const n=window.XianxiaWorld?.npcs.find(n=>n.id===id);if(!n||shLocked()||shStoryReason(n))return false;const x=sh(),stage=x.stories[id]||0,m=n.map;x.bag[shId(m,11)]--;x.stories[id]=stage+1;const stories=[`${n.name}取出一封未寄出的家書，說起${REGIONS[m].sites[0]}的故鄉。你答應替他留意失散的消息。`,`${n.name}辨認出信箋上的印記，那正是${REGIONS[m].ruin}的舊紋。你們拼起昔年避難的路線，終於尋回故人的遺物。`,`${n.name}將遺物安放在${REGIONS[m].sites[2]}，決意放下舊恨。他將珍藏的心得交給你，約定來日一同守護此地。`];shAdd(m,stage===2?4:2,stage===2?1:2);state.materials.insight+=stage+1;log(stories[stage],'故人');save();renderAll();showModal('shStory',`<h2 id="modalTitle">${esc(n.name)} · ${['初識心願','尋回舊物','共守道心'][stage]}</h2><p>${stories[stage]}</p><p class="gold">${stage===2?SH_NAMES[m][4]+' ×1':SH_NAMES[m][2]+' ×2'}、感悟 ×${stage+1}</p><button class="btn" data-sh-tab="stories">返回道友故事</button>`);return true;}
+// Warehouse: reserve unique equipment in ownership lists, so drops cannot duplicate it.
+const shOriginalInventoryEntry=inventoryEntry;
+inventoryEntry=function(key){if(state?.shanhai?.warehouse[key]&&['gear','mount'].includes(key.split(':')[0]))return null;return key?.startsWith('supply:')?shEntry(key):shOriginalInventoryEntry(key);};
+const shOriginalEntries=inventoryEntries;
+inventoryEntries=function(){return [...shOriginalEntries(),...Object.keys(sh().bag).map(id=>shEntry('supply:'+id)).filter(Boolean)];};
+const shOriginalIcon=inventoryIcon;
+inventoryIcon=function(kind,...args){return SH_ITEMS[kind]?shIcon(kind):shOriginalIcon(kind,...args);};
+const shOriginalOpen=openInventory;
+openInventory=function(key){if(key?.startsWith('supply:'))return shOpenItem(key.slice(7));shOriginalOpen(key);if(modalKind==='inventory'){const v=inventoryEntry(key);if(v&&!v.protected)$('modalContent').insertAdjacentHTML?.('beforeend',`<button class="btn" data-sh-store-item="${key}" ${shLocked()||v.equipped?'disabled':''}>存入洞府倉庫（所選數量）</button>`);}};
+function shWarehouseEntry(key,side){if(side==='bag')return inventoryEntry(key);const n=sh().warehouse[key];if(!n)return null;const [type,id]=key.split(':');if(type==='supply'){const v=SH_ITEMS[id];return {key,type,id,name:v.name,count:n,icon:id};}if(type==='gear'||type==='mount')return {...shOriginalInventoryEntry(key),count:n};if(type==='item')return {key,type,id,name:ITEMS[id].name,count:n,icon:id};if(type==='material')return {key,type,id,name:BAG_MATERIALS[id].name,count:n,icon:id};return null;}
+function shTransfer(key,side,n){if(shLocked()||!['bag','warehouse'].includes(side)||!Number.isSafeInteger(n)||n<1)return false;const x=sh(),v=shWarehouseEntry(key,side);if(!v||v.protected||v.equipped||n>v.count||['gear','mount'].includes(v.type)&&n!==1)return false;const [type,id]=key.split(':'),into=side==='bag';if(type==='supply'&&Object.values(x.runes).includes(id))return false;if(!['supply','gear','mount','material','item'].includes(type))return false;
+ const bag=type==='supply'?x.bag:type==='item'?state.items:type==='material'?state.materials:null;
+ if(into){if((x.warehouse[key]||0)+n>1e8)return false;if(bag)bag[id]-=n;x.warehouse[key]=(x.warehouse[key]||0)+n;}
+ else {if(bag&&(bag[id]||0)+n>1e8)return false;x.warehouse[key]-=n;if(x.warehouse[key]===0)delete x.warehouse[key];if(bag)bag[id]=(bag[id]||0)+n;}
+ save();renderAll();return true;
+}
+function shWarehouse(side=shWarehouseSide,filter=shFilter){shWarehouseSide=['bag','warehouse'].includes(side)?side:'bag';shFilter=['all','gear','item','material','mount','supply'].includes(filter)?filter:'all';const entries=shWarehouseSide==='bag'?inventoryEntries().filter(v=>!v.protected):Object.keys(sh().warehouse).map(k=>shWarehouseEntry(k,'warehouse')).filter(Boolean),visible=entries.filter(v=>shFilter==='all'||v.type===shFilter),lock=shLocked();showModal('warehouse',`<div data-sh-warehouse-view><span class="kicker">洞府藏珍</span><h2 id="modalTitle">洞府倉庫</h2><p>無容量限制；物品分類保存，裝備淬鍊階級保留。已穿戴、已裝入銘紋及綁定修行不可存入。戰鬥或探索事件中不能存取。</p><div class="sh-tabs"><button class="btn ${shWarehouseSide==='bag'?'primary':''}" data-sh-side="bag">背包 → 存入</button><button class="btn ${shWarehouseSide==='warehouse'?'primary':''}" data-sh-side="warehouse">倉庫 → 取出</button></div><div class="sh-tabs">${Object.entries({...BAG_FILTERS,supply:'山海百物'}).map(([k,name])=>`<button class="btn ghost ${shFilter===k?'active':''}" data-sh-filter="${k}">${name}</button>`).join('')}</div><p class="note">${lock||'點選物品，輸入數量後存取。'}</p><div class="sh-list">${visible.map(v=>`<button class="btn sh-storage-row" data-sh-warehouse-item="${v.key}">${inventoryIcon(v.icon,false,v.type==='gear'?v.id:null)}<span>${v.name}${v.forgeRank?' · '+v.forgeRank:''} ×${v.count}${v.equipped?' · 已穿戴':''}</span></button>`).join('')||'<p>此分類沒有物品。</p>'}</div><button class="btn ghost" data-action="close">返回遊戲</button></div>`);}
+function shWarehouseDetail(key){const v=shWarehouseEntry(key,shWarehouseSide);if(!v)return;showModal('warehouseDetail',`<h2 id="modalTitle">${v.name}</h2><p>${shWarehouseSide==='bag'?'存入':'取出'} · 可選 ${v.count} 件${v.forgeRank?' · '+v.forgeRank:''}</p><input class="input" type="number" id="shQuantity" aria-label="存取數量" value="1" min="1" max="${v.count}" step="1" inputmode="numeric"><div class="modal-actions"><button class="btn" data-sh-transfer="${key}" data-sh-direction="${shWarehouseSide}">確認${shWarehouseSide==='bag'?'存入':'取出'}</button><button class="btn ghost" data-sh-warehouse>返回倉庫</button></div>`);}
+function shQuantity(max){const n=Number($('shQuantity')?.value);return Number.isSafeInteger(n)&&n>0&&n<=max?n:null;}
+const shOriginalRenderBag=renderBag;
+renderBag=function(){shOriginalRenderBag();$('bagToolbar').insertAdjacentHTML?.('beforeend','<div class="modal-actions"><button class="btn" data-sh-warehouse>洞府倉庫</button><button class="btn" data-sh-tab="items">山海百物／製作</button></div>');};
+const shOriginalPower=power,shOriginalMaxHP=maxHP;
+power=function(...args){const id=state?.shanhai?.runes.attack,v=SH_ITEMS[id];return Math.round(shOriginalPower(...args)*(v?1+(2+v.map)/100:1));};
+maxHP=function(...args){const id=state?.shanhai?.runes.guard,v=SH_ITEMS[id];return Math.round(shOriginalMaxHP(...args)*(v?1+(3+v.map)/100:1));};
+const shOriginalEquip=equipGear;
+equipGear=function(id){if(sh().warehouse['gear:'+id])return toast('請先從倉庫取出此裝備。');return shOriginalEquip(id);};
+const shOriginalKill=qzRecordKill;
+qzRecordKill=function(id){shOriginalKill(id);shKill(state.auto.active?state.auto.map:state.location,id);};
+const shOriginalInitial=initial;
+initial=function(){return {...shOriginalInitial(),shanhai:shDefaults()};};
+const shOriginalMigrate=migrateSave;
+migrateSave=function(raw){const s=shOriginalMigrate(raw);sh(s);return s;};
+const shOriginalValid=validSave;
+validSave=function(s){return shOriginalValid(s)&&shValid(s.shanhai,s);};
+const shOriginalHelp=help;
+help=function(){shOriginalHelp();$('modalContent').insertAdjacentHTML?.('afterbegin',`<details class="guide-section" data-guide-section open><summary>山海百物、六區玩法與洞府倉庫</summary><p>選單 → 山海百物：六區各有十二種新道具，共七十二種。當地除妖獲得靈植、獸材、珍材與靈砂，每十二次擊殺必得藏寶圖。百藝製作將材料變為丹藥、護符、攻守銘紋、坐騎靈糧、守陣石及故人箋。每項均可查看用途與來源。</p><p>每日尋訪與藏寶圖可開啟有選擇的奇遇；選擇保存，不能重整重抽。宗門懸賞按六區分開累積，需在當地交付。故人故事分三段，需交情十五／三十五／六十及信物，只發一次獎勵。攻守銘紋各只能裝一枚，坐騎培養提高每日採集，守陣石用於本區已佔領資源地。</p><p>背包與選單均有洞府倉庫；可分類、選數量存取，裝備淬鍊保留，已裝備與綁定物不可存。倉庫、圖鑑、故事及奇遇皆包含在本機、匯出與雲端存檔。</p><button class="btn" data-sh-tab="items">開啟山海百物</button><button class="btn" data-sh-warehouse>開啟倉庫</button></details>`);};
+let shTrade=null,shTradeSerial=0;
+function shAskTrade(id,mode){if(modalKind!=='shItem'||shLocked()||!['sell','discard'].includes(mode))return false;const v=SH_ITEMS[id],n=v&&shQuantity(sh().bag[id]||0);if(!v||!n||Object.values(sh().runes).includes(id))return toast('請先卸下銘紋，並確認數量。');const tx=shTrade={id,n,mode,token:++shTradeSerial};showModal('shTradeConfirm',`<h2 id="modalTitle">確認${mode==='sell'?'販賣':'丟棄'}物品</h2><p>${v.name} ×${n}</p><p>${mode==='sell'?'可得 '+Math.floor(v.price/2)*n+' 靈石（半價）。':'丟棄後不會獲得靈石，且無法復原。'}</p><button class="btn" data-sh-trade-confirm="${tx.token}">確認${mode==='sell'?'販賣':'丟棄'}</button><button class="btn ghost" data-sh-item="${id}">返回詳情</button>`);return true;}
+function shSettleTrade(token){const tx=shTrade;if(!tx||modalKind!=='shTradeConfirm'||String(tx.token)!==String(token)||shLocked())return false;shTrade=null;if(!SH_ITEMS[tx.id]||(sh().bag[tx.id]||0)<tx.n||Object.values(sh().runes).includes(tx.id))return false;sh().bag[tx.id]-=tx.n;if(tx.mode==='sell')state.stones+=Math.floor(SH_ITEMS[tx.id].price/2)*tx.n;save();renderAll();shMenu('items',SH_ITEMS[tx.id].map);return true;}
+window.xianxiaShanhai={open:()=>shMenu(),warehouse:()=>shWarehouse()};
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled||!state)return;const d=b.dataset;
+ if(d.shTab!==undefined)return shMenu(d.shTab,shMap);
+ if(d.shMap!==undefined)return shMenu(shTab,Number(d.shMap));
+ if(d.shCraftDetail){shCraft(d.shCraftDetail);return shOpenItem(d.shCraftDetail);}
+ if(d.shCraft){shCraft(d.shCraft);return shMenu(shTab,shMap);}
+ if(d.shItem)return shOpenItem(d.shItem);
+ if(d.shUse)return shUse(d.shUse);
+ if(d.shVisit!==undefined)return shVisit(Number(d.shVisit));
+ if(d.shTreasure!==undefined)return shUse(shId(Number(d.shTreasure),4));
+ if(d.shResolve)return shResolve(d.shResolve);
+ if(d.shBounty){shBounty(d.shBounty);return shMenu('bounty',shMap);}
+ if(d.shStory)return shStory(d.shStory);
+ if(b.hasAttribute('data-sh-clear-runes')){if(shLocked())return;sh().runes={attack:null,guard:null};state.hp=Math.min(state.hp,maxHP());save();renderAll();return shMenu('build',shMap);}
+ if(b.hasAttribute('data-sh-warehouse'))return shWarehouse();
+ if(d.shSide)return shWarehouse(d.shSide);
+ if(d.shFilter)return shWarehouse(shWarehouseSide,d.shFilter);
+ if(d.shWarehouseItem)return shWarehouseDetail(d.shWarehouseItem);
+ if(d.shTransfer){if(modalKind!=='warehouseDetail')return;const v=shWarehouseEntry(d.shTransfer,d.shDirection),n=v&&shQuantity(v.count);if(n===null||!v)return toast('請輸入有效的整數數量。');if(!shTransfer(d.shTransfer,d.shDirection,n))return toast('目前無法存取，請確認數量、穿戴與戰鬥狀態。');return shWarehouse();}
+ if(d.shStoreItem){const v=inventoryEntry(d.shStoreItem);if(!v)return;const n=v.type==='supply'?shQuantity(v.count):inventoryQuantity(v);if(!n||!shTransfer(d.shStoreItem,'bag',n))return toast('目前無法存入，請確認穿戴、數量與戰鬥狀態。');return shWarehouse('warehouse');}
+ if(d.shSell||d.shDiscard){return shAskTrade(d.shSell||d.shDiscard,d.shSell?'sell':'discard');}
+ if(d.shTradeConfirm)return shSettleTrade(d.shTradeConfirm);
+});
+// END SHANHAI EXPANSION V1
+const shOriginalChoose=qzChoose;
+qzChoose=function(choice){const run=qz()?.run,was=run&&{node:run.node,done:run.ruinDone,path:run.path},m=state.location;const out=shOriginalChoose(choice);if(run&&was){let reward='';if(was.node===0&&run.node===1)reward=choice==='aid'?shAdd(m,11):choice==='track'?shAdd(m,1,2):shAdd(m,0,2);if(was.node===2&&!was.done&&run.ruinDone)reward=choice==='force'?shAdd(m,3,3):shAdd(m,0,2);if(reward){log('分支收穫：'+reward,'山海');save();}}return out;};
+const shOriginalWorldCommand=worldCommand;
+worldCommand=function(action,value){const result=shOriginalWorldCommand(action,value);if(result&&!result.error&&['opportunity','omen'].includes(action)){shAdd(state.location,0,2);shAdd(state.location,3);save();}return result;};
+window.xianxiaWorldBridge.command=worldCommand;
+const shOriginalFieldStart=fieldStart;
+fieldStart=function(...args){const before={...sh().bag},out=shOriginalFieldStart(...args);if(out&&!out.error&&fieldSession){fieldSession.shBag=before;const baseReward=out.reward;if(baseReward)out.reward=function(mob){const result=baseReward(mob);if(result&&fieldSession?.spec?.mode==='worldboss'){const loot=shKill(state.location,'wolfking');result.bonus+=(result.bonus?' · ':'')+loot;save();}return result;};}return out;};
+window.xianxiaFieldBridge.start=fieldStart;
+const shOriginalFieldLoot=fieldLoot;
+fieldLoot=function(){return [...shOriginalFieldLoot(),...Object.entries(state?.shanhai?.bag||{}).flatMap(([id,n])=>{const count=n-(fieldSession?.shBag?.[id]||0);return count>0?[SH_ITEMS[id].name+' ×'+count]:[];})];};
+window.xianxiaBridge.valid=validSave;
+$('helpBtn').onclick=help;
+Object.assign(BAG_FILTERS,{supply:'山海百物'});
+
 initPageArt();
 try{const raw=localStorage.getItem(KEY);if(raw){const s=JSON.parse(raw);if(validSave(s))applySave(s);else toast('舊存檔無法辨識，請重新創角或匯入備份。')}}catch(e){storageOK=false}
 if(!state){$('nameInput').value=pick(draftGender==='female'?FEMALE_NAMES:NAMES);renderCreatorAppearance();roll();$('creatorOverlay').classList.remove('hidden');setTimeout(()=>$('nameInput').focus({preventScroll:true}),100)}
@@ -2474,7 +2634,7 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/field.js?v=22"></script>
 <script type="module" src="assets/engine/territory.js?v=3"></script>
 <script src="assets/mounts-v1/map-data.js"></script>
-<script type="module" src="assets/engine/client.js?v=mount1-59"></script>
+<script type="module" src="assets/engine/client.js?v=shanhai1-60"></script>
 </body></html>
 
 
