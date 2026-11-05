@@ -55,5 +55,7 @@ fresh();shAdd(0,0,4);modalKind='shItem';
 sh().bag[shId(0,0)]=4;setTestQuantity(2);assert.ok(shAskTrade(shId(0,0),'sell'));const tradeToken=shTrade.token,oldGold=state.stones;assert.ok(shSettleTrade(tradeToken));assert.equal(shCount(0,0),2);assert.equal(state.stones,oldGold+20);assert.equal(shSettleTrade(tradeToken),false);modalKind='shItem';setTestQuantity(1);assert.ok(shAskTrade(shId(0,0),'discard'));assert.ok(shSettleTrade(shTrade.token));assert.equal(shCount(0,0),1);assert.equal(state.stones,oldGold+20);
 console.log('Six-region crafting, 72 items, warehouse invariants, save migration, rune effects, treasure, bounties, stories, field and boss idempotency passed');
 `,context);
-for(let m=0;m<6;m++)for(let i=0;i<12;i++){const f=path.join(root,'assets','expansion-v1','items',`sh-${m}-${i}.webp`),b=fs.readFileSync(f);assert.ok(b.length>1000);assert.equal(b.toString('ascii',0,4),'RIFF');assert.equal(b.readUInt32LE(4)+8,b.length);}
-console.log('72 generated icon integrity checks passed');
+for(const name of ['bamboo','marsh','sea','snow','nether','heaven']){const b=fs.readFileSync(path.join(root,'assets','expansion-v1','transparent',name+'.webp'));assert.ok(b.length>1000);assert.equal(b.toString('ascii',0,4),'RIFF');assert.equal(b.readUInt32LE(4)+8,b.length);assert.equal(b.toString('ascii',12,16),'VP8X');assert.ok(b[20]&0x10,'alpha channel is required');}
+for(let m=0;m<6;m++)for(let i=0;i<12;i++){const icon=vm.runInContext(`shIcon('sh-${m}-${i}')`,context);assert.match(icon,/transparent\/.*\.webp/);assert.match(icon,/<svg/);assert.ok(!icon.includes('items/sh-'));}
+assert.match(html,/border-radius:12px;background:transparent}\.sh-tabs/);
+console.log('Six transparent atlas headers, 72 clipped icon references, and transparent CSS checks passed');
