@@ -410,6 +410,10 @@ function migrateSave(raw){
     if(s.battle){s.battle=null;s.logs.push({time:stamp(),type:'宗門新制',msg:'宗門晉升與問鼎規則已更新，舊制挑戰已安全結束，境界、職位與資源保留。請至宗務查看新資格。'});s.logs=s.logs.slice(-100)}
   }
   if(window.XianxiaWorld)s.world=window.XianxiaWorld.normalize(s.world,s.location);
+  if(mainStoryIndex(s)>=2){
+    const gear=grantMainStoryGear(s);
+    if(gear.length)s.logs=[...s.logs,{time:stamp(),type:'主線',msg:'補發竹林主線裝備：'+gear.join('、')+'。'}].slice(-100);
+  }
   return s;
 }
 function maxHP(equipment=state.equipment){return Math.round((100+eff(equipment)[0]*12+gearBonus(equipment).hp)*Math.pow(1.42,tier())*daoMul())}
@@ -607,6 +611,7 @@ function resolveEncounter(action,{battleWon=false}={}){
     text=`${m.name}歷練失利，損失 ${Math.round(loss)} 氣血，退回起點；既有物品與材料保留。`;
   }
   if(martial)text+=` 施展${martial.name}（真氣 ${Math.floor(martial.qi)}），${martial.defense?'身法／護體減傷 '+Math.round(martial.defense*100)+'%。':'起手招式效果已結算。'}`;rememberJourney(`${m.name}：${text}`);toast(text);renderAll();save();
+  if(action==='sword'&&success&&MAIN_STORY[mainStoryIndex()]?.objective==='sword')showMainStory();
 }
 
 // Qingzhou: fixed regional ecology, branching expeditions and real turn combat.
@@ -1284,59 +1289,143 @@ function renderCultivation(){
   const daoReason=lock||(state.materials.crystal<8?`尚缺靈晶 ${8-state.materials.crystal}`:state.materials.insight<5?`尚缺感悟 ${5-state.materials.insight}`:'');
   el.innerHTML=`<p class="note">修行節奏：越接近本境極限，每層需求增幅越大。凝氣每秒一次；丹藥僅輔助積累，秘境以材料與裝備為主要收穫。已有境界與修為均保留。</p><h3 class="section-title">肉身與神魂</h3><p class="note">煉體 ${state.training.body}/20 · 神魂 ${state.training.soul}/20</p><div class="training-actions">${train('body','煉體','每階根骨 +2，增加氣血與減傷。')}${train('soul','養神','每階神識 +2、悟性 +1。')}</div><button class="text-action" data-resource="insight">感悟取得方式</button><div class="rule"></div><button class="btn ghost wide" data-open-artifact>前往本命法寶 · 餵養與蛻變</button>${state.realm>0&&state.foundation!=='heaven'?`<div class="rule"></div><button class="btn wide" data-train="foundation" ${daoReason?'disabled':''}>重塑天道 · 靈晶 8／感悟 5</button><p class="button-reason">${daoReason||'戰力與最大氣血提升 25%，修煉潛力提升。'}</p>`:''}`;
 }
-const MAIN_STORY=[
+const MAIN_STORY_CHAPTERS=[
+ {title:'青州初入道',reward:{stones:100},steps:[
  {title:'竹溪夜鐘',place:'0:town',where:'竹溪鎮',story:'竹溪鎮的守夜人把半張巡山圖塞進你手裡。「昨夜山裡的鐘響了三次，可古劍廬那口鐘，早在十年前就裂了。」',hint:'到竹溪鎮聽守夜人的委託。',finish:'接下巡山委託'},
- {title:'斷刃回聲',place:'0:wild',where:'青州竹林',story:'巡山圖上墨跡已褪，唯有一筆劍痕仍泛著微光。踏入竹林後，地底有什麼應了你一聲。',hint:'到青州竹林尋訪秘境，拾得照玄殘劍。',action:'explore',label:'尋找照玄殘劍',ready:()=>state.artifact.unlocked,finish:'查看殘劍上的刻痕'},
- {title:'竹影試鋒',place:'0:wild',where:'青州竹林',story:'殘劍上的刻痕指向古劍廬。兩隻受鐘聲驚動的妖獸擋住了山路，正循著劍鳴靠近。',hint:'在青州野外除妖兩隻。戰鬥中用移動搖桿避開攻擊，再用普攻或招式反擊。',action:'field',label:'進入野外除妖',ready:()=>worldKills(0)>=2,finish:'收劍查看戰利品'},
+ {title:'斷刃回聲',objective:'sword',place:'0:wild',where:'青州竹林',story:'巡山圖上墨跡已褪，唯有一筆劍痕仍泛著微光。踏入竹林後，地底有什麼應了你一聲。',hint:'到青州竹林尋訪秘境，拾得照玄殘劍。',action:'explore',label:'尋找照玄殘劍',ready:()=>state.artifact.unlocked,finish:'查看殘劍上的刻痕'},
+ {title:'竹影試鋒',place:'0:wild',where:'青州竹林',story:'殘劍上的刻痕指向古劍廬。兩隻受鐘聲驚動的妖獸擋住了山路，正循著劍鳴靠近。',hint:'在青州野外除妖兩隻，達標後收劍離開戰場即可接續主線。戰鬥中用搖桿走位，再用普攻或招式反擊。',kills:2,action:'field',label:'進入野外除妖',finish:'接續行囊備戰'},
  {title:'行囊備戰',story:'守夜人在巡山圖背面留了字。「上山前翻翻行囊。要用的丹藥和兵刃，總不能等到妖獸眼前才找。」',hint:'打開背包，熟悉丹藥、材料與裝備分類。裝備可點選後穿戴。',page:'bag',label:'打開背包'},
  {title:'洞府養氣',story:'每次試著握緊殘劍，劍身都把你的靈氣震散。先回洞府調息，等氣息穩了再上山。',hint:'到洞府累積修為，修為滿時提升小境，直到煉氣第三層。',page:'home',label:'前往洞府修煉',ready:sectJoinUnlocked,finish:'循劍鳴前往山門'},
  {title:'山門問道',place:'0:sect',where:'青嵐山門',story:'青嵐山門的接引人認出刻痕。「這是舊日封陣的劍。六宗各有修法，但能走到陣前的，未必一定有師門。」',hint:'比較六宗的打法與代表招式。可以拜師，也可以散修身分繼續。',page:'sect',label:'比較六宗',ready:()=>state.sect!==null,finish:'記下修行方向',optional:'以散修身分繼續'},
  {title:'古劍廬破陣',place:'0:ruin',where:'古劍廬',story:'古劍廬的鐘繩已斷，鐘聲卻從秘境深處傳來。殘劍指著首領背後的石碑，那裡刻著和劍身一樣的紋路。',hint:'挑戰青州秘境的首個深度，擊敗首領。若戰力不足，可先修煉、穿戴裝備或回野外歷練。',action:'explore',label:'查看秘境試煉',ready:()=>state.qingzhou?.clears?.[0]>0,finish:'拓下石碑線索'},
  {title:'鐘聲往雲夢',place:'0:town',where:'竹溪鎮',story:'石碑上的字只有半句：「鐘沉澤底，劍歸其鞘。」守夜人將拓片轉過來，露出雲夢大澤煙水集的渡口印。那三聲鐘響，是有人在等這把劍。',hint:'回竹溪鎮交付拓片，完成第一章。',finish:'交付拓片'}
+ ]},
+ {title:'澤底尋鐘',reward:{stones:220,crystal:3,insight:2},steps:[
+  {title:'煙水失渡',place:'1:town',story:'煙水集的船娘認出拓片上的渡口印。昨夜鐘響後，三艘渡船接連消失，只有一盞掛著青竹結的船燈逆流漂了回來。',hint:'到煙水集詢問失蹤渡船。可順道查看坊市補給，或向附近道友打聽消息。',finish:'接過船燈',service:'shop'},
+  {title:'蘆岸尋人',place:'1:wild',story:'船燈映出水下的腳印。你循著腳印找到翻覆的渡船，船夫還活著，卻被循聲而來的澤妖困在蘆葦叢中。',hint:'清理雲夢野外的妖物，護船夫離開蘆岸。',kills:3,action:'field',label:'前往蘆岸除妖',finish:'護送船夫上岸'},
+  {title:'水底第三聲',place:'1:ruin',story:'船夫說，每艘船都是在第三聲鐘響後沉下去的。澤底古陣裡，雲夢蛟王正纏著沉鐘。鐘舌上有一道與殘劍吻合的缺口。',hint:'在澤底古陣通關「蘆岸淺澤」，取回鐘舌。',depth:0,action:'explore',label:'挑戰雲夢蛟王',finish:'取回鐘舌'},
+  {title:'潮印指東',place:'1:town',story:'船娘把鐘舌上的鹽霜刮進燈火，火中顯出一座海港。她認出是望潮港，也想起父親說過，古劍有鞘，曾隨封印沉在東海。',hint:'回煙水集交代渡船下落，領取下一程盤纏。',finish:'交還船燈'}
+ ]},
+ {title:'歸墟尋鞘',reward:{stones:420,crystal:5,fragment:4},steps:[
+  {title:'望潮問匠',place:'2:town',story:'望潮港的鑄劍師把鐘舌在砧上輕敲。兩道音色中，一道是照玄劍，另一道卻與劍反向而行。他說那是劍鞘留下的封紋。',hint:'到望潮港找鑄劍師。煉器坊可查看妖材配方與裝備淬鍊。',finish:'收下試鞘圖',service:'forge'},
+  {title:'沉龍取鞘',place:'2:ruin',story:'潮退之後，沉龍宮露出一道刻滿劍紋的門。你依試鞘圖嵌入鐘舌，石門開了，歸墟龍王卻伏在劍鞘旁。',hint:'通關沉龍宮「潮汐外礁」，帶回照玄劍的舊鞘。',depth:0,action:'explore',label:'挑戰歸墟龍王',finish:'拾起照玄舊鞘'},
+  {title:'斷劍舊痕',place:'2:town',story:'鑄劍師指出斷面朝內收束的靈紋。當年有人主動折劍，讓劍鋒鎮守天門、劍鞘鎮住海眼。親眼見過斷劍的人，還在崑崙。',hint:'帶舊鞘回望潮港鑑定。可用章末靈晶強化裝備，殘片則可用來培養本命法寶。',finish:'記下崑崙口信',service:'forge'}
+ ]},
+ {title:'雪境問劍',reward:{stones:650,crystal:7,insight:4},steps:[
+  {title:'雪驛借火',place:'3:town',story:'雪嶺驛的爐火只在殘劍靠近時往北倒。驛卒壓低聲音，說當年封陣的見證人藏起了自己的名字，也藏起了最後一份封陣圖。',hint:'到雪嶺驛尋訪封陣舊人。下一步會依宗門身分指路。',finish:'詢問見證人的去處'},
+  {title:'兩路同證',place:'3:sect',story:'崑崙仙寺的知客以宗門印信查到舊卷。卷中記著一名被抹去姓名的守門人，他曾以自己的魂魄替九州承受封陣反噬。',hint:'到崑崙仙寺查閱仙門保存的舊卷。',finish:'抄下封陣口訣',scatter:{place:'3:wild',story:'雪徑上一位無名散修正替路人掘開雪道。他聽見鐘舌一響，便說出封陣當夜的情形。那位守門人曾將封陣口訣交給他，請他日後轉告持劍之人。',hint:'沿雪徑拜訪無名散修，聽他親述封陣往事。',finish:'記下封陣口訣'}},
+  {title:'冰窟存證',place:'3:ruin',story:'口訣使古窟冰牆上的字重新浮現。崑崙霜麟守著圖卷，牠的鱗片上仍留有當年封印反噬的焦痕。',hint:'通關寒天古窟「踏雪山麓」，取出封陣圖。',depth:0,action:'explore',label:'挑戰崑崙霜麟',finish:'取出封陣圖'},
+  {title:'往生缺名',place:'3:town',story:'你在爐前攤開封陣圖。折劍的位置是天門，守門人的魂魄卻被壓在幽冥。圖邊有一行新字：請在下一次鐘響之前，到忘川渡。',hint:'回雪嶺驛核對圖上的渡口，備妥前往幽冥的物資。',finish:'收起封陣圖'}
+ ]},
+ {title:'冥關破印',reward:{stones:950,crystal:9,insight:4,fragment:6},steps:[
+  {title:'忘川撤渡',place:'4:town',story:'忘川渡的水逆著河床往上流。船夫正把渡客送上最後一艘船，請你沿岸壓住追來的妖物，等船離岸。',hint:'到忘川渡與船夫會合，確認撤離方向。',finish:'接下護渡之託'},
+  {title:'渡口斷後',place:'4:wild',story:'鐘聲一起，岸邊倒下的石碑全站了起來。渡船還在轉向，你得把追兵截在船燈照不到的地方。',hint:'在幽冥野外除妖六隻，清出渡船的撤離路線。',kills:6,action:'field',label:'前往渡口斷後',finish:'目送渡船離岸'},
+  {title:'往生殿問魂',place:'4:ruin',story:'幽冥古君自稱當年的守門人。他借鐘鳴呼救，卻不知道每響一次，天門後的災氣就更容易循聲而來。你照圖破開困住他的外印，讓他能親自引路。',hint:'通關往生殿「幽魂長廊」，破除束縛守門人的外印。',depth:1,action:'explore',label:'迎戰幽冥古君',finish:'聽守門人交代天門真相'}
+ ]},
+ {title:'九州重封',reward:{stones:1500,crystal:12,insight:6,fragment:10},steps:[
+  {title:'天街重聚',place:'5:town',story:'天街的燈盞無風自熄。煙水集船娘託人送來的燈仍亮著，守門人認出那是當年照玄劍第一次出鞘時點起的引路火。',hint:'到天街和守門人會合，整備最後一程。',finish:'點起引路燈',service:'shop'},
+  {title:'仙宮合契',place:'5:sect',story:'問道仙宮的石臺有三個缺口。鐘舌鎮住災氣的聲息，舊鞘承住反噬，殘劍則替守門人斬斷封印與他魂魄的牽連。你們依封陣圖排好次序。',hint:'前往問道仙宮校準封陣。六宗弟子與散修皆可進入。',finish:'校準照玄封陣'},
+  {title:'天門最後一戰',place:'5:ruin',story:'星河遺府的門後，災氣已附在九霄天龍身上。守門人引走鐘聲，你持殘劍走進陣眼，等牠掠過燈火才出手。',hint:'通關星河遺府「浮空靈苑」，擊敗九霄天龍，完成重封。',depth:1,action:'explore',label:'迎戰九霄天龍',finish:'歸劍入鞘，重封天門'},
+  {title:'鐘歇人歸',place:'5:town',story:'你回到天街時，守門人已把引路燈交給下一班巡夜的人。最後一次鐘響從很遠的西面傳來。這回聲音很輕，沒有驚醒任何人，只在燈罩上留下一個陌生的州印。',hint:'回天街交還引路燈，完成第一卷。',finish:'將引路燈交給巡夜人'}
+ ]}
 ];
-function mainStoryIndex(){
- const step=state?.mainStoryStep;
+const MAIN_STORY=MAIN_STORY_CHAPTERS.flatMap((chapter,chapterIndex)=>chapter.steps.map((step,index)=>({
+ ...step,chapter:chapterIndex,number:index+1,total:chapter.steps.length,
+ chapterReward:index===chapter.steps.length-1?chapter.reward:null
+})));
+const MAIN_STORY_STARTER_GEAR=['0-weapon','0-robe'];
+function grantMainStoryGear(s){
+ if(s.mainStoryGearClaimed===true)return [];
+ s.mainStoryGearClaimed=true;
+ const missing=MAIN_STORY_STARTER_GEAR.filter(id=>!s.ownedGear.includes(id));
+ s.ownedGear.push(...missing);
+ return missing.map(id=>GEAR[id].name);
+}
+function mainStoryIndex(s=state){
+ const step=s?.mainStoryStep;
  return Number.isInteger(step)&&step>=0&&step<=MAIN_STORY.length?step:0;
 }
 function mainStoryAt(place){
  const [map,type]=place.split(':'),w=worldState();
  return state.location===Number(map)&&w.place===type;
 }
+function mainStoryStepAt(index){
+ const step=MAIN_STORY[index];
+ return step?.scatter&&state?.sect===null?{...step,...step.scatter}:step;
+}
+function mainStoryMap(step){return Number(step.place?.split(':')[0]);}
+function mainStoryDestination(step){
+ const [map,type]=step.place.split(':');
+ const region=window.XianxiaWorld.regions[Number(map)];
+ return type==='wild'?region.name:region[type];
+}
+function mainStoryReward(reward){
+ return Object.entries(reward).map(([kind,amount])=>({stones:'靈石',crystal:'靈晶',insight:'感悟',fragment:'殘片'}[kind]+' ×'+fmt(amount))).join('、');
+}
 function mainStoryReady(step){
+ if(step.kills!==undefined)return worldKills(mainStoryMap(step))>=step.kills;
+ if(step.depth!==undefined)return qz(mainStoryMap(step)).clears[step.depth]>0;
  if(step.ready?.())return true;
  return !step.ready&&(!step.place||mainStoryAt(step.place));
 }
 function showMainStory(){
  if(!state)return;
- const index=mainStoryIndex(),step=MAIN_STORY[index];
+ const index=mainStoryIndex(),step=mainStoryStepAt(index);
  if(!step){
-  showModal('mainStory','<span class="kicker">主線 · 第一章</span><h2 id="modalTitle">青州初入道 · 已完成</h2><p>你已查明青州異動與古劍廬的關聯。下一條線索在雲夢大澤的煙水集，待地區解鎖後可前往遊歷。</p><button class="btn" data-action="mainStoryGuide">仙途指引</button>');
+  showModal('mainStory','<span class="kicker">主線 · 第一卷</span><h2 id="modalTitle">第一卷 · 已完成</h2><p>天門重封，守門人終於放下守了多年的燈。引路燈上的陌生州印，將是下一段旅程的線索。</p><button class="btn" data-action="mainStoryGuide">仙途指引</button>');
   return;
  }
  const ready=mainStoryReady(step),here=!step.place||mainStoryAt(step.place);
- const button=(action,label)=>`<button class="btn primary" data-action="${action}">${label}</button>`;
- const next=ready?button(step.page==='bag'?'mainStoryGo':'mainStoryNext',step.finish||step.label):here?button('mainStoryGo',step.label):button('mainStoryGo','自動前往 · '+step.where);
+ const button=(action,label)=>`<button class="btn primary" data-action="${action}" data-story-step="${index}">${label}</button>`;
+ const resume=!ready&&state.journey.pending&&(step.action||(step.place&&!here));
+ const blocked=!ready&&step.place&&!here?regionReason(mainStoryMap(step)):
+  !ready&&here&&step.depth!==undefined?qzDepthReason(step.depth):'';
+ const prepare=blocked.startsWith('需')?
+  '<button class="btn primary" data-guide-go="break">查看破境準備</button>':
+  '<button class="btn primary" data-go="home" data-dismiss="true">回洞府修煉</button>';
+ const next=resume?button('encounter','處理未結束的探索'):
+  ready?button(step.page==='bag'?'mainStoryGo':'mainStoryNext',step.finish||step.label):
+  blocked?prepare:
+  here?button('mainStoryGo',step.label):button('mainStoryGo','自動前往 · '+(step.where||mainStoryDestination(step)));
  const choices=here&&step.optional&&!ready?button('mainStoryScatter',step.optional):'';
- const progress=index===2?` · 除妖 ${Math.min(2,worldKills(0))}／2`:'';
- showModal('mainStory',`<span class="kicker">主線 · 青州初入道 · ${index+1}／${MAIN_STORY.length}</span><h2 id="modalTitle">${step.title}</h2><p>${step.story}</p><p class="note">${step.hint}${progress}</p><div class="modal-actions">${next}${choices}<button class="btn ghost" data-action="mainStoryGuide">仙途指引</button></div>`);
+ const progress=step.kills!==undefined?` · 除妖 ${Math.min(step.kills,worldKills(mainStoryMap(step)))}／${step.kills}`:'';
+ const reward=step.objective==='sword'?'竹影劍、青竹道袍':step.chapterReward?mainStoryReward(step.chapterReward):'';
+ const gearLink=step.action==='field'&&!ready?'<button class="btn ghost" data-go="bag" data-dismiss="true">打開背包穿戴裝備</button>':'';
+ const service=here?({shop:'<button class="btn ghost" data-go="shop" data-dismiss="true">查看此地坊市</button>',forge:'<button class="btn ghost" data-guide-go="forge">前往煉器坊</button>'}[step.service]||''):'';
+ const chapter=MAIN_STORY_CHAPTERS[step.chapter];
+ showModal('mainStory',`<span class="kicker">主線 · 第${step.chapter+1}章 ${chapter.title} · ${step.number}／${step.total}</span><h2 id="modalTitle">${step.title}</h2><p>${step.story}</p><p class="note">${step.hint}${progress}</p>${blocked&&!resume?`<p class="note">${esc(blocked)}</p>`:''}${reward?`<p class="jade">任務獎勵 · ${reward}</p>`:''}<div class="modal-actions">${next}${gearLink}${choices}${service}<button class="btn ghost" data-action="mainStoryGuide">仙途指引</button></div>`);
 }
 function advanceMainStory(scatter=false){
- const index=mainStoryIndex(),step=MAIN_STORY[index];
+ const index=mainStoryIndex(),step=mainStoryStepAt(index);
  if(!step||(!mainStoryReady(step)&&!(scatter&&step.optional&&mainStoryAt(step.place))))return;
  state.mainStoryStep=index+1;
- if(state.mainStoryStep===MAIN_STORY.length){
-  state.stones+=100;
-  log('青州初入道已完成。守夜人謝你送回拓片，贈予 100 靈石。','主線');
-  toast('主線完成 · 靈石 +100');
+ if(step.objective==='sword'){
+  const gear=grantMainStoryGear(state);
+  if(gear.length){
+   const message='主線獎勵 · '+gear.join('、')+'已收入背包';
+   log(message,'主線');
+   toast(message);
+  }
+ }
+ if(step.chapterReward){
+  const {stones=0,...materials}=step.chapterReward;
+  state.stones+=stones;
+  for(const [kind,amount] of Object.entries(materials))state.materials[kind]+=amount;
+  const title=MAIN_STORY_CHAPTERS[step.chapter].title;
+  const message=title+'已完成 · '+mainStoryReward(step.chapterReward);
+  log(message,'主線');
+  toast(message);
  }
  save();showMainStory();
 }
 async function goMainStory(){
- const index=mainStoryIndex(),step=MAIN_STORY[index];
+ const index=mainStoryIndex(),step=mainStoryStepAt(index);
  if(!step)return;
  const locked=actionLock();
  if(locked)return toast(locked);
  if(step.place&&!mainStoryAt(step.place)){
+  const reason=regionReason(mainStoryMap(step));
+  if(reason){showMainStory();return toast(reason);}
   if(state.journey.pending)return toast('請先接續或撤退目前的探索事件。');
   if(!window.xianxiaWorldUI?.questTravel)return toast('大地圖尚未載入。');
   const character=state;
@@ -1350,7 +1439,14 @@ async function goMainStory(){
   if(step.page==='bag'){state.mainStoryStep=index+1;save();}
   routeTo(step.page);return;
  }
- if(step.action){const result=window.xianxiaWorldUI?.questAction(step.action);if(result?.error)toast(result.error);return;}
+ if(step.action){
+  const result=window.xianxiaWorldUI?.questAction(step.action,step.depth);
+  if(!result||result.error){
+   showMainStory();
+   toast(result?.error||'大地圖尚未載入，請稍後再試。');
+  }else if(step.objective==='sword'&&mainStoryReady(step)&&!modalKind)showMainStory();
+  return;
+ }
  showMainStory();
 }
 const MAIN_TRACKER_KEY='xianxia-main-tracker';
@@ -1366,11 +1462,18 @@ function updateMainTracker(change){
 window.xianxiaMainStory={
  open:showMainStory,
  track(){
-  const step=MAIN_STORY[mainStoryIndex()];
-  if(step?.place&&!mainStoryReady(step)&&!mainStoryAt(step.place))return goMainStory();
+  if(!state)return;
+  const step=mainStoryStepAt(mainStoryIndex());
+  if(step?.place&&!state.journey.pending&&!mainStoryReady(step)&&!mainStoryAt(step.place)&&!regionReason(mainStoryMap(step)))return goMainStory();
   showMainStory();
  },
- tracker(){const index=mainStoryIndex(),step=MAIN_STORY[index];return {...mainTracker,title:step?.title||'',progress:index+1,total:MAIN_STORY.length};},
+ resumeAfterBattle(mode,map){
+  if(!state)return;
+  const step=mainStoryStepAt(mainStoryIndex());
+  const expected=mode==='wild'?'field':mode==='dungeon'?'explore':null;
+  if(expected&&step?.action===expected&&map===mainStoryMap(step)&&step.objective!=='sword'&&mainStoryAt(step.place)&&mainStoryReady(step)&&!modalKind)showMainStory();
+ },
+ tracker(){const step=mainStoryStepAt(mainStoryIndex());return {...mainTracker,title:step?.title||'',progress:step?.number||0,total:step?.total||0};},
  resize(delta){updateMainTracker({scale:Math.min(130,Math.max(70,mainTracker.scale+delta))});},
  collapse(){updateMainTracker({collapsed:!mainTracker.collapsed});}
 };
@@ -1855,6 +1958,7 @@ if(el.hasAttribute('data-open-wardrobe')){sectTab='wardrobe';sectTabOwner=state.
 if(el.dataset.previewRegion!==undefined){const map=Number(el.dataset.previewRegion);if(Number.isInteger(map)&&map>=0&&map<WORLD_ART.length)qingzhouPreview(map);return}
 if(el.dataset.action==='toggleMainTracker'){updateMainTracker({visible:!mainTracker.visible});settingsMenu();return}
 if(el.dataset.action==='mainStoryOpen'){showMainStory();return}
+if(el.dataset.storyStep!==undefined&&Number(el.dataset.storyStep)!==mainStoryIndex())return;
 if(el.dataset.action==='mainStoryGo'){goMainStory();return}
 if(el.dataset.action==='mainStoryNext'){advanceMainStory();return}
 if(el.dataset.action==='mainStoryScatter'){advanceMainStory(true);return}
@@ -2273,11 +2377,18 @@ function worldCommand(action,value){
  else if(action==='cultivate'){routeTo('home');return {};}
  else if(action==='explore'){
   if(!['wild','ruin'].includes(w.place))return {error:'先前往野外或遺跡。'};
+  if(Number.isInteger(value)){
+   const reason=huntReason()||qzDepthReason(value);
+   if(reason)return {error:reason};
+   if(!window.xianxiaField)return {error:'戰鬥場景尚未載入，請稍後再試。'};
+   window.xianxiaField.open({mode:'dungeon',depth:value});
+   return {};
+  }
   if(!state.artifact.unlocked){state.artifact.unlocked=true;state.journey.seen[state.location]|=1;message='拾得照玄殘劍，飛劍除妖與法寶溫養已開啟。';advance=1;}
   else{const reason=autoStartReason();if(reason)return {error:reason};if(power()<routeRecommended(state.location,0))return {error:'秘境建議戰力 '+routeRecommended(state.location,0)+'，可先在野外歷練。'};W.advance(w);W.note(w,'進入'+MAPS[state.location].name+'秘境。');save();trialPicker();return {};}
 
  }else if(action==='field'){
-  if(w.place!=='wild')return {error:'先到野外，再開始除妖。'};const reason=autoStartReason();if(reason)return {error:reason};W.advance(w);W.note(w,'在'+MAPS[state.location].name+'展開除妖歷練。');save();window.xianxiaField?.open();return {};
+  if(w.place!=='wild')return {error:'先到野外，再開始除妖。'};const reason=autoStartReason();if(reason)return {error:reason};if(!window.xianxiaField)return {error:'戰鬥場景尚未載入，請稍後再試。'};W.advance(w);W.note(w,'在'+MAPS[state.location].name+'展開除妖歷練。');save();window.xianxiaField?.open();return {};
  }else if(action==='service'){
   if(!['shop','sect','character','bag','community'].includes(value))return {error:'此處服務不存在。'};
   if(value==='shop'&&w.place!=='town')return {error:'坊市位於城鎮。'};if(value==='sect'&&w.place!=='sect')return {error:'請先前往山門。'};routeTo(value);if(value==='sect'&&state.sect!==state.location)previewSect(state.location);return {};
@@ -2296,8 +2407,8 @@ setInterval(tick,250);
 <script type="module" src="assets/engine/journey.js?v=10"></script>
 <script type="module" src="assets/engine/hunt.js?v=8"></script>
 <script type="module" src="assets/engine/home.js?v=7"></script>
-<script type="module" src="assets/engine/world.js?v=20"></script>
-<script type="module" src="assets/engine/field.js?v=21"></script>
+<script type="module" src="assets/engine/world.js?v=21"></script>
+<script type="module" src="assets/engine/field.js?v=22"></script>
 <script type="module" src="assets/engine/territory.js?v=3"></script>
 <script src="assets/mounts-v1/map-data.js"></script>
 <script type="module" src="assets/engine/client.js?v=mount1-58"></script>
